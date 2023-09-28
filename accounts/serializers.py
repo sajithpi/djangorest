@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserProfile
+from .models import User, UserProfile, CoverPhoto
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -26,11 +26,14 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         fields = ['first_name', 'last_name', 'email', 'username', 'phone_number']  # Add other user fields as needed
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    
+    cover_photos = serializers.ListField(child = serializers.ImageField(), required = False)
+
     class Meta:
         model = UserProfile
         fields = [
             'profile_picture',
-            'cover_photo',
+            'cover_photos',
             'address_line1',
             'address_line2',
             'country',
@@ -39,10 +42,17 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
             'pin_code',
         ]
     def update(self, instance, validated_data):
+        cover_photos_data = validated_data.pop('cover_photos',[])
         # Update specific fields in the UserProfile model
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+
+        # Create CoverPhoto objects and associate them with the user's UserProfile
+        # Process cover photos data
+        for image_data in cover_photos_data:
+            CoverPhoto.objects.create(user_profile=instance, image=image_data)
+            
         return instance
     
 class ResetPasswordEmailSerializer(serializers.Serializer):

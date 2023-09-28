@@ -70,10 +70,16 @@ def user_profile_picture_upload_path(instance, filename):
     # Generate the upload path based on the user's ID
     return f'users/{instance.user.id}/profile_pictures/{filename}'
 
+def user_cover_photo_upload_path(instance, filename):
+    # Generate the upload path based on the user's ID
+    return f'users/{instance.user_profile.user.id}/cover_photos/{filename}'
+
+
 class UserProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
-    cover_photo = models.ImageField(upload_to='users/cover_photos',blank=True, null=True)
+    # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
+   
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
@@ -85,3 +91,11 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.email
+
+class CoverPhoto(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True,  related_name='cover_photos')
+    image = models.ImageField(upload_to=user_cover_photo_upload_path, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.id)
