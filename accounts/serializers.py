@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, UserProfile
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -11,14 +11,39 @@ class UserSerializers(serializers.ModelSerializer):
         model = User
         fields = ["id","email","username","password","first_name","last_name"]
 
-    def create(self, validate_data):
-        user = User.objects.create(email=validate_data['email'],
-                                       username=validate_data['username'],
-                                       first_name=validate_data['first_name'],
-                                       last_name=validate_data['last_name'])
-        user.set_password(validate_data['password'])
+    def create(self, validated_data):
+        user = User.objects.create(email=validated_data['email'],
+                                       username=validated_data['username'],
+                                       first_name=validated_data['first_name'],
+                                       last_name=validated_data['last_name'])
+        user.set_password(validated_data['password'])
         user.save()
         return user
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username', 'phone_number']  # Add other user fields as needed
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            'profile_picture',
+            'cover_photo',
+            'address_line1',
+            'address_line2',
+            'country',
+            'state',
+            'city',
+            'pin_code',
+        ]
+    def update(self, instance, validated_data):
+        # Update specific fields in the UserProfile model
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
     
 class ResetPasswordEmailSerializer(serializers.Serializer):
     class Meta:

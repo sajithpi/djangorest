@@ -64,10 +64,15 @@ class User(AbstractBaseUser):
         return self.is_admin
     def has_module_perms(self, add_label):
         return True
-    
+
+
+def user_profile_picture_upload_path(instance, filename):
+    # Generate the upload path based on the user's ID
+    return f'users/{instance.user.id}/profile_pictures/{filename}'
+
 class UserProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='users/profile_pictures',blank=True,null=True)
+    profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     cover_photo = models.ImageField(upload_to='users/cover_photos',blank=True, null=True)
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
