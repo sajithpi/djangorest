@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from . models import UserProfile, CoverPhoto
 from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer
 from rest_framework import status
-class SimpleApI(APIView):
+class GetUserData(APIView):
     permission_classes = (IsAuthenticated,)
     def get(self, request):
 
