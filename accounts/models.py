@@ -41,7 +41,16 @@ class User(AbstractBaseUser):
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
+    date_of_birth = models.DateField(default=None, null=True, blank=True)
     phone_number = models.CharField(max_length=50)
+    
+    GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    )
+
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
 
     #required
     date_joined = models.DateTimeField(auto_now_add=True)

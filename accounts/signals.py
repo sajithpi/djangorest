@@ -24,19 +24,19 @@ def post_save_create_profile_receiver(sender, instance, created, **kwargs):
 def pre_save_profile_receiver(sender, instance, **kwargs):
     print(instance.username, 'this user is being saved')
 
-@receiver(post_save, sender = UserProfile)
-def post_save_create_cover_photo_receiver(sender, instance, created, **kwargs):
-    print(created)
-    if created:
-        CoverPhoto.objects.create(user_profile = instance)
-        print("create the user cover")
+# @receiver(post_save, sender = UserProfile)
+# def post_save_create_cover_photo_receiver(sender, instance, created, **kwargs):
+#     print(created)
+#     if created:
+#         CoverPhoto.objects.create(user_profile = instance)
+#         print("create the user cover")
 
-    else:
-        try:
-            cover = CoverPhoto.objects.get(user_profile = instance)
-            cover.save()
-            print("user cover is updated")
-        except Exception as Error:
-            #create the user profile if not exists
-            CoverPhoto.objects.create(user_profile = instance)
-            print("user cover is not exists so i created one")
+#     else:
+#         try:
+#             cover = CoverPhoto.objects.get(user_profile = instance)
+#             cover.save()
+#             print("user cover is updated")
+#         except Exception as Error:
+#             #create the user profile if not exists
+#             CoverPhoto.objects.create(user_profile = instance)
+#             print("user cover is not exists so i created one")

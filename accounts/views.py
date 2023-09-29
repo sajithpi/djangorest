@@ -8,16 +8,44 @@ from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnico
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
+from rest_framework.parsers import MultiPartParser
 from .utils import Util
-from .models import User
+from .models import User, UserProfile, CoverPhoto
 # Create your views here.
 
 class RegisterView(APIView):
+    
+    parser_classes = (MultiPartParser,)
+    
     def post(self, request):
-        serializer = UserSerializers(data=request.data)
+        serializer = UserSerializers(data=request.data, partial = True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        
+        # Extract cover photos from request data
+        cover_photos_data = request.FILES.getlist('cover_photos')
+        
+        # Extract cover photos from request data
+        profile_photo_data = request.FILES.get('profile_photo')
+        
+        # Extract the first cover photo if available
+        # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
+
+        user = serializer.save()
+        
+        # Associate cover photos with the user's profile if provided
+        if cover_photos_data:
+            user_profile = UserProfile.objects.get(user=user)
+            for image_data in cover_photos_data:
+                CoverPhoto.objects.create(user_profile = user_profile, image = image_data)
+                
+                
+        # If a profile photo was provided, set it as the profile picture
+        if profile_photo_data:
+            user_profile = UserProfile.objects.get(user=user)
+            user_profile.profile_picture = profile_photo_data
+            user_profile.save()
+
+            return Response(serializer.data)
     
 class ForgotPassword(APIView):
     def post(self, request):
