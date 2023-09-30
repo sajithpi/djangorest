@@ -45,7 +45,8 @@ class RegisterView(APIView):
             user_profile.profile_picture = profile_photo_data
             user_profile.save()
 
-            return Response(serializer.data)
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({'status':True,'message':'Registration Successful'}, status=status.HTTP_201_CREATED)
     
 class ForgotPassword(APIView):
     def post(self, request):
