@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, IntrestSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -95,6 +96,12 @@ class SetNewPasswordAPI(APIView):
         return Response({'success':True, 'message':'Password Reset Success'}, status=status.HTTP_200_OK)
     
         
-# class IntrestListCreateView(generics.ListCreateAPIView):
-#     queryset = Interest.objects.all()
-#     # serializer_class = Itr
+class IntrestListCreateView(generics.ListCreateAPIView):
+    permission_classes = [AllowAny]  # Use AllowAny permission to allow unauthenticated access
+    
+    queryset = Interest.objects.all()
+    serializer_class = IntrestSerializer
+    
+class InterestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Interest.objects.all()
+    serializer_class = IntrestSerializer

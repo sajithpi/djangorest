@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto
+from . models import User, UserProfile, CoverPhoto, Interest
 
 
 class CoverPhotoAdmin(admin.ModelAdmin):
@@ -11,3 +11,4 @@ class CoverPhotoAdmin(admin.ModelAdmin):
 admin.site.register(User)
 admin.site.register(UserProfile)
 admin.site.register(CoverPhoto, CoverPhotoAdmin)
+admin.site.register(Interest)
