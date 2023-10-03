@@ -42,7 +42,7 @@ class User(AbstractBaseUser):
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
     date_of_birth = models.DateField(default=None, null=True, blank=True)
-    phone_number = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=50, default=None, null=True, blank=True)
     
     GENDER_CHOICES = (
         ('M', 'Male'),
@@ -67,7 +67,7 @@ class User(AbstractBaseUser):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
     
     def has_perm(self, perm, obj=None):
         return self.is_admin
@@ -102,9 +102,18 @@ class UserProfile(models.Model):
         return self.user.email
 
 class CoverPhoto(models.Model):
+    
+
+    
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True,  related_name='cover_photos')
     image = models.ImageField(upload_to=user_cover_photo_upload_path, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return str(self.id)
+        return str(self.user_profile.user.username)
+    
+class Interest(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserProfile, CoverPhoto
+from .models import User, UserProfile, CoverPhoto, Interest
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -9,7 +9,7 @@ class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth"]
+        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth","phone_number"]
 
     def create(self, validated_data):
         user = User.objects.create(email=validated_data['email'],
@@ -17,6 +17,7 @@ class UserSerializers(serializers.ModelSerializer):
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
                                        gender = validated_data["gender"],
+                                       phone_number = validated_data.get('phone_number'),
                                        date_of_birth = validated_data.get('date_of_birth'),)
         user.set_password(validated_data['password'])
         user.save()
@@ -114,3 +115,35 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'created_at',
             'modified_at',
         ]
+        
+
+
+
+class UploadCoverPhotoSerializer(serializers.ModelSerializer):
+    
+    cover_photos = serializers.ListField(child = serializers.ImageField(), required = False)
+
+    class Meta:
+        model = CoverPhoto
+        fields = [
+            'cover_photos',
+        ]
+    def update(self, instance, validated_data):
+        cover_photos_data = validated_data.pop('cover_photos',[])
+        # Update specific fields in the UserProfile model
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Create CoverPhoto objects and associate them with the user's UserProfile
+        # Process cover photos data
+        for image_data in cover_photos_data:
+            CoverPhoto.objects.create(user_profile=instance, image=image_data)
+            
+        return instance
+    
+    
+class IntrestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interest
+        fields = "__all__"

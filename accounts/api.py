@@ -50,3 +50,53 @@ class GetUserData(APIView):
         return Response({'message': 'User information updated successfully'})
     
 
+class UpdateCoverPhoto(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def put(self, request):
+        user = self.request.user
+
+        # Update fields in the UserProfile model if provided
+        try:
+            profile = UserProfile.objects.get(user=user)
+            profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
+            if profile_serializer.is_valid():
+                if 'profile_picture' in request.data:
+                    old_profile_picture = profile.profile_picture
+                    if old_profile_picture:
+                        old_profile_picture.delete(save=False)
+                    else:
+                        print("profile picture not exist")
+                profile_serializer.save()
+            else:
+                return Response(profile_serializer.errors, status=400) # Return validation errors
+            
+        except UserProfile.DoesNotExist:
+            return Response({'error':'UserProfile does not exist for this user.'}, status=404)
+        return Response({'message':'User Profile updated successfully'})
+    
+    
+class DeleteCoverPhoto(APIView):
+    permission_classes = (IsAuthenticated,)
+    
+    def put(self, request):
+        user = self.request.user
+        image_id = request.data.get('image_id',None)
+        
+        if image_id is None:
+            return Response({'error': 'Image ID is required'}, status=status.HTTP_400_BAD_REQUEST) 
+        
+         # Update fields in the UserProfile model if provided
+        try:
+            profile = UserProfile.objects.get(user = user)
+            cover_photo = CoverPhoto.objects.filter(user_profile = profile, id = image_id).first()
+            if not cover_photo:
+                return Response({'error': 'Cover photo not found'}, status=status.HTTP_404_NOT_FOUND)
+            # Delete the cover photo file from storage
+            cover_photo.image.delete(save=False)
+            # Delete the corresponding database record)
+            cover_photo.delete()
+            return Response({'message': 'Cover photo deleted successfully'})
+
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'UserProfile does not exist for this user.'}, status=status.HTTP_404_NOT_FOUND)
