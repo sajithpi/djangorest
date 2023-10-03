@@ -43,6 +43,8 @@ class User(AbstractBaseUser):
     email = models.EmailField(max_length=100, unique=True)
     date_of_birth = models.DateField(default=None, null=True, blank=True)
     phone_number = models.CharField(max_length=50, default=None, null=True, blank=True)
+     # Add a many-to-many field for interests
+    interests = models.ManyToManyField('Interest', related_name='users', blank=True)
     
     GENDER_CHOICES = (
         ('M', 'Male'),

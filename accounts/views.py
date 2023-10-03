@@ -31,6 +31,9 @@ class RegisterView(APIView):
         # Extract the first cover photo if available
         # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
 
+        # Extract the interests data from request data
+        interests_data = request.data.get('interests', [])    
+        
         user = serializer.save()
         
         # Associate cover photos with the user's profile if provided
@@ -45,7 +48,15 @@ class RegisterView(APIView):
             user_profile = UserProfile.objects.get(user=user)
             user_profile.profile_picture = profile_photo_data
             user_profile.save()
-
+        print(f"interest data:{interests_data}")
+        interest_list = interests_data.split(",")
+        for interest in interest_list:
+            print(f"interest:{interest}")
+            interest= Interest.objects.get(name=interest.strip())
+            if interest:
+                # user.user_ interests.add(interest)
+                user.interests.add(interest)
+        
         # return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'status':True,'message':'Registration Successful'}, status=status.HTTP_201_CREATED)
     
