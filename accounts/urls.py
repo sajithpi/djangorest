@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, UpdateCoverPhoto, DeleteCoverPhoto
+from .api import GetUserData, UpdateProfilePhoto, DeleteCoverPhoto
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView
 from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
@@ -7,7 +7,7 @@ urlpatterns = [
     path('api/upload-cover-photo', GetUserData.as_view(), name='upload-cover-photo'),
     path('api/delete-cover-photo', DeleteCoverPhoto.as_view(), name='delete-cover-photo'),
     path('api/get-intrests', IntrestListCreateView.as_view(), name='get-intrests'),
-    # path('api/UpdateCoverPhoto', UpdateCoverPhoto.as_view(), name='update-cover-photo'),
+    path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
     path('api/login', jwt_views.TokenObtainPairView.as_view(), name ='token_obtain_pair'),
     path('api/login/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
     path('api/register',RegisterView.as_view(), name="sign_up"),

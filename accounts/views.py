@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, IntrestSerializer
+from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -12,9 +13,12 @@ from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
 from .utils import Util
 from .models import User, UserProfile, CoverPhoto, Interest
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+import json
 # Create your views here.
 
-class RegisterView(APIView):
+class RegisterView(GenericAPIView):
     
     parser_classes = (MultiPartParser,)
     
@@ -31,8 +35,8 @@ class RegisterView(APIView):
         # Extract the first cover photo if available
         # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
 
-        # Extract the interests data from request data
-        interests_data = request.data.get('interests', [])    
+         # Extract the interests data from request data as a list
+        interests_data = json.loads(request.data.get('interests', '[]')) # Use getlist to retrieve a list 
         
         user = serializer.save()
         
@@ -48,11 +52,11 @@ class RegisterView(APIView):
             user_profile = UserProfile.objects.get(user=user)
             user_profile.profile_picture = profile_photo_data
             user_profile.save()
-        print(f"interest data:{interests_data}")
-        interest_list = interests_data.split(",")
-        for interest in interest_list:
-            print(f"interest:{interest}")
-            interest= Interest.objects.get(name=interest.strip())
+        print(f"interests_data:{interests_data}")
+        for interest_name in interests_data:
+            interest_name = interest_name.strip()
+            print(f"interest_name:{interest_name}")
+            interest= Interest.objects.get(name=interest_name)
             if interest:
                 # user.user_ interests.add(interest)
                 user.interests.add(interest)
@@ -60,10 +64,10 @@ class RegisterView(APIView):
         # return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'status':True,'message':'Registration Successful'}, status=status.HTTP_201_CREATED)
     
-class ForgotPassword(APIView):
+class ForgotPassword(GenericAPIView):
     def post(self, request):
         pass
-class RequestPasswordResetEmail(APIView):
+class RequestPasswordResetEmail(GenericAPIView):
     def post(self, request):
         
         serializer = ResetPasswordEmailSerializer(data = request.data)
@@ -84,7 +88,7 @@ class RequestPasswordResetEmail(APIView):
 
         return Response({'success':'We have sent you a link to reset your passwors'}, status=status.HTTP_200_OK)
     
-class PasswordTokenCheckAPI(APIView):
+class PasswordTokenCheckAPI(GenericAPIView):
     def get(self, request, uidb64, token):
         try:
             id = smart_str(urlsafe_base64_decode(uidb64))
@@ -98,7 +102,7 @@ class PasswordTokenCheckAPI(APIView):
         except DjangoUnicodeDecodeError as Error:
             return Response({'Error':'Token is not valid, please request a new one'}, status=status.HTTP_401_UNAUTHORIZED)
             
-class SetNewPasswordAPI(APIView):
+class SetNewPasswordAPI(GenericAPIView):
 
     def patch(self, request):
         serializer = SetNewPasswordSerializer(data=request.data)
@@ -111,8 +115,8 @@ class IntrestListCreateView(generics.ListCreateAPIView):
     permission_classes = [AllowAny]  # Use AllowAny permission to allow unauthenticated access
     
     queryset = Interest.objects.all()
-    serializer_class = IntrestSerializer
+    serializer_class = InterestSerializer
     
 class InterestDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Interest.objects.all()
-    serializer_class = IntrestSerializer
+    serializer_class = InterestSerializer

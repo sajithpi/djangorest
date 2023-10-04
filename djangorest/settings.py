@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'corsheaders',
+    'drf_yasg',
 ]
 
 # CORS_ALLOWED_ORIGINS = ['http://192.168.21.2:3000', 'http://192.168.21.2']
@@ -87,6 +88,14 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_EACH_TIME': False,
 }
 
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic',
+        },
+    },
+    'DEFAULT_AUTO_SCHEMA_CLASS': 'drf_yasg.inspectors.SwaggerAutoSchema',
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

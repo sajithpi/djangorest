@@ -79,11 +79,11 @@ class User(AbstractBaseUser):
 
 def user_profile_picture_upload_path(instance, filename):
     # Generate the upload path based on the user's ID
-    return f'users/{instance.user.id}/profile_pictures/{filename}'
+    return f'users/{instance.user.username}/profile_pictures/{filename}'
 
 def user_cover_photo_upload_path(instance, filename):
     # Generate the upload path based on the user's ID
-    return f'users/{instance.user_profile.user.id}/cover_photos/{filename}'
+    return f'users/{instance.user_profile.user.username}/cover_photos/{filename}'
 
 
 class UserProfile(models.Model):

@@ -9,7 +9,7 @@ class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth","phone_number"]
+        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth","phone_number",]
 
     def create(self, validated_data):
         user = User.objects.create(email=validated_data['email'],
@@ -96,6 +96,14 @@ class CoverPhotoSerializer(serializers.ModelSerializer):
         model = CoverPhoto
         fields = '__all__'
         
+        
+    
+class InterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Interest
+        fields = ['id','name']
+
+        
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializers()
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
@@ -108,6 +116,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'cover_photos',  # Use 'cover_photos' (plural) here
             'address_line1',
             'address_line2',
+            'interests',
             'country',
             'state',
             'city',
@@ -116,7 +125,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'modified_at',
         ]
         
-
+    # Add a SerializerMethodField to include the user's interests
+    interests = serializers.SerializerMethodField()
+    
+    def get_interests(self, obj):
+         # Access the user's interests through the UserProfile's user field
+        return [interest.name for interest in obj.user.interests.all()]
 
 
 class UploadCoverPhotoSerializer(serializers.ModelSerializer):
@@ -142,8 +156,6 @@ class UploadCoverPhotoSerializer(serializers.ModelSerializer):
             
         return instance
     
-    
-class IntrestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Interest
-        fields = "__all__"
+class CombinedSerializer(serializers.Serializer):
+    data_a = UpdateUserSerializer()  # Use your serializer for data A
+    data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
