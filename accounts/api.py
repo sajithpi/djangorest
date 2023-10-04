@@ -75,16 +75,22 @@ class GetUserData(GenericAPIView):
             else:
                 return Response(profile_serializer.errors, status=400) # Return validation errors
             
-            # Update user interests
-            interests_data = json.loads(request.data.get('interests', '[]'))
-            if interests_data:
-                for interest_name in interests_data:
-                    interest_name = interest_name.strip()
-                    print(f"interest_name:{interest_name}")
-                    interest= Interest.objects.get(name=interest_name)
-                    if interest:
-                        # user.user_ interests.add(interest)
-                        user.interests.add(interest)
+            interest_name = request.data.get('interests',None)
+            if interest_name:
+                interest_name = interest_name.strip('"')
+                print(f"interest name:{interest_name}")
+                interest= Interest.objects.get(name=interest_name)
+                user.interests.add(interest)
+            # # Update user interests
+            # interests_data = json.loads(request.data.get('interests', '[]'))
+            # if interests_data:
+            #     for interest_name in interests_data:
+            #         interest_name = interest_name.strip()
+            #         print(f"interest_name:{interest_name}")
+            #         interest= Interest.objects.get(name=interest_name)
+            #         if interest:
+            #             # user.user_ interests.add(interest)
+            #             user.interests.add(interest)
                 
         except UserProfile.DoesNotExist:
             return Response({'error':'UserProfile does not exist for this user.'}, status=404)
@@ -216,25 +222,55 @@ class RemoveUserInterestView(GenericAPIView):
     
     permission_classes = [IsAuthenticated,]
     
-    def delete(self, request):
+    
+    @swagger_auto_schema(
+        operation_summary="Remove a user's interest",
+        operation_description="Remove a specific interest from the user's profile.",
+        manual_parameters=[
+            openapi.Parameter('interest_id', openapi.IN_QUERY, type=openapi.TYPE_INTEGER, description="ID of the interest to remove", required=True),
+        ],
+        responses={
+            status.HTTP_204_NO_CONTENT: "Interest removed successfully",
+            status.HTTP_404_NOT_FOUND: "User or interest not found",
+            status.HTTP_500_INTERNAL_SERVER_ERROR: "Internal server error",
+        }
+    )
+    def put(self, request):
         try:
             
             user_id = request.user.id
-            interest_id = request.data.get('interest_id',None)
-            if not interest_id:
-                return Response({'status':False, 'message':'interest should be passed'}, status=status.HTTP_204_NO_CONTENT)
+            # interest_id = request.data.get('interest_id',None)
+            # if not interest_id:
+            #     return Response({'status':False, 'message':'interest should be passed'}, status=status.HTTP_204_NO_CONTENT)
             
+            # user = User.objects.get(id=user_id)
+            # interest = Interest.objects.get(id = interest_id)
+            # user.interests.remove(interest)
+            
+            
+                        # Update user interests
+            # interests_data = json.loads(request.data.get('interest_id', '[]'))
+            interests_data = request.data.get('interest_id', [])
+            print(f"interests_data:{interests_data}")
             user = User.objects.get(id=user_id)
-            interest = Interest.objects.get(id = interest_id)
-            user.interests.remove(interest)
+            if interests_data:
+                for interest_id in interests_data:
+                    print(f"interest_id:{interest_id}")
+                    interest= Interest.objects.get(id=interest_id)
+                    if interest:
+                        # user.user_ interests.add(interest)                        
+                        user.interests.remove(interest)
             
             return Response({'status': True, 'message': 'Interest removed successfully'}, status=status.HTTP_204_NO_CONTENT)
             
         except User.DoesNotExist:
+            print(f"ERROR:{e}")
             return Response({'status': False, 'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
         except Interest.DoesNotExist:
+            print(f"ERROR:{e}")
             return Response({'status': False, 'message': 'Interest not found'}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
+            print(f"ERROR:{e}")
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
