@@ -2,12 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import UserProfile, CoverPhoto
+from . models import User, UserProfile, CoverPhoto, Interest
 from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer
 from rest_framework import status
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-
+from rest_framework.serializers import Serializer
+import json
 class GetUserData(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     
@@ -34,7 +35,7 @@ class GetUserData(GenericAPIView):
           # Add interests to the serialized data
         data['interests'] = InterestSerializer(interests, many=True).data
         
-        return Response(profile_serializer.data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
     operation_description="Update user data",  # Describe the operation
@@ -45,6 +46,8 @@ class GetUserData(GenericAPIView):
     def put(self, request):
         user = self.request.user
 
+            
+            
         #Update fields in the User model if provided
         user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
         if user_serializer.is_valid():
@@ -57,6 +60,9 @@ class GetUserData(GenericAPIView):
             profile = UserProfile.objects.get(user=user)
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
             if profile_serializer.is_valid():
+                
+                
+                
                 if 'profile_picture' in request.data:
                     old_profile_picture = profile.profile_picture
                     if old_profile_picture:
@@ -64,9 +70,22 @@ class GetUserData(GenericAPIView):
                     else:
                         print("profile picture not exist")
                 profile_serializer.save()
+                
+   
             else:
                 return Response(profile_serializer.errors, status=400) # Return validation errors
             
+            # Update user interests
+            interests_data = json.loads(request.data.get('interests', '[]'))
+            if interests_data:
+                for interest_name in interests_data:
+                    interest_name = interest_name.strip()
+                    print(f"interest_name:{interest_name}")
+                    interest= Interest.objects.get(name=interest_name)
+                    if interest:
+                        # user.user_ interests.add(interest)
+                        user.interests.add(interest)
+                
         except UserProfile.DoesNotExist:
             return Response({'error':'UserProfile does not exist for this user.'}, status=404)
         return Response({'message':'User Profile updated successfully'})
@@ -157,3 +176,65 @@ class DeleteCoverPhoto(GenericAPIView):
 
         except UserProfile.DoesNotExist:
             return Response({'error': 'UserProfile does not exist for this user.'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CheckUserExists(GenericAPIView):
+    serializer_class = Serializer  
+    
+    @swagger_auto_schema(
+        operation_summary="Check if a user with a given email exists",
+        manual_parameters=[
+            openapi.Parameter('email', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="Email address to check")
+        ],
+        responses={
+            status.HTTP_200_OK: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description="Result message")
+                }
+            ),
+            status.HTTP_400_BAD_REQUEST: openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'message': openapi.Schema(type=openapi.TYPE_STRING, description="Error message")
+                }
+            ),
+        }
+    )
+    def get(self, request):
+        email = request.data.get('email', None)
+        
+        if not email:
+            return Response({'message':'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=email).exists():
+            return Response({'message':'User with this email already exists'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
+        
+class RemoveUserInterestView(GenericAPIView):
+    
+    permission_classes = [IsAuthenticated,]
+    
+    def delete(self, request):
+        try:
+            
+            user_id = request.user.id
+            interest_id = request.data.get('interest_id',None)
+            if not interest_id:
+                return Response({'status':False, 'message':'interest should be passed'}, status=status.HTTP_204_NO_CONTENT)
+            
+            user = User.objects.get(id=user_id)
+            interest = Interest.objects.get(id = interest_id)
+            user.interests.remove(interest)
+            
+            return Response({'status': True, 'message': 'Interest removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+            
+        except User.DoesNotExist:
+            return Response({'status': False, 'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Interest.DoesNotExist:
+            return Response({'status': False, 'message': 'Interest not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'status': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -120,3 +120,5 @@ class IntrestListCreateView(generics.ListCreateAPIView):
 class InterestDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Interest.objects.all()
     serializer_class = InterestSerializer
+    
+            
