@@ -83,7 +83,7 @@ class GetUserData(GenericAPIView):
             #     user.interests.add(interest)
             # Update user interests
             print(f"interest data json:{request.data.get('interests')}")
-            interests_data = json.loads(request.data.get('interests', '[]'))
+            interests_data = request.data.get('interests', '[]')
             # interests_data = request.data.get('interests', '[]')
             if interests_data:
                 for interest_name in interests_data:
