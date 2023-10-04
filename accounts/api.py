@@ -75,22 +75,22 @@ class GetUserData(GenericAPIView):
             else:
                 return Response(profile_serializer.errors, status=400) # Return validation errors
             
-            interest_name = request.data.get('interests',None)
-            if interest_name:
-                interest_name = interest_name.strip('"')
-                print(f"interest name:{interest_name}")
-                interest= Interest.objects.get(name=interest_name)
-                user.interests.add(interest)
-            # # Update user interests
-            # interests_data = json.loads(request.data.get('interests', '[]'))
-            # if interests_data:
-            #     for interest_name in interests_data:
-            #         interest_name = interest_name.strip()
-            #         print(f"interest_name:{interest_name}")
-            #         interest= Interest.objects.get(name=interest_name)
-            #         if interest:
-            #             # user.user_ interests.add(interest)
-            #             user.interests.add(interest)
+            # interest_name = request.data.get('interests',None)
+            # if interest_name:
+            #     interest_name = interest_name.strip('"')
+            #     print(f"interest name:{interest_name}")
+            #     interest= Interest.objects.get(name=interest_name)
+            #     user.interests.add(interest)
+            # Update user interests
+            interests_data = json.loads(request.data.get('interests', '[]'))
+            if interests_data:
+                for interest_name in interests_data:
+                    interest_name = interest_name.strip()
+                    print(f"interest_name:{interest_name}")
+                    interest= Interest.objects.get(name=interest_name)
+                    if interest:
+                        # user.user_ interests.add(interest)
+                        user.interests.add(interest)
                 
         except UserProfile.DoesNotExist:
             return Response({'error':'UserProfile does not exist for this user.'}, status=404)
