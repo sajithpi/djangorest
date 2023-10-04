@@ -209,7 +209,7 @@ class CheckUserExists(GenericAPIView):
             ),
         }
     )
-    def get(self, request):
+    def post(self, request):
         email = request.data.get('email', None)
         
         if not email:

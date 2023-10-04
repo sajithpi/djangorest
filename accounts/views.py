@@ -121,4 +121,15 @@ class InterestDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Interest.objects.all()
     serializer_class = InterestSerializer
     
+class CheckUserExists(APIView):
+    def get(self, request):
+        email = request.data.get('email', None)
+        
+        if not email:
+            return Response({'message':'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if User.objects.filter(email=email).exists():
+            return Response({'message':'User with this email already exists'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
             
