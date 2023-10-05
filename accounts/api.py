@@ -263,7 +263,7 @@ class RemoveUserInterestView(GenericAPIView):
                         # user.user_ interests.add(interest)                        
                         user.interests.remove(interest)
             
-            return Response({'status': True, 'message': 'Interest removed successfully'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'status': True, 'message': 'Interest removed successfully'}, status=status.HTTP_200_OK)
             
         except User.DoesNotExist:
             print(f"ERROR:{e}")
