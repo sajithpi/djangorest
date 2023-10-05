@@ -87,10 +87,43 @@ def user_cover_photo_upload_path(instance, filename):
 
 
 class UserProfile(models.Model):
+    
+    # KIDS_CHOICES = (
+    #     ('Want someday','Want someday'),
+    #     ('Dont want','Dont want'),
+    #     ('Have and want more','Have and want more'),
+    #     ("Have and don't want more","Have and don't want more"),
+    #     ("Not sure yet", "Not sure yet"),
+    #     ("Have Kids", "Have Kids"),
+        
+    # )
+    
+    # DRINK_CHOICES = (
+    #     ('Frequently','Frequently'),
+    #     ('Socially','Socially'),
+    #     ('Rarely','Rarely'),
+    #     ('Never','Never'),
+    #     ('Sober','Sober'),
+    #     ('Skip','Skip')
+    # )
+    
+    # RELIGION_CHOICES =(
+    #     ('Jain','Jain')
+    # )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
    
+    family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
+    height = models.PositiveIntegerField(blank=True, null=True)  # Add the 'height' field here
+    drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True)
+    religion = models.ForeignKey("Religions", on_delete=models.SET_NULL, blank=True, null=True)
+    education = models.ForeignKey("EducationTypes", on_delete=models.SET_NULL, blank=True, null=True)
+    relationship_goals = models.ForeignKey("RelationShipGoals", on_delete=models.SET_NULL, blank=True, null=True)
+    workout = models.ForeignKey("Workouts", on_delete=models.SET_NULL, blank=True, null=True)
+    smoke = models.ForeignKey("SmokeChoices", on_delete=models.SET_NULL, blank=True, null=True)
+ 
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
@@ -115,6 +148,47 @@ class CoverPhoto(models.Model):
         return str(self.user_profile.user.username)
     
 class Interest(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class DrinkChoice(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    
+    def __str__(self):
+        return self.name
+    
+class FamilyPlanChoice(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class Workouts(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class Religions(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class RelationShipGoals(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class SmokeChoices(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+class EducationTypes(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
