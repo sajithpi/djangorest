@@ -221,7 +221,7 @@ class CheckUserExists(GenericAPIView):
         if User.objects.filter(email=email).exists():
             return Response({'message':'User with this email already exists'}, status=status.HTTP_200_OK)
         else:
-            return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
+            return Response({'message':'User with this email not exists'}, status=status.HTTP_226_IM_USED)
         
 class RemoveUserInterestView(GenericAPIView):
     
