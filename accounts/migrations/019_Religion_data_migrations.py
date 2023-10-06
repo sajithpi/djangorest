@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import Religions
+from ..models import Religion
 
 RELIGIONS = [
     "Christian",
@@ -14,7 +14,7 @@ RELIGIONS = [
 def addReligionsChoices(apps, schema_editor):
   
     for choice in RELIGIONS:
-        Religions.objects.get_or_create(name=choice)
+        Religion.objects.get_or_create(name=choice)
 
 class Migration(migrations.Migration):
     dependencies = [

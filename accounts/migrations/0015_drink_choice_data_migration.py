@@ -1,6 +1,5 @@
 from django.db import migrations
-from ..models import DrinkChoice, FamilyPlanChoice, Workouts, Religions, RelationShipGoals, SmokeChoices, EducationTypes
-
+from ..models import DrinkChoice
 def addDrinkChoices(apps, schema_editor):
     # DrinkChoice = apps.get('accounts','DrinkChoice')
     DrinkChoice.objects.create(name='Frequently')

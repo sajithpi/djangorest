@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='EducationTypes',
+            name='EducationType',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
@@ -33,28 +33,28 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='RelationShipGoals',
+            name='RelationShipGoal',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Religions',
+            name='Religion',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='SmokeChoices',
+            name='SmokeChoice',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Workouts',
+            name='Workout',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=50, unique=True)),
@@ -73,7 +73,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='education',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.educationtypes'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.educationtype'),
         ),
         migrations.AddField(
             model_name='userprofile',
@@ -83,21 +83,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='relationship_goals',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.relationshipgoals'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.relationshipgoal'),
         ),
         migrations.AddField(
             model_name='userprofile',
             name='religion',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.religions'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.religion'),
         ),
         migrations.AddField(
             model_name='userprofile',
             name='smoke',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.smokechoices'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.smokechoice'),
         ),
         migrations.AddField(
             model_name='userprofile',
             name='workout',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.workouts'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.workout'),
         ),
     ]

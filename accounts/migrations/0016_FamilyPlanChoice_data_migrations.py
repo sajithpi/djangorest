@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import FamilyPlanChoice, Workouts, Religions, RelationShipGoals, SmokeChoices, EducationTypes
+from ..models import FamilyPlanChoice, Workout, Religion, RelationShipGoal, SmokeChoice, EducationType
 
 def addFamilyPlanChoices(apps, schema_editor):
     # DrinkChoice = apps.get('accounts','DrinkChoice')

@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import  SmokeChoices
+from ..models import  SmokeChoice
 
 SMOKE_CHOICES = [
     "Socially",
@@ -11,7 +11,7 @@ SMOKE_CHOICES = [
 def addSmokeChoices(apps, schema_editor):
   
     for choice in SMOKE_CHOICES:
-        SmokeChoices.objects.get_or_create(name=choice)
+        SmokeChoice.objects.get_or_create(name=choice)
 
 class Migration(migrations.Migration):
     dependencies = [

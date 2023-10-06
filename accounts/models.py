@@ -118,11 +118,11 @@ class UserProfile(models.Model):
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
     height = models.PositiveIntegerField(blank=True, null=True)  # Add the 'height' field here
     drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True)
-    religion = models.ForeignKey("Religions", on_delete=models.SET_NULL, blank=True, null=True)
-    education = models.ForeignKey("EducationTypes", on_delete=models.SET_NULL, blank=True, null=True)
-    relationship_goals = models.ForeignKey("RelationShipGoals", on_delete=models.SET_NULL, blank=True, null=True)
-    workout = models.ForeignKey("Workouts", on_delete=models.SET_NULL, blank=True, null=True)
-    smoke = models.ForeignKey("SmokeChoices", on_delete=models.SET_NULL, blank=True, null=True)
+    religion = models.ForeignKey("Religion", on_delete=models.SET_NULL, blank=True, null=True)
+    education = models.ForeignKey("EducationType", on_delete=models.SET_NULL, blank=True, null=True)
+    relationship_goals = models.ForeignKey("RelationShipGoal", on_delete=models.SET_NULL, blank=True, null=True)
+    workout = models.ForeignKey("Workout", on_delete=models.SET_NULL, blank=True, null=True)
+    smoke = models.ForeignKey("SmokeChoice", on_delete=models.SET_NULL, blank=True, null=True)
  
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
@@ -165,30 +165,30 @@ class FamilyPlanChoice(models.Model):
     def __str__(self):
         return self.name
     
-class Workouts(models.Model):
+class Workout(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
     
-class Religions(models.Model):
+class Religion(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
     
-class RelationShipGoals(models.Model):
+class RelationShipGoal(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
     
-class SmokeChoices(models.Model):
+class SmokeChoice(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
-class EducationTypes(models.Model):
+class EducationType(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):

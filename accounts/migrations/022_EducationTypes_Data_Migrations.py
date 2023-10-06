@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import  EducationTypes
+from ..models import  EducationType
 
 EDUCATION_CHOICES = [
     "High School",
@@ -13,7 +13,7 @@ EDUCATION_CHOICES = [
 def addEducationChoices(apps, schema_editor):
   
     for choice in EDUCATION_CHOICES:
-        EducationTypes.objects.get_or_create(name=choice)
+        EducationType.objects.get_or_create(name=choice)
 
 class Migration(migrations.Migration):
     dependencies = [

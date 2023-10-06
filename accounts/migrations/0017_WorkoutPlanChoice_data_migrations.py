@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import FamilyPlanChoice, Workouts, Religions, RelationShipGoals, SmokeChoices, EducationTypes
+from ..models import Workout
 
 WORKOUT_CHOICES = [
     "Everyday",
@@ -11,7 +11,7 @@ WORKOUT_CHOICES = [
 def addWorkoutChoices(apps, schema_editor):
   
     for choice in WORKOUT_CHOICES:
-        Workouts.objects.get_or_create(name=choice)
+        Workout.objects.get_or_create(name=choice)
 
 class Migration(migrations.Migration):
     dependencies = [

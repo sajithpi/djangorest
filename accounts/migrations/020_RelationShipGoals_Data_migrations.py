@@ -1,5 +1,5 @@
 from django.db import migrations
-from ..models import RelationShipGoals
+from ..models import RelationShipGoal
 
 RELATIONSHIP_GOALS = [
     "Find True Love",
@@ -17,7 +17,7 @@ RELATIONSHIP_GOALS = [
 def addRelationShipGoals(apps, schema_editor):
   
     for choice in RELATIONSHIP_GOALS:
-        RelationShipGoals.objects.get_or_create(name=choice)
+        RelationShipGoal.objects.get_or_create(name=choice)
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -25,5 +25,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(RelationShipGoals)
+        migrations.RunPython(addRelationShipGoals)
     ]
