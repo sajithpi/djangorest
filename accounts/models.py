@@ -88,29 +88,6 @@ def user_cover_photo_upload_path(instance, filename):
 
 class UserProfile(models.Model):
     
-    # KIDS_CHOICES = (
-    #     ('Want someday','Want someday'),
-    #     ('Dont want','Dont want'),
-    #     ('Have and want more','Have and want more'),
-    #     ("Have and don't want more","Have and don't want more"),
-    #     ("Not sure yet", "Not sure yet"),
-    #     ("Have Kids", "Have Kids"),
-        
-    # )
-    
-    # DRINK_CHOICES = (
-    #     ('Frequently','Frequently'),
-    #     ('Socially','Socially'),
-    #     ('Rarely','Rarely'),
-    #     ('Never','Never'),
-    #     ('Sober','Sober'),
-    #     ('Skip','Skip')
-    # )
-    
-    # RELIGION_CHOICES =(
-    #     ('Jain','Jain')
-    # )
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
@@ -123,6 +100,7 @@ class UserProfile(models.Model):
     relationship_goals = models.ForeignKey("RelationShipGoal", on_delete=models.SET_NULL, blank=True, null=True)
     workout = models.ForeignKey("Workout", on_delete=models.SET_NULL, blank=True, null=True)
     smoke = models.ForeignKey("SmokeChoice", on_delete=models.SET_NULL, blank=True, null=True)
+    languages = models.ManyToManyField('Language', related_name='users', blank=True)
  
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
@@ -189,6 +167,12 @@ class SmokeChoice(models.Model):
     def __str__(self):
         return self.name
 class EducationType(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+    
+class Language(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
