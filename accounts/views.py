@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer
+from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer, GoogleSocialAuthSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.generics import GenericAPIView
@@ -53,14 +53,14 @@ class RegisterView(GenericAPIView):
             user_profile.profile_picture = profile_photo_data
             user_profile.save()
         print(f"interests_data:{interests_data}")
-        for interest_name in interests_data:
-            interest_name = interest_name.strip()
-            print(f"interest_name:{interest_name}")
-            interest= Interest.objects.get(name=interest_name)
-            if interest:
-                # user.user_ interests.add(interest)
-                user.interests.add(interest)
-        
+        if interests_data:
+                interest_name = interest_name.strip()
+                print(f"interest_name:{interest_name}")
+                interest= Interest.objects.get(name=interest_name)
+                if interest:
+                    # user.user_ interests.add(interest)
+                    user.interests.add(interest)
+            
         # return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response({'status':True,'message':'Registration Successful'}, status=status.HTTP_201_CREATED)
     
@@ -132,4 +132,21 @@ class CheckUserExists(APIView):
             return Response({'message':'User with this email already exists'}, status=status.HTTP_200_OK)
         else:
             return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
-            
+        
+class GoogleSocialAuthView(generics.GenericAPIView):
+    
+    serializer_class = GoogleSocialAuthSerializer
+
+    def post(self, request):
+        
+        """
+
+        POST with "auth_token"
+
+        Send an idtoken as from google to get user information
+
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = ((serializer.validated_data)['auth_token'])
+        return Response(data, status=status.HTTP_200_OK)

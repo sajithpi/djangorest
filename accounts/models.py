@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from rest_framework_simplejwt.tokens import RefreshToken
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -35,7 +36,8 @@ class UserManager(BaseUserManager):
         user.is_superadmin = True
         user.save(using = self._db)
         return user
-
+AUTH_PROVIDERS = {'facebook':'facebook', 'google':'google',
+                  'twitter':'twitter', 'email':'email'}
 class User(AbstractBaseUser):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -43,6 +45,8 @@ class User(AbstractBaseUser):
     email = models.EmailField(max_length=100, unique=True)
     date_of_birth = models.DateField(default=None, null=True, blank=True)
     phone_number = models.CharField(max_length=50, default=None, null=True, blank=True)
+    
+    auth_provider = models.CharField(max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
      # Add a many-to-many field for interests
     interests = models.ManyToManyField('Interest', related_name='users', blank=True)
     
@@ -75,7 +79,13 @@ class User(AbstractBaseUser):
         return self.is_admin
     def has_module_perms(self, add_label):
         return True
-
+    
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            'refresh':str(refresh),
+            'access':str(refresh.access_token)
+        }
 
 def user_profile_picture_upload_path(instance, filename):
     # Generate the upload path based on the user's ID

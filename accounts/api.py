@@ -8,7 +8,8 @@ from rest_framework import status
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.serializers import Serializer
-import json
+
+
 class GetUserData(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     
@@ -277,3 +278,4 @@ class RemoveUserInterestView(GenericAPIView):
         except Exception as e:
             print(f"ERROR:{e}")
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
