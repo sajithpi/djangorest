@@ -2,6 +2,11 @@ from django.contrib import admin
 from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, RelationShipGoal, SmokeChoice, EducationType, Language
 
 
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('id','username')
+    list_filter = ('id','username')
+    search_fields = ('id','username')
+
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
     list_filter = ('user_profile',)
@@ -17,7 +22,7 @@ class ChoiceAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     search_fields = ('name','id')
     
-admin.site.register(User)
+admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile)
 admin.site.register(CoverPhoto, CoverPhotoAdmin)
 admin.site.register(Interest, InterestAdmin)

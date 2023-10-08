@@ -325,3 +325,12 @@ class GetPreferences(GenericAPIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+    
+
+class GetFollowers:
+    def post(self, request):
+        user = self.request.user
+        print(f"user_id:{user.id}")
+        user_profile = UserProfile.objects.get(user = user)
+
+        return Response({'message':'success'}, status=status.HTTP_200_OK)

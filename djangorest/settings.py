@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'social_auth',
+    'followers',
     'rest_framework',
     'corsheaders',
     'drf_yasg',
