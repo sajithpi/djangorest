@@ -100,8 +100,11 @@ class UserProfile(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
+    follows = models.ManyToManyField("self", related_name="followed_by",
+                                     symmetrical=False,
+                                     blank=True)
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
-   
+    
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
     height = models.PositiveIntegerField(blank=True, null=True)  # Add the 'height' field here
     drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True)
