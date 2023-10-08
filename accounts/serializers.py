@@ -160,3 +160,4 @@ class UploadCoverPhotoSerializer(serializers.ModelSerializer):
 class CombinedSerializer(serializers.Serializer):
     data_a = UpdateUserSerializer()  # Use your serializer for data A
     data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
+

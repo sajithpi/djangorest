@@ -45,6 +45,7 @@ MANIFEST
 
 djangorest/__pycache__
 accounts/__pycache__
+social_auth/__pycache__
 media/
 
 # PyInstaller

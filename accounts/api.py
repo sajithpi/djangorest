@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest
+from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice
 from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer
 from rest_framework import status
 from drf_yasg import openapi
@@ -279,3 +279,49 @@ class RemoveUserInterestView(GenericAPIView):
             print(f"ERROR:{e}")
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class GetPreferences(GenericAPIView):
+    permission_classes = (IsAuthenticated,)
+    
+    @swagger_auto_schema(
+    operation_description="Get user data",  # Describe the operation
+    responses={200: UserProfileSerializer},  # Define the response schema
+    tags=["User"],  # Categorize the endpoint using tags
+    )
+    def get(self, request):
+        # Fetch data from each model
+        interests = Interest.objects.all()
+        drink_choices = DrinkChoice.objects.all()
+        family_plan_choices = FamilyPlanChoice.objects.all()
+        workouts = Workout.objects.all()
+        religions = Religion.objects.all()
+        relationship_goals = RelationShipGoal.objects.all()
+        smoke_choices = SmokeChoice.objects.all()
+        education_types = EducationType.objects.all()
+        languages = Language.objects.all()
+
+        # Create dictionaries for each model's data
+        interests_data = [{'id': interest.id, 'name': interest.name} for interest in interests]
+        drink_choices_data = [{'id': choice.id, 'name': choice.name} for choice in drink_choices]
+        family_plan_choices_data = [{'id': choice.id, 'name': choice.name} for choice in family_plan_choices]
+        workouts_data = [{'id': workout.id, 'name': workout.name} for workout in workouts]
+        religions_data = [{'id': religion.id, 'name': religion.name} for religion in religions]
+        relationship_goals_data = [{'id': goal.id, 'name': goal.name} for goal in relationship_goals]
+        smoke_choices_data = [{'id': choice.id, 'name': choice.name} for choice in smoke_choices]
+        education_types_data = [{'id': education.id, 'name': education.name} for education in education_types]
+        languages_data = [{'id': language.id, 'name': language.name} for language in languages]
+
+        # Create a response data dictionary
+        data = {
+            'interests': interests_data,
+            'drink_choices': drink_choices_data,
+            'family_plan_choices': family_plan_choices_data,
+            'workouts': workouts_data,
+            'religions': religions_data,
+            'relationship_goals': relationship_goals_data,
+            'smoke_choices': smoke_choices_data,
+            'education_types': education_types_data,
+            'languages': languages_data,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
