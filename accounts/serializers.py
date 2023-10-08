@@ -4,9 +4,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
-from .google import Google
-from .register import register_social_user
-from django.http import HttpRequest
+
 
 class UserSerializers(serializers.ModelSerializer):
     
@@ -162,27 +160,3 @@ class UploadCoverPhotoSerializer(serializers.ModelSerializer):
 class CombinedSerializer(serializers.Serializer):
     data_a = UpdateUserSerializer()  # Use your serializer for data A
     data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
-GOOGLE_CLIENT_ID = '74750236370-melid0v5g6l1t2kt9la69eigjafq68qi.apps.googleusercontent.com'
-
-class GoogleSocialAuthSerializer(serializers.Serializer):
-    auth_token = serializers.CharField()
-
-    def validate_auth_token(self, auth_token):
-        user_data = Google.validate(auth_token)
-        print(f"user data:{user_data}")
-        try:
-            user_data['sub']
-        except:
-            raise serializers.ValidationError(
-                'The token is invalid or expired, please login again,'
-            )
-        # if user_data['aud'] != GOOGLE_CLIENT_ID:
-        #     raise AuthenticationFailed('Oops, who are you?')
-        
-        user_id = user_data['sub']
-        email = user_data['email']
-        name = user_data['name']
-        provider = 'google'
-
-        return register_social_user(provider = provider, user_id = user_id, email = email, name = name)
-    

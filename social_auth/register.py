@@ -2,7 +2,7 @@ from rest_framework.exceptions import AuthenticationFailed
 import random
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from .models import User
+from accounts.models import User
 from django.contrib.auth import authenticate as django_authenticate
 
 def generate_username(name):
