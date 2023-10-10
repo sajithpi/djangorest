@@ -124,6 +124,16 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.email
+class ProfilePreference(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    family_choices = models.ManyToManyField('FamilyPlanChoice', related_name='profile_preferences_family', blank=True)
+    drink_choices = models.ManyToManyField('DrinkChoice', related_name='profile_preferences_drink', blank=True)
+    religion_choices = models.ManyToManyField('Religion', related_name='profile_preferences_religion', blank=True)
+    education_choices = models.ManyToManyField('EducationType', related_name='profile_preferences_education', blank=True)
+    relationship_choices = models.ManyToManyField('RelationShipGoal', related_name='profile_preferences_relationship', blank=True)
+    workout_choices = models.ManyToManyField('Workout', related_name='profile_preferences_workout', blank=True)
+    smoke_choices = models.ManyToManyField('SmokeChoice', related_name='profile_preferences_smoke', blank=True)
+    languages_choices =  models.ManyToManyField('Language', related_name='profile_preferences_languages', blank=True)
 
 class CoverPhoto(models.Model):
     
@@ -188,3 +198,4 @@ class Language(models.Model):
 
     def __str__(self):
         return self.name
+

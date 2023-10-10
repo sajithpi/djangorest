@@ -38,13 +38,24 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = [
             'profile_picture',
+            'family_plan',
+            'height',
+            'drink',
+            'religion',
+            'education',
+            'relationship_goals',
+            'workout',
+            'smoke',
+            'languages',
             'cover_photos',
+             
             'address_line1',
             'address_line2',
             'country',
             'state',
             'city',
             'pin_code',
+            
         ]
     def update(self, instance, validated_data):
         cover_photos_data = validated_data.pop('cover_photos',[])
