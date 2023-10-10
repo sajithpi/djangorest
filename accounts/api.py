@@ -102,7 +102,6 @@ class GetUserData(GenericAPIView):
         # Return a success response
         return Response({'message': 'User information updated successfully'})
     
-
 class UpdateProfilePhoto(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     

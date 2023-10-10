@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, RelationShipGoal, SmokeChoice, EducationType, Language
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -21,6 +21,10 @@ class ChoiceAdmin(admin.ModelAdmin):
     list_display = ('id','name')
     list_filter = ('name',)
     search_fields = ('name','id')
+class ProfilePreferenceAdmin(admin.ModelAdmin):
+    list_display = ('id','user_profile')
+    list_filter = ('id','user_profile')
+    search_fields = ('id','user_profile')
     
 admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile)
@@ -33,3 +37,4 @@ admin.site.register(RelationShipGoal, ChoiceAdmin)
 admin.site.register(SmokeChoice, ChoiceAdmin)
 admin.site.register(EducationType, ChoiceAdmin)
 admin.site.register(Language, ChoiceAdmin)
+admin.site.register(ProfilePreference, ProfilePreferenceAdmin)
