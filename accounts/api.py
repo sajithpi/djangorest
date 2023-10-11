@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice
-from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer
+from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference
+from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer
 from rest_framework import status
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -326,10 +326,33 @@ class GetPreferences(GenericAPIView):
         return Response(data, status=status.HTTP_200_OK)
     
 
-class GetFollowers:
+class GetFollowers(GenericAPIView):
     def post(self, request):
         user = self.request.user
         print(f"user_id:{user.id}")
         user_profile = UserProfile.objects.get(user = user)
 
         return Response({'message':'success'}, status=status.HTTP_200_OK)
+
+class UpdateProfilePreference(GenericAPIView):
+        
+        @swagger_auto_schema(
+        operation_description="Update the user's profile preferences",
+        request_body=ProfilePreferenceSerializer,
+        responses={200: ProfilePreferenceSerializer, 400: "Bad Request"},
+        )
+        def put(self, request):
+            user = self.request.user
+            user_profile = UserProfile.objects.get(user=user)
+            try:
+                print(f"user:{user} profile:{user_profile}")
+                profile_preference = ProfilePreference.objects.get(user_profile = user_profile)
+            except ProfilePreference.DoesNotExist:
+                return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
+            
+            serializer = ProfilePreferenceSerializer(profile_preference, data=request.data, partial =True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message':"User Preference Updated Successfully", 'data':serializer.data}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

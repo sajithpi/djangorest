@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserProfile, CoverPhoto, Interest
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -172,3 +172,19 @@ class CombinedSerializer(serializers.Serializer):
     data_a = UpdateUserSerializer()  # Use your serializer for data A
     data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
 
+class ProfilePreferenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
+
+        
+    # def update(self, instance, validated_data):
+    #         # Implement your custom update logic here
+    #         # For example:
+    #         instance.family_choices.set(validated_data.get('family_choices', instance.family_choices.all()))
+    #         instance.drink_choices.set(validated_data.get('drink_choices', instance.drink_choices.all()))
+    #         instance.religion_choices.set(validated_data.get('religion_choices', instance.religion_choices.all()))
+    #         # Repeat for other fields
+
+    #         instance.save()
+    #         return instance
