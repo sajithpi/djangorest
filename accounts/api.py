@@ -347,9 +347,19 @@ class UpdateProfilePreference(GenericAPIView):
             try:
                 print(f"user:{user} profile:{user_profile}")
                 profile_preference = ProfilePreference.objects.get(user_profile = user_profile)
+                
             except ProfilePreference.DoesNotExist:
                 return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
             
+            #Clear existing preferences
+            profile_preference.family_choices.clear()
+            profile_preference.drink_choices.clear()
+            profile_preference.religion_choices.clear()
+            profile_preference.education_choices.clear()
+            profile_preference.relationship_choices.clear()
+            profile_preference.workout_choices.clear()
+            profile_preference.smoke_choices.clear()
+            profile_preference.languages_choices.clear()
             serializer = ProfilePreferenceSerializer(profile_preference, data=request.data, partial =True)
             if serializer.is_valid():
                 serializer.save()
