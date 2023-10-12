@@ -53,10 +53,11 @@ class User(AbstractBaseUser):
     GENDER_CHOICES = (
         ('M', 'Male'),
         ('F', 'Female'),
-        ('O', 'Other'),
+        ('TM', 'Transman'),
+        ('TW','Transwomen'),
     )
 
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True, blank=True)
+    gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
 
     #required
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -112,6 +113,7 @@ class UserProfile(models.Model):
     workout = models.ForeignKey("Workout", on_delete=models.SET_NULL, blank=True, null=True)
     smoke = models.ForeignKey("SmokeChoice", on_delete=models.SET_NULL, blank=True, null=True)
     languages = models.ManyToManyField('Language', related_name='users', blank=True)
+    looking_for = models.ManyToManyField('LookingFor', related_name='users', blank=True, null=True)
  
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
@@ -199,3 +201,8 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
+class LookingFor(models.Model):
+    name = models.CharField(max_length=10, unique=True)
+    
+    def __str__(self):
+        return self.name
