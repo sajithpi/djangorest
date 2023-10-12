@@ -7,6 +7,7 @@ from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfi
 from rest_framework import status
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.db.models import Q
 from rest_framework.serializers import Serializer
 
 
@@ -360,9 +361,161 @@ class UpdateProfilePreference(GenericAPIView):
             profile_preference.workout_choices.clear()
             profile_preference.smoke_choices.clear()
             profile_preference.languages_choices.clear()
+            
             serializer = ProfilePreferenceSerializer(profile_preference, data=request.data, partial =True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message':"User Preference Updated Successfully", 'data':serializer.data}, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+class GetProfileMatches(GenericAPIView):
+    
+    def get(self, request):
+        # Retrieve the user's preferences
+        user = self.request.user
+        user_profile = UserProfile.objects.get(user = user)
+        user_preferences = ProfilePreference.objects.get(user_profile = user_profile)
+        print(f"user preferences:{user_preferences}")
+        print(f"family preference:{user_preferences.family_choices.all()}")
+        
+        #create a dictionary to store matched preference
+        matched_preferences = {}
+        if user_preferences.family_choices.all():
+            matched_preferences['family_plan'] = [str(choice) for choice in user_preferences.family_choices.all()]
+        
+        if user_preferences.drink_choices.all():
+            matched_preferences['drink'] = [str(choice) for choice in user_preferences.drink_choices.all()]
+        
+        if user_preferences.religion_choices.all():
+            matched_preferences['religion'] = [str(choice) for choice in user_preferences.religion_choices.all()]
+        
+        if user_preferences.education_choices.all():
+            matched_preferences['education'] = [str(choice) for choice in user_preferences.education_choices.all()]
+        
+        if user_preferences.relationship_choices.all():
+            matched_preferences['relationship_goals'] = [str(choice) for choice in user_preferences.relationship_choices.all()]
+        
+        if user_preferences.workout_choices.all():
+            matched_preferences['workout'] = [str(choice) for choice in user_preferences.workout_choices.all()]
+        
+        if user_preferences.smoke_choices.all():
+            matched_preferences['smoke'] = [str(choice) for choice in user_preferences.smoke_choices.all()]
+        
+        if user_preferences.languages_choices.all():
+            matched_preferences['languages']  = [str(choice) for choice in user_preferences.languages_choices.all()]
+    
+        # Create a list of Q objects to match at least one preference in each category
+        preferences_filters = []
+
+
+        # if 'family_plan' in matched_preferences:
+        #     preferences_filters.append(Q(family_plan__in=user_preferences.family_choices.all()))
+
+        # if 'drink' in matched_preferences:
+        #     preferences_filters.append(Q(drink__in=user_preferences.drink_choices.all()))
+
+        # if 'religion' in matched_preferences:
+        #     preferences_filters.append(Q(religion__in=user_preferences.religion_choices.all()))
+
+        # if 'education' in matched_preferences:
+        #     preferences_filters.append(Q(education__in=user_preferences.education_choices.all()))
+        
+        # if 'relationship_goals' in matched_preferences:
+        #     preferences_filters.append(Q(relationship_goals__in = user_preferences.relationship_choices.all()))
+        
+        # if 'workout' in matched_preferences:
+        #     preferences_filters.append(Q(workout__in = user_preferences.workout_choices.all()))
+        
+        # if 'smoke' in matched_preferences:
+        #     preferences_filters.append(Q(smoke__in = user_preferences.smoke_choices.all()))
+            
+        # if 'languages' in matched_preferences:
+        #     preferences_filters.append(Q(languages__in = user_preferences.languages_choices.all()))
+        
+        
+        preference_fields = {
+            'family_plan': 'family_choices',
+            'drink': 'drink_choices',
+            'religion': 'religion_choices',
+            'education': 'education_choices',
+            'relationship_goals': 'relationship_choices',
+            'workout': 'workout_choices',
+            'smoke': 'smoke_choices',
+            'languages': 'languages_choices'
+        }
+            
+        preferences_filters = []
+
+        for preference, queryset_name in preference_fields.items():
+            queryset = getattr(user_preferences, queryset_name).all()
+            if queryset.exists():
+                field_name = f"{preference}__in"
+                preferences_filters.append(Q(**{field_name: queryset}))
+
+        # Add similar checks for other preference categories
+
+        # Combine the Q objects using the OR operator (|)
+        combined_filter = Q()
+        for q_obj in preferences_filters:
+            combined_filter |= q_obj
+
+        # Query to find matching user profiles
+        matching_profiles = UserProfile.objects.filter(combined_filter).exclude(user=user)
+
+        # Serialize the matching user profiles
+        serializer = UserProfileSerializer(matching_profiles, many=True)
+ # Create a dictionary to store preferences by user ID
+        preferences_by_user_id = {}
+
+        for profile in matching_profiles:
+            user_id = profile.user.id
+            print(f"user:{user_id}\n")
+            # user_preferences = ProfilePreference.objects.get(user_profile=profile)
+            preferences_by_user_id[user_id] = {}
+            
+            if user_preferences.family_choices.all():
+                for choice in user_preferences.family_choices.all():
+                    if str(profile.family_plan) == str(choice):
+                        preferences_by_user_id[user_id]['family_plan'] = str(profile.family_plan)
+            
+            if user_preferences.drink_choices.all():
+                for choice in user_preferences.drink_choices.all():
+                    if str(profile.drink) == str(choice):
+                        preferences_by_user_id[user_id]['drink'] = str(profile.drink)
+            
+            if user_preferences.religion_choices.all():
+                for choice in user_preferences.religion_choices.all():
+                    if str(profile.religion) == str(choice):
+                        preferences_by_user_id[user_id]['religion'] = str(profile.religion)
+                        
+            if user_preferences.education_choices.all():
+                for choice in user_preferences.education_choices.all():
+                    if str(profile.education) == str(choice):
+                        preferences_by_user_id[user_id]['education'] = str(profile.education)
+            
+            if user_preferences.relationship_choices.all():
+                for choice in user_preferences.education_choices.all():
+                    if str(profile.relationship_goals) == str(profile.relationship_goals):
+                        preferences_by_user_id[user_id]['relationship_goals'] = str(profile.relationship_goals)
+            
+            if user_preferences.workout_choices.all():
+                for choice in user_preferences.workout_choices.all():
+                    if str(profile.workout) == str(choice):
+                        preferences_by_user_id[user_id]['workout'] = str(profile.workout)
+            
+            if user_preferences.smoke_choices.all():
+                for choice in user_preferences.smoke_choices.all():
+                    if str(profile.smoke) == str(choice):
+                        preferences_by_user_id[user_id]['smoke'] = str(profile.smoke)
+                    
+            if user_preferences.languages_choices.all():
+                for choice in user_preferences.languages_choices.all():
+                    if str(profile.languages) == str(choice):
+                        preferences_by_user_id[user_id]['languages']
+                        
+                # [str(choice) for choice in user_preferences.religion_choices.all()]
+
+            # Add similar checks for other preference categories
+
+        return Response({'matching_profiles': serializer.data, 'matched_preferences': matched_preferences, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)

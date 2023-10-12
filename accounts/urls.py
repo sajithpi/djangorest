@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, UpdateProfilePhoto, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference
+from .api import GetUserData, UpdateProfilePhoto, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView
 from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/get-interests', IntrestListCreateView.as_view(), name='get-interests'),
     path('api/get-preferences', GetPreferences.as_view(), name='get-preferences'),
     path('api/update-profile-preference',UpdateProfilePreference.as_view(), name='update-profile-preference'),
+    path('api/get-profile-matches',GetProfileMatches.as_view(), name='get-profile-matches'),
     
     path('api/check-email-exists', CheckUserExists.as_view(), name='check-email-exists'),
     path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
