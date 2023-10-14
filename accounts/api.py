@@ -375,10 +375,29 @@ class GetProfileMatches(GenericAPIView):
         # Retrieve the user's preferences
         user = self.request.user
         user_profile = UserProfile.objects.get(user = user)
+        user_gender = user_profile.user.gender
+        user_orientation = user_profile.user.orientation
+        print(f"USER {user} GENDER:{user_gender}, ORIENTATION:{user_orientation}")
         user_preferences = ProfilePreference.objects.get(user_profile = user_profile)
         print(f"user preferences:{user_preferences}")
         print(f"family preference:{user_preferences.family_choices.all()}")
         
+        user_orientation_filter = {
+            ('M','Hetero'):'F',
+            ('M','Homo'):'M',
+            
+            ('F','Hetro'):'M',
+            ('F','Homo'):'F',
+
+            ('TM','Hetero'):'TF',
+            ('TM','Homo'):'TM',
+
+            ('TF','Hetero'):'TM',
+            ('TF','Homo'):'TF',
+        }
+        
+        user_partner_gender_preference = user_orientation_filter.get((user_gender, user_orientation))
+        print(f"user partner preference:{user_partner_gender_preference}")
         preferences_to_check = {
             'family_choices': 'family_plan',
             'drink_choices': 'drink',
@@ -478,7 +497,7 @@ class GetProfileMatches(GenericAPIView):
             combined_filter |= q_obj
 
         # Query to find matching user profiles
-        matching_profiles = UserProfile.objects.filter(combined_filter).exclude(user=user)
+        matching_profiles = UserProfile.objects.filter(combined_filter, user__gender=user_partner_gender_preference, user__orientation = user_orientation).exclude(user=user)
 
         # Serialize the matching user profiles
         serializer = UserProfileSerializer(matching_profiles, many=True)

@@ -53,12 +53,18 @@ class User(AbstractBaseUser):
     GENDER_CHOICES = (
         ('M', 'Male'),
         ('F', 'Female'),
-        ('TM', 'Transman'),
-        ('TW','Transwomen'),
+        ('TM', 'Transgender Male'),
+        ('TF','Transgender Female'),
+    )
+    ORIENTATION_CHOICES = (
+        ('Hetero', 'Heterosexual'),
+        ('Homo', 'Homo'),
+        ('Pan', 'Pansexual'),
+        ('Bi','Bisexual'),
     )
 
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
-
+    orientation = models.CharField(max_length=7, choices=ORIENTATION_CHOICES, null=True, blank=True)
     #required
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
@@ -99,6 +105,7 @@ def user_cover_photo_upload_path(instance, filename):
 
 class UserProfile(models.Model):
     
+   
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     
@@ -113,8 +120,6 @@ class UserProfile(models.Model):
     workout = models.ForeignKey("Workout", on_delete=models.SET_NULL, blank=True, null=True)
     smoke = models.ForeignKey("SmokeChoice", on_delete=models.SET_NULL, blank=True, null=True)
     languages = models.ManyToManyField('Language', related_name='users', blank=True)
-    looking_for = models.ManyToManyField('LookingFor', related_name='users', blank=True, null=True)
- 
     address_line1 = models.CharField(max_length=50, blank=True, null=True)
     address_line2 = models.CharField(max_length=50, blank=True, null=True)
     country = models.CharField(max_length=50, blank=True, null=True)
@@ -201,7 +206,7 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
-class LookingFor(models.Model):
+class Orientation(models.Model):
     name = models.CharField(max_length=10, unique=True)
     
     def __str__(self):
