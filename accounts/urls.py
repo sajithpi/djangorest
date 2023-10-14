@@ -1,6 +1,7 @@
 from django.urls import path, include
-from .api import GetUserData, UpdateProfilePhoto, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches
-from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView
+from .api import GetUserData, UpdateProfilePhoto, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA
+from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView
+from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
     path('api/getUser-data', GetUserData.as_view(), name='getUser-data'),
@@ -15,16 +16,18 @@ urlpatterns = [
     path('api/check-email-exists', CheckUserExists.as_view(), name='check-email-exists'),
     path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
     path('api/remove_interest', RemoveUserInterestView.as_view(), name='remove-user-interest'),
-    path('api/login', jwt_views.TokenObtainPairView.as_view(), name ='token_obtain_pair'),
+    # path('api/login', jwt_views.TokenObtainPairView.as_view(), name ='token_obtain_pair'),
+    path('api/login', jwt_views.TokenObtainPairView.as_view(serializer_class = CustomTokenObtainPairSerializer), name ='token_obtain_pair'),
     path('api/login/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
+    path('api/logout',LogoutView.as_view(),name='logout'),
     path('api/register',RegisterView.as_view(), name="sign_up"),
-
+    path('api/verify-account',VerifyAccount.as_view(), name='verify-account'),
 
     path('api/changePassword', RequestPasswordResetEmail.as_view(), name="change_password"),
     path('api/password-reset/<uidb64>/<token>/',PasswordTokenCheckAPI.as_view(),name='password_reset_confirm'),
     path('api/password-reset-complete',SetNewPasswordAPI.as_view(), name='password-reset-complete'), 
-
- 
+    path('api/send-otp',sendOTP.as_view(), name='send-otp'),
+    path('api/enable-2fa',Enable2FA.as_view(), name='enable-2fa')
     # path('forgot_password/', ForgotPassword.as_view(), name="forgot_password"),
     # path('reset_password_validate/<uidb64>/<token>', ResetPasswordValidate, name="reset_password_validate"),
     # path('reset_password', ResetPassword, name = 'forgot_password'),

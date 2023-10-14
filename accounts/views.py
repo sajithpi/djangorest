@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.views.decorators.csrf import csrf_exempt
 from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -11,13 +13,17 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
+from .otp import send_otp_via_mail, send_otp_whatsapp
 from .utils import Util
 from .models import User, UserProfile, CoverPhoto, Interest
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
+from django.conf import settings
+
 import json
 # Create your views here.
+
 
 class RegisterView(GenericAPIView):
     
@@ -43,7 +49,7 @@ class RegisterView(GenericAPIView):
             with transaction.atomic():
                 # Save the user
                 user = serializer.save()
-                
+                send_otp_via_mail(serializer.data['email'])
                 # Associate cover photos with the user's profile if provided
                 if cover_photos_data:
                     user_profile = UserProfile.objects.get(user=user)
@@ -67,8 +73,70 @@ class RegisterView(GenericAPIView):
 
         except Exception as e:
             # Handle other exceptions (e.g., database errors, file upload errors)
+            print(f"Error in registration:{e}")
             return Response({'status': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
+class VerifyAccount(GenericAPIView):
+    def post(self, request):
+        try:
+
+            otp = request.data.get('otp')
+            method = request.data.get('method')
+            email = request.data.get('email')
+            type = request.data.get('type') #login, account_active
+            
+            user = User.objects.filter(email = email).first()
+            print(f"user:{user}")
+            if type == 'account_active':
+                if not user:
+                    return Response(f"{'status':false, 'message':'Enter a valid email'}", status=status.HTTP_400_BAD_REQUEST)
+                if user.register_otp != otp:
+                    return Response(f"{'status':false, 'message':'Enter a valid otp'}", status=status.HTTP_400_BAD_REQUEST)
+                user.is_verified = True
+                user.save()
+                return Response(f"Account Verified Successfully",status=status.HTTP_200_OK)
+            elif type == 'login':
+                print(f"user login otp:{user.login_otp} otp:{otp}")
+                if user.login_otp != otp:
+                    return Response(f"OTP is invalid", status=status.HTTP_400_BAD_REQUEST)
+                user.has_2fa_passed = True
+                user.login_status = True
+                user.save()
+                return Response({'status':'success','message':'Login otp verification successful'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist as e:
+            return Response(f"User does't exist with this email", status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            print(f"error:{e}")
+            return Response(f"'error:{e}",status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+class sendOTP(GenericAPIView):
+    
+    def post(self, request):
+
+        method = request.data.get('method')
+        print(f"user:{self.request.user.id}")
+        user = User.objects.get(id = request.user.id)
+        email = user.email
+        print(f"email:{email}")
+        print(f"method:{method}")
+        if method == 'whatsapp':
+            message = send_otp_whatsapp()
+            return Response(message)
+        elif method == 'email':
+            send_otp_via_mail(email=email, type='register')
+            return Response(f"Login Otp sent into your email")
+        
+class LogoutView(GenericAPIView):
+    def post(self, request):
+        user = User.objects.get(id = request.user.id)
+        # token = RefreshToken(request.data.get('token'))
+        # token.blacklist()
+        user.has_2fa_passed = False
+        user.login_status = False
+        user.login_otp = None
+        user.save()
+        return Response({'status':'True','  message':'User Logout Successful'}, status=status.HTTP_200_OK)
 class ForgotPassword(GenericAPIView):
     def post(self, request):
         pass
@@ -91,7 +159,7 @@ class RequestPasswordResetEmail(GenericAPIView):
                 Util.send_mail(data)
 
 
-        return Response({'success':'We have sent you a link to reset your passwors'}, status=status.HTTP_200_OK)
+        return Response({'success':'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
     
 class PasswordTokenCheckAPI(GenericAPIView):
     def get(self, request, uidb64, token):
@@ -138,3 +206,4 @@ class CheckUserExists(APIView):
         else:
             return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
         
+

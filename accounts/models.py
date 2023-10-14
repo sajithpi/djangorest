@@ -47,7 +47,8 @@ class User(AbstractBaseUser):
     phone_number = models.CharField(max_length=50, default=None, null=True, blank=True)
     
     auth_provider = models.CharField(max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
-     # Add a many-to-many field for interests
+    register_otp = models.CharField(max_length=6, null=True, blank=True)
+    # Add a many-to-many field for interests
     interests = models.ManyToManyField('Interest', related_name='users', blank=True)
     
     GENDER_CHOICES = (
@@ -68,9 +69,17 @@ class User(AbstractBaseUser):
     #required
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    login_status = models.BooleanField(default=False)
+    has_2fa_passed = models.BooleanField(default=False)
+    has_2fa_enabled = models.BooleanField(default=False)
+    shared_secret = models.CharField(max_length=65, blank=True, null=True)
+    login_otp = models.CharField(max_length=7, blank=True, null=True)
+    login_otp_validity = models.DateTimeField(blank=True, null=True)
+
     is_superadmin = models.BooleanField(default=False)
 
     USERNAME_FIELD ='username'

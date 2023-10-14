@@ -4,15 +4,24 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference
 from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer
-from rest_framework import status
+from rest_framework import status, permissions
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
+from .otp import enable_tfa
+class TwoFactorAuthRequired(permissions.BasePermission):
+    def has_permission(self, request, view):
+        #check if the user has passed 2fa
+        user = User.objects.get(id=request.user.id)
+        if user.is_authenticated:
+            if user.has_2fa_enabled and not user.has_2fa_passed:
+                return False #Return false to deny the access
+            return True
 
 class GetUserData(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
     
     @swagger_auto_schema(
     operation_description="Get user data",  # Describe the operation
@@ -502,3 +511,9 @@ class GetProfileMatches(GenericAPIView):
         
         # return Response({'matching_profiles': serializer.data, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
         return Response({'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
+
+class Enable2FA(GenericAPIView):
+    def post(self, request):
+        user = self.request.user
+        enable_tfa(user= user)
+        return Response("Enabled 2FF", status=status.HTTP_200_OK)

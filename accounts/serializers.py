@@ -1,11 +1,26 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
+from . otp import send_otp_via_mail
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        # Add custom data to the response
+        _2fa = user.has_2fa_enabled
+        if _2fa == True:
+            send_otp_via_mail(user.email, 'login')
+            
+        print(f"2fa status:{_2fa}")
+        data['has_2fa_enabled'] = _2fa
+        return data
+    
 class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
