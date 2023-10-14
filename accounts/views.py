@@ -15,6 +15,7 @@ from .utils import Util
 from .models import User, UserProfile, CoverPhoto, Interest
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.db import transaction
 import json
 # Create your views here.
 
@@ -23,46 +24,50 @@ class RegisterView(GenericAPIView):
     parser_classes = (MultiPartParser,)
     
     def post(self, request):
-        serializer = UserSerializers(data=request.data, partial = True)
-        serializer.is_valid(raise_exception=True)
-        
-        # Extract cover photos from request data
-        cover_photos_data = request.FILES.getlist('cover_photos')
-        
-        # Extract cover photos from request data
-        profile_photo_data = request.FILES.get('profile_photo')
-        
-        # Extract the first cover photo if available
-        # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
-
-         # Extract the interests data from request data as a list
-        interests_data = json.loads(request.data.get('interests', '[]')) # Use getlist to retrieve a list 
-        
-        user = serializer.save()
-        
-        # Associate cover photos with the user's profile if provided
-        if cover_photos_data:
-            user_profile = UserProfile.objects.get(user=user)
-            for image_data in cover_photos_data:
-                CoverPhoto.objects.create(user_profile = user_profile, image = image_data)
-                
-                
-        # If a profile photo was provided, set it as the profile picture
-        if profile_photo_data:
-            user_profile = UserProfile.objects.get(user=user)
-            user_profile.profile_picture = profile_photo_data
-            user_profile.save()
-        print(f"interests_data:{interests_data}")
-        if interests_data:
-                interest_name = interest_name.strip()
-                print(f"interest_name:{interest_name}")
-                interest= Interest.objects.get(name=interest_name)
-                if interest:
-                    # user.user_ interests.add(interest)
-                    user.interests.add(interest)
+        try:
+            serializer = UserSerializers(data=request.data, partial = True)
+            serializer.is_valid(raise_exception=True)
             
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({'status':True,'message':'Registration Successful'}, status=status.HTTP_201_CREATED)
+            # Extract cover photos from request data
+            cover_photos_data = request.FILES.getlist('cover_photos')
+            
+            # Extract cover photos from request data
+            profile_photo_data = request.FILES.get('profile_photo')
+            
+            # Extract the first cover photo if available
+            # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
+
+            # Extract the interests data from request data as a list
+            interests_data = json.loads(request.data.get('interests', '[]')) # Use getlist to retrieve a list 
+            
+            with transaction.atomic():
+                # Save the user
+                user = serializer.save()
+                
+                # Associate cover photos with the user's profile if provided
+                if cover_photos_data:
+                    user_profile = UserProfile.objects.get(user=user)
+                    for image_data in cover_photos_data:
+                        CoverPhoto.objects.create(user_profile=user_profile, image=image_data)
+                        
+                # If a profile photo was provided, set it as the profile picture
+                if profile_photo_data:
+                    user_profile = UserProfile.objects.get(user=user)
+                    user_profile.profile_picture = profile_photo_data
+                    user_profile.save()
+
+                # Add interests
+                if interests_data:
+                    for interest_name in interests_data:
+                        interest = Interest.objects.get(name=interest_name)
+                        if interest:
+                            user.interests.add(interest)
+
+                return Response({'status': True, 'message': 'Registration Successful'}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            # Handle other exceptions (e.g., database errors, file upload errors)
+            return Response({'status': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 class ForgotPassword(GenericAPIView):
     def post(self, request):
