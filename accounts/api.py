@@ -413,29 +413,6 @@ class GetProfileMatches(GenericAPIView):
         #create a dictionary to store matched preference
         matched_preferences = {}
         match_count = 0
-        # if user_preferences.family_choices.all():
-        #     matched_preferences['family_plan'] = [str(choice) for choice in user_preferences.family_choices.all()]
-        
-        # if user_preferences.drink_choices.all():
-        #     matched_preferences['drink'] = [str(choice) for choice in user_preferences.drink_choices.all()]
-        
-        # if user_preferences.religion_choices.all():
-        #     matched_preferences['religion'] = [str(choice) for choice in user_preferences.religion_choices.all()]
-        
-        # if user_preferences.education_choices.all():
-        #     matched_preferences['education'] = [str(choice) for choice in user_preferences.education_choices.all()]
-        
-        # if user_preferences.relationship_choices.all():
-        #     matched_preferences['relationship_goals'] = [str(choice) for choice in user_preferences.relationship_choices.all()]
-        
-        # if user_preferences.workout_choices.all():
-        #     matched_preferences['workout'] = [str(choice) for choice in user_preferences.workout_choices.all()]
-        
-        # if user_preferences.smoke_choices.all():
-        #     matched_preferences['smoke'] = [str(choice) for choice in user_preferences.smoke_choices.all()]
-        
-        # if user_preferences.languages_choices.all():
-        #     matched_preferences['languages']  = [str(choice) for choice in user_preferences.languages_choices.all()]
         
         for queryset_attr, preference_key in preferences_to_check.items():
             queryset = getattr(user_preferences, queryset_attr).all()
@@ -445,31 +422,6 @@ class GetProfileMatches(GenericAPIView):
         preferences_filters = []
 
 
-        # if 'family_plan' in matched_preferences:
-        #     preferences_filters.append(Q(family_plan__in=user_preferences.family_choices.all()))
-
-        # if 'drink' in matched_preferences:
-        #     preferences_filters.append(Q(drink__in=user_preferences.drink_choices.all()))
-
-        # if 'religion' in matched_preferences:
-        #     preferences_filters.append(Q(religion__in=user_preferences.religion_choices.all()))
-
-        # if 'education' in matched_preferences:
-        #     preferences_filters.append(Q(education__in=user_preferences.education_choices.all()))
-        
-        # if 'relationship_goals' in matched_preferences:
-        #     preferences_filters.append(Q(relationship_goals__in = user_preferences.relationship_choices.all()))
-        
-        # if 'workout' in matched_preferences:
-        #     preferences_filters.append(Q(workout__in = user_preferences.workout_choices.all()))
-        
-        # if 'smoke' in matched_preferences:
-        #     preferences_filters.append(Q(smoke__in = user_preferences.smoke_choices.all()))
-            
-        # if 'languages' in matched_preferences:
-        #     preferences_filters.append(Q(languages__in = user_preferences.languages_choices.all()))
-        
-        
         preference_fields = {
             'family_plan': 'family_choices',
             'drink': 'drink_choices',
@@ -527,12 +479,14 @@ class GetProfileMatches(GenericAPIView):
             # user_preferences = ProfilePreference.objects.get(user_profile=profile)
             preferences_by_user_id[user_id] = {}
             preferences_by_user_id[user_id]['id'] = profile.user.id
-            preferences_by_user_id[user_id]['interests'] = str(profile.user.interests)
             preferences_by_user_id[user_id]['username'] = profile.user.username
-            preferences_by_user_id[user_id]['profile_picture'] = profile.profile_picture if profile.profile_picture  else None
+            preferences_by_user_id[user_id]['interests'] = [interests.name for interests in profile.user.interests.all()]
             preferences_by_user_id[user_id]['date_of_birth'] = profile.user.date_of_birth
             age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
             preferences_by_user_id[user_id]['age'] =age
+            preferences_by_user_id[user_id]['profile_picture'] = str(profile.profile_picture) if profile.profile_picture  else None
+            preferences_by_user_id[user_id]['height'] = profile.height
+            preferences_by_user_id[user_id]['languages'] = [language.name for language in profile.languages.all()]
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():
@@ -546,50 +500,5 @@ class GetProfileMatches(GenericAPIView):
             print(f"match percentage:{match_percentage}")
                             
         
-            
-            # if user_preferences.family_choices.all():
-            #     for choice in user_preferences.family_choices.all():
-            #         if str(profile.family_plan) == str(choice):
-            #             preferences_by_user_id[user_id]['family_plan'] = str(profile.family_plan)
-            
-            # if user_preferences.drink_choices.all():
-            #     for choice in user_preferences.drink_choices.all():
-            #         if str(profile.drink) == str(choice):
-            #             preferences_by_user_id[user_id]['drink'] = str(profile.drink)
-            
-            # if user_preferences.religion_choices.all():
-            #     for choice in user_preferences.religion_choices.all():
-            #         if str(profile.religion) == str(choice):
-            #             preferences_by_user_id[user_id]['religion'] = str(profile.religion)
-                        
-            # if user_preferences.education_choices.all():
-            #     for choice in user_preferences.education_choices.all():
-            #         if str(profile.education) == str(choice):
-            #             preferences_by_user_id[user_id]['education'] = str(profile.education)
-            
-            # if user_preferences.relationship_choices.all():
-            #     for choice in user_preferences.education_choices.all():
-            #         if str(profile.relationship_goals) == str(profile.relationship_goals):
-            #             preferences_by_user_id[user_id]['relationship_goals'] = str(profile.relationship_goals)
-            
-            # if user_preferences.workout_choices.all():
-            #     for choice in user_preferences.workout_choices.all():
-            #         if str(profile.workout) == str(choice):
-            #             preferences_by_user_id[user_id]['workout'] = str(profile.workout)
-            
-            # if user_preferences.smoke_choices.all():
-            #     for choice in user_preferences.smoke_choices.all():
-            #         if str(profile.smoke) == str(choice):
-            #             preferences_by_user_id[user_id]['smoke'] = str(profile.smoke)
-                    
-            # if user_preferences.languages_choices.all():
-            #     for choice in user_preferences.languages_choices.all():
-            #         if str(profile.languages) == str(choice):
-            #             preferences_by_user_id[user_id]['languages']
-                        
-                # [str(choice) for choice in user_preferences.religion_choices.all()]
-
-            # Add similar checks for other preference categories
-
-        # return Response({'matching_profiles': serializer.data, 'matched_preferences': matched_preferences, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
-        return Response({'matching_profiles': serializer.data, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
+        # return Response({'matching_profiles': serializer.data, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
+        return Response({'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
