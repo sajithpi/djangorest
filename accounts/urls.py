@@ -29,4 +29,4 @@ urlpatterns = [
     path('api/password-reset-complete',SetNewPasswordAPI.as_view(), name='password-reset-complete'), 
     path('api/send-otp',sendOTP.as_view(), name='send-otp'),
     path('api/enable-2fa',Enable2FA.as_view(), name='enable-2fa')
-    
+]
