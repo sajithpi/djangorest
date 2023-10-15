@@ -11,6 +11,8 @@ from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
 from .otp import enable_tfa
+from user_agents import parse
+
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
         #check if the user has passed 2fa
@@ -30,8 +32,18 @@ class GetUserData(GenericAPIView):
     )
     def get(self, request):
 
+        user_agent_string = request.META.get('HTTP_USER_AGENT')
+        user_agent = parse(user_agent_string)
+
         user = self.request.user
-         
+        print(f"user agent details:{user_agent}")
+        device = user_agent.device
+        print(f"device:{device}")
+        client_ip = request.META.get('REMOTE_ADDR')
+        print(f"my ip:{client_ip}")
+
+        print(f"browser:{user_agent.browser}")
+
          #get the user's profile 
         profile = UserProfile.objects.get(user=user)
         
