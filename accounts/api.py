@@ -10,7 +10,6 @@ from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
-from .otp import enable_tfa
 from user_agents import parse
 
 class TwoFactorAuthRequired(permissions.BasePermission):
@@ -526,6 +525,8 @@ class GetProfileMatches(GenericAPIView):
 
 class Enable2FA(GenericAPIView):
     def post(self, request):
-        user = self.request.user
-        enable_tfa(user= user)
-        return Response("Enabled 2FF", status=status.HTTP_200_OK)
+        
+        user = User.objects.get(id = self.request.user.id)
+        user.has_2fa_enabled = True
+        user.save()
+        return Response(f"Enabled 2FF for user {self.request.user}", status=status.HTTP_200_OK)

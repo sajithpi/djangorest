@@ -9,6 +9,10 @@ from rest_framework import status
 import pyotp
 import base64
 import os
+from django.utils import timezone
+import pytz
+
+current_timezone = settings.TIME_ZONE
 
 def send_otp_via_mail(email, type):
     subject = 'Your account verification email'
@@ -20,10 +24,12 @@ def send_otp_via_mail(email, type):
     user_obj = User.objects.filter(email = email).first()
     if type == 'login':
         if user_obj.has_2fa_enabled:
-            otp = generate_login_otp(email=email)
             user_obj.login_otp = otp
-            user_obj.login_otp_validity = datetime.now() + timedelta(minutes=1) # Set the validity for 5 minutes
-        return True
+            print(f"current timezone:{current_timezone}")
+
+            now = settings.NOW
+            print(f"current time:{now}")
+            user_obj.login_otp_validity = now + timedelta(minutes=1) # Set the validity for 5 minute
     else:
         user_obj.otp = otp
     user_obj.save()
@@ -39,21 +45,8 @@ def send_otp_whatsapp():
 
     
     return (f"OTP sent to {to} successfully: {message.sid}")
-def enable_tfa(user):
-    user = User.objects.filter(username = user).first()
-    secret_bytes = os.urandom(10) # Generate a random 80-bit (10-byte) secret
-    shared_secret = base64.b32encode(secret_bytes).decode()
-    print(f"shared secret = {shared_secret}")
-    user.shared_secret = shared_secret
-    user.two_step_verification = True
-    user.save()
+
     
-def generate_login_otp(email):
-    user = User.objects.filter(email = email).first()
-    shared_secret = user.shared_secret
-    totp = pyotp.TOTP(shared_secret)
-    otp = totp.now()
-    return otp
 
 def verify_otp(user_id, otp, type):
     if type == 'login':

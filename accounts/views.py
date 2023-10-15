@@ -20,10 +20,11 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
 from django.conf import settings
-
+from django.utils import timezone
 import json
 # Create your views here.
 
+now = timezone.now()    # Get the current time 
 
 class RegisterView(GenericAPIView):
     
@@ -99,7 +100,9 @@ class VerifyAccount(GenericAPIView):
             elif type == 'login':
                 print(f"user login otp:{user.login_otp} otp:{otp}")
                 if user.login_otp != otp:
-                    return Response(f"OTP is invalid", status=status.HTTP_400_BAD_REQUEST)
+                    return Response(f"OTP is invalid", status=status.HTTP_403_FORBIDDEN)
+                if user.login_otp_validity < now:
+                    return Response(f"Otp validity expired", status=status.HTTP_403_FORBIDDEN)
                 user.has_2fa_passed = True
                 user.login_status = True
                 user.save()
