@@ -138,7 +138,8 @@ class UserProfile(models.Model):
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user.email
+        return self.user.username
+    
 class ProfilePreference(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     family_choices = models.ManyToManyField('FamilyPlanChoice', related_name='profile_preferences_family', blank=True)

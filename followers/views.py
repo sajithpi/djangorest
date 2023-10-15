@@ -87,34 +87,64 @@ import json
 # Create your views here.
 
 class AddRemoveFavorite(GenericAPIView):
-
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'user': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description="The ID of the user to favorite/unfavorite."
+                ),
+            },
+            required=['user'],
+        ),
+        responses={
+            200: "Favorite/unfavorite action was successful",
+            400: "Bad request or user is already favorited/unfavorited",
+            500: "Internal server error",
+        },
+    )
     def post(self, request):
+        """
+        Favorite/Unfavorite a user.
+        """
         try:
             print(f"request data:{request.data}")
-            user_id = request.data.get('user')
-            favored_by = request.data.get('favored_by')
-            user = UserProfile.objects.get(user = favored_by)
-            favoured_user = UserProfile.objects.get(user = user_id)
-            exists = Favorite.objects.filter(user = user, favored_by = favored_by)
+            user = request.data.get('user')
+            favored_by = UserProfile.objects.get(user__id = request.user.id)
+            user = UserProfile.objects.get(user = user)
+            # favoured_user = UserProfile.objects.get(user = favored_by)
+            exists = Favorite.objects.filter(user = user, favored_by = favored_by).first()
             if exists:
                 exists.delete()
                 return Response({'status':'True', 
-                                'message': f"{favoured_user.user.username} is already Favorited {user.user.username} so user in unfavored this user",
-                                'action':f"{favoured_user.user.username}' is unfavorited {user.user.username}"
+                                'message': f"{favored_by.user.username} is already Favorited {user.user.username} so user in unfavored this user",
+                                'action':f"{favored_by.user.username}' is unfavored {user.user.username}"
                                 }, 
                                 status=status.HTTP_200_OK)
-            favorite = Favorite.objects.create(user = user, favored_by = favoured_user)
+            favorite = Favorite.objects.create(user = user, favored_by = favored_by)
             favorite.save()
-            print(f"user:{user} favored_user:{favoured_user}")
+            print(f"user:{user} favored_user:{request.user}")
             return Response({'message':'Success', 
-                            'description':f"{favoured_user.user.username} is Favorited {user.user.username} Successfully"},
+                            'description':f"{favored_by.user.username} is Favorited {user.user.username} Successfully"},
                             status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
         
 class GetFavoriteUsers(GenericAPIView):
-    def post(self,request):
-        user_id = request.data.get('user_id')
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: "Successful response with admire count and favorite user data",
+            404: "User not found",
+        },
+    )
+    
+    def post(self, request):
+        """
+        Get favorite users and admire count. Note:User Must be login
+        """
+        user_id = request.user.id
         
         # Ensure the user exists or return a 404 response if not found
         user = get_object_or_404(User, id=user_id)
