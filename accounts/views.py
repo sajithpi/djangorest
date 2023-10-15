@@ -171,6 +171,7 @@ class LogoutView(GenericAPIView):
         user.has_2fa_passed = False
         user.login_status = False
         user.login_otp = None
+        user.login_otp_validity = None
         user.save()
         return Response({'status':'True','  message':'User Logout Successful'}, status=status.HTTP_200_OK)
 class ForgotPassword(GenericAPIView):
