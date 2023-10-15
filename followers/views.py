@@ -19,7 +19,7 @@ from accounts.models import User, UserProfile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 import json
-from accounts.api import get_blocked_users_data
+from accounts.api import get_blocked_users_data, add_notification
 # Create your views here.
 """_summary_
     First two classes for Favorites
@@ -55,8 +55,10 @@ class AddRemoveFavorite(GenericAPIView):
             user = UserProfile.objects.get(user = user)
             # favoured_user = UserProfile.objects.get(user = favored_by)
             exists = Favorite.objects.filter(user = user, favored_by = favored_by).first()
+            
             if exists:
                 exists.delete()
+
                 return Response({'status':'True', 
                                 'message': f"{favored_by.user.username} is already Favorited {user.user.username} so user in unfavored this user",
                                 'action':f"{favored_by.user.username}' is unfavored {user.user.username}"
@@ -64,9 +66,11 @@ class AddRemoveFavorite(GenericAPIView):
                                 status=status.HTTP_200_OK)
             favorite = Favorite.objects.create(user = user, favored_by = favored_by)
             favorite.save()
+            description = f"{favored_by.user.username} is Favorited {user.user.username}'"
+            add_notification(from_user=favored_by, to_user=user, type='follow', description=description)
             print(f"user:{user} favored_user:{request.user}")
             return Response({'message':'Success', 
-                            'description':f"{favored_by.user.username} is Favorited {user.user.username} Successfully"},
+                            'description':f"{description} Successfully"},
                             status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
@@ -156,6 +160,8 @@ class LikeDislike(GenericAPIView):
                                 status=status.HTTP_200_OK)
             like = Like.objects.create(user = user, liked_by = liked_by)
             like.save()
+            description = f"{liked_by.user.username} is liked {user.user.username}'"
+            add_notification(from_user=liked_by, to_user=user, type='like', description=description)
             print(f"user:{user} favored_user:{request.user}")
             return Response({'message':'Success', 
                             'description':f"{liked_by.user.username} is liked {user.user.username} Successfully"},

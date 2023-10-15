@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -203,3 +203,11 @@ class ProfilePreferenceSerializer(serializers.ModelSerializer):
 
     #         instance.save()
     #         return instance
+
+class NotificationSerializer(serializers.ModelSerializer):
+    from_user = serializers.CharField(source='from_user.user.username', read_only=True)
+    to_user = serializers.CharField(source='to_user.user.username', read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ['from_user', 'to_user', 'type', 'description', 'user_has_seen', 'date_added']

@@ -139,7 +139,16 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+class Notification(models.Model):
     
+    from_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='from_user')
+    to_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='to_user')
+    type = models.CharField(max_length=10, blank=True, null=True)
+    description = models.CharField(max_length=25, blank=True, null=True)
+    user_has_seen = models.BooleanField(default=False)
+    date_added = models.DateTimeField(auto_now_add=True)
+
 class ProfilePreference(models.Model):
     user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     family_choices = models.ManyToManyField('FamilyPlanChoice', related_name='profile_preferences_family', blank=True)

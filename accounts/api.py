@@ -2,8 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference
-from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer
+from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
+from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from rest_framework import status, permissions
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -11,6 +11,8 @@ from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
 from user_agents import parse
+from django.core import serializers
+import json
 from followers.models import Favorite, Like, BlockedUser
 
 class TwoFactorAuthRequired(permissions.BasePermission):
@@ -597,3 +599,21 @@ class Enable2FA(GenericAPIView):
         user.save()
         return Response(f"Enabled 2FF for user {self.request.user}", status=status.HTTP_200_OK)
     
+def add_notification(from_user, to_user, type, description ):
+
+    notification = Notification.objects.create(from_user = from_user, to_user = to_user,
+                                               type = type, description = description)
+    notification.save()
+
+class GetNotifications(GenericAPIView):
+
+    def get(self, request):
+        user_profile = UserProfile.objects.get(user = self.request.user)
+        notifications = Notification.objects.filter(to_user = user_profile)
+        notifications .update(user_has_seen = True)
+        
+        # Serialize the notifications using your custom serializer
+        serializer = NotificationSerializer(notifications, many = True)
+        serializer_data = serializer.data
+
+        return Response({'status':True, 'notifications':serializer_data}, status=status.HTTP_200_OK)
