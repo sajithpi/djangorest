@@ -11,7 +11,7 @@ from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
 from user_agents import parse
-from followers.models import Favorite
+from followers.models import Favorite, Like
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -531,7 +531,9 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id[user_id]['height'] = profile.height
             preferences_by_user_id[user_id]['languages'] = [language.name for language in profile.languages.all()]
             favorite_status = True if Favorite.objects.filter(user = profile, favored_by = user_profile).first() else False
+            like_status = True if Like.objects.filter(user = profile, liked_by = user_profile).first() else False
             preferences_by_user_id[user_id]['favorite_status'] = favorite_status
+            preferences_by_user_id[user_id]['like_status'] = like_status
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():
