@@ -14,10 +14,12 @@ from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
 from .models import Favorite, Like, BlockedUser
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from accounts.models import User, UserProfile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 import json
+from accounts.api import get_blocked_users_data
 # Create your views here.
 """_summary_
     First two classes for Favorites
@@ -87,6 +89,8 @@ class GetFavoriteUsers(GenericAPIView):
         # Ensure the user exists or return a 404 response if not found
         user = get_object_or_404(User, id=user_id)
         user_profile = UserProfile.objects.get(user = user)
+        blocked_users = get_blocked_users_data(user_profile=user_profile)
+        print(f"blocked_users:{blocked_users}")
         # Calculate total followers and total following for the user
         admire_count = Favorite.objects.filter(user=user_profile).count()
         my_favorites = Favorite.objects.filter(favored_by=user_profile).count()
@@ -94,14 +98,15 @@ class GetFavoriteUsers(GenericAPIView):
         # Get the list of users following the current user
         my_admire_list = Favorite.objects.filter(user=user_profile).values_list('favored_by', flat=True)
 
+    
         #fetch username, and user profile picture of each user in the users_following_current_user list
-        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture')
+        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
 
         #get the list of users where the current user following
         my_favorite_list = Favorite.objects.filter(favored_by=user_profile).values_list('user',flat=True)
 
         #fetch username, and user profile picture of each user in the users_following_current_user list
-        my_favorite_data = UserProfile.objects.filter(user__id__in=my_favorite_list).values('user__username','user__id','profile_picture')
+        my_favorite_data = UserProfile.objects.filter(user__id__in=my_favorite_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
 
         return Response({
             'message': 'Success',
@@ -178,19 +183,21 @@ class GetLikeUsers(GenericAPIView):
         # Calculate total likes you got and your likes 
         admire_count = Like.objects.filter(user=user_profile).count()
         my_likes = Like.objects.filter(liked_by=user_profile).count()
-        
+
+        blocked_users = get_blocked_users_data(user_profile=user_profile)
+
         # Get the list of users liked the current user
         my_admire_list = Like.objects.filter(user=user_profile).values_list('liked_by', flat=True)
 
         #fetch username, and user profile picture of each user in the users_liked current_user list
-        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture')
+        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
 
         #get the list of users where the current user liked
         my_like_list = Like.objects.filter(liked_by=user_profile).values_list('user',flat=True)
 
         #fetch username, and user profile picture of each user in the user liked  list
-        my_like_data = UserProfile.objects.filter(user__id__in=my_like_list).values('user__username','user__id','profile_picture')
-
+        my_like_data = UserProfile.objects.filter(user__id__in=my_like_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
+        
         return Response({
             'message': 'Success',
             'admire_count': admire_count,
@@ -227,7 +234,12 @@ class BLockUser(GenericAPIView):
                                 status=status.HTTP_200_OK)
             block_user = BlockedUser.objects.create(user = user, blocked_by = blocked_by)
             block_user.save()
-        
+            remove_favorite = Favorite.objects.filter(Q(user = user) | Q(user = blocked_by), 
+                                                      Q(favored_by = blocked_by) | Q(favored_by = user))
+            remove_favorite.delete()
+            remove_likes = Like.objects.filter(Q(user = user) | Q(user=blocked_by),
+                                                Q(liked_by=blocked_by) | Q(user = user))
+            remove_likes.delete()
             return Response({'message':'Success', 
                             'description':f"{blocked_by.user.username} is blocked {user.user.username} Successfully"},
                             status=status.HTTP_200_OK)
