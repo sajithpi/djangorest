@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'accounts',
     'social_auth',
     'followers',
+
+
     'rest_framework',
     'corsheaders',
     'drf_yasg',

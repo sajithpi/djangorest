@@ -1,9 +1,9 @@
 from django.contrib import admin
-from . models import Follower
+from . models import Favorite
 # Register your models here.
-class FollowerAdmin(admin.ModelAdmin):
-    list_display = ('id', 'followed_by', 'following')
-    list_filter = ('followed_by', 'following')
-    search_fields = ('followed_by', 'following')
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'favored_by')
+    list_filter = ('user', 'favored_by')
+    search_fields = ('user', 'favored_by')
     
-admin.site.register(Follower, FollowerAdmin)
+admin.site.register(Favorite, FavoriteAdmin)

@@ -1,19 +1,20 @@
 from rest_framework import serializers
-from .models import Follower
+from .models import Favorite
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
 
-class FollowSerializer(serializers.ModelSerializer):
+class FavoriteSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = Follower
-        fields = ['followed_by', 'following']
+        model = Favorite
+        fields = ['favored_by']
 
         def create(self, validate_data):
             print(f"validate data:{validate_data}")
-            follow_Data = Follower.objects.create(followed_by=validate_data['followed_by'],
-                                                  following=validate_data['following'])
-            follow_Data.save()
-            return follow_Data
+            user = self.context['user']
+            favorite_data = Favorite.objects.create(user=user,
+                                                  favored_by=validate_data['favored_by'])
+            favorite_data.save()
+            return favorite_data
