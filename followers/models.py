@@ -14,3 +14,7 @@ class Favorite(models.Model):
 class Like(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='like')
     liked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='liked_by')
+
+class BlockedUser(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_user')
+    blocked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_by')

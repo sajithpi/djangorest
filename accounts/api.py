@@ -11,7 +11,7 @@ from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
 from user_agents import parse
-from followers.models import Favorite, Like
+from followers.models import Favorite, Like, BlockedUser
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -407,7 +407,37 @@ class UpdateProfilePreference(GenericAPIView):
                 return Response({'message':"User Preference Updated Successfully", 'data':serializer.data}, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+
+
+def get_blocked_users_data(user_profile):
+        """
+        Get blocked users. Note: User must be logged in.
+        """    
+        
+        # Ensure the user exists or return a 404 response if 
+        # user_profile = UserProfile.objects.get(user = user)
+        
+        my_blocked_user_count = BlockedUser.objects.filter(blocked_by=user_profile).count()
+
+         # Get the list of users blocked the current user
+        users_blocked_me = BlockedUser.objects.filter(user=user_profile).values_list('blocked_by', flat=True)
+
+        #fetch username, and user profile picture of each user in the users blocked current_user list
+        users_blocked__data = UserProfile.objects.filter(user__id__in=users_blocked_me).values('user__id')
+        users_blocked__id = [user['user__id'] for user in users_blocked__data]
+        #get the list of users where the current user blocked
+        my_blocked_list = BlockedUser.objects.filter(blocked_by=user_profile).values_list('user',flat=True)
+
+        #fetch username, and user profile picture of each user in the user liked  list
+        my_blocked_users_data = UserProfile.objects.filter(user__id__in=my_blocked_list).values('user__id')
+        my_blocked_users_id = [user['user__id'] for user in my_blocked_users_data]
+        
+        blocked_users = list(set(users_blocked__id + my_blocked_users_id))
+        
+        return blocked_users
+    
+
+
 class GetProfileMatches(GenericAPIView):
     @swagger_auto_schema(
         responses={
@@ -425,6 +455,8 @@ class GetProfileMatches(GenericAPIView):
         print(f"user preferences:{user_preferences}")
         print(f"family preference:{user_preferences.family_choices.all()}")
         
+        blocked_users = get_blocked_users_data(user_profile=user_profile)
+        print(f"blocked users:{blocked_users}")
         user_orientation_filter = {
             ('M','Hetero'):'F',
             ('M','Homo'):'M',
@@ -490,9 +522,11 @@ class GetProfileMatches(GenericAPIView):
         combined_filter = Q()
         for q_obj in preferences_filters:
             combined_filter |= q_obj
+        # Create a Q object to represent the exclusion condition
+        exclude_blocked_users = Q(user__id__in=blocked_users)
 
         # Query to find matching user profiles
-        matching_profiles = UserProfile.objects.filter(combined_filter, user__gender=user_partner_gender_preference, user__orientation = user_orientation).exclude(user=user)
+        matching_profiles = UserProfile.objects.filter(combined_filter & ~exclude_blocked_users, user__gender=user_partner_gender_preference, user__orientation = user_orientation)
 
         # Serialize the matching user profiles
         serializer = UserProfileSerializer(matching_profiles, many=True)
@@ -513,12 +547,11 @@ class GetProfileMatches(GenericAPIView):
         # Create a dictionary to store preferences by user ID
         preferences_by_user_id = {}
 
-
         current_date = datetime.now()
         for profile in matching_profiles:
             user_id = profile.user.id
             matches_count = 0
-            print(f"user:{user_id}\n")
+        
             # user_preferences = ProfilePreference.objects.get(user_profile=profile)
             preferences_by_user_id[user_id] = {}
             preferences_by_user_id[user_id]['id'] = profile.user.id
@@ -563,3 +596,4 @@ class Enable2FA(GenericAPIView):
         user.has_2fa_enabled = True
         user.save()
         return Response(f"Enabled 2FF for user {self.request.user}", status=status.HTTP_200_OK)
+    

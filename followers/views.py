@@ -12,7 +12,7 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .models import Favorite, Like
+from .models import Favorite, Like, BlockedUser
 from django.shortcuts import get_object_or_404
 from accounts.models import User, UserProfile
 from drf_yasg import openapi
@@ -78,7 +78,7 @@ class GetFavoriteUsers(GenericAPIView):
         },
     )
     
-    def post(self, request):
+    def get(self, request):
         """
         Get favorite users and admire count. Note:User Must be login
         """
@@ -159,9 +159,17 @@ class LikeDislike(GenericAPIView):
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
 
 class GetLikeUsers(GenericAPIView):
-    
-    def post(self, request):
-        
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: "Successful response with admire count and favorite user data",
+            404: "User not found",
+        },
+    )
+    def get(self, request):
+        """
+        Get favorite users and admire count. Note: User must be logged in.
+        """
         user_id = request.user.id
         
         # Ensure the user exists or return a 404 response if not found
@@ -189,5 +197,74 @@ class GetLikeUsers(GenericAPIView):
             'my_likes': my_likes,
             'my_admires_users': my_admires_data,
             'my_like_data':my_like_data,
+        }, status=status.HTTP_200_OK)
+    
+
+class BLockUser(GenericAPIView):
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: "Successful response with block/unblock message",
+            404: "User not found",
+        },
+    )
+    def post(self, request):
+        """
+        Block or unblock a user. Note: User must be logged in.
+        """        
+        try:
+            print(f"request data:{request.data}")
+            user = request.data.get('user')
+            blocked_by = UserProfile.objects.get(user__id = request.user.id)
+            user = UserProfile.objects.get(user = user)
+            
+            blocked_user = BlockedUser.objects.filter(user = user, blocked_by = blocked_by).first()
+            if blocked_user:
+                blocked_user.delete() #unblock if the user is blocked
+                return Response({'status':'True', 
+                                'action':f"{blocked_by.user.username}' is unbloked {user.user.username}"
+                                }, 
+                                status=status.HTTP_200_OK)
+            block_user = BlockedUser.objects.create(user = user, blocked_by = blocked_by)
+            block_user.save()
+        
+            return Response({'message':'Success', 
+                            'description':f"{blocked_by.user.username} is blocked {user.user.username} Successfully"},
+                            status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist as e:
+            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
+
+
+class GetBlockedUsers(GenericAPIView):
+    @swagger_auto_schema(
+        request_body=None,
+        responses={
+            200: "Successful response with blocked users' data",
+            404: "User not found",
+        },
+    )
+    def get(self, request):
+        """
+        Get blocked users. Note: User must be logged in.
+        """    
+        user_id = request.user.id
+        
+        # Ensure the user exists or return a 404 response if not found
+        user = get_object_or_404(User, id=user_id)
+        user_profile = UserProfile.objects.get(user = user)
+        
+        my_blocked_user_count = BlockedUser.objects.filter(blocked_by=user_profile).count()
+        
+    
+        #get the list of users where the current user blocked
+        my_blocked_list = BlockedUser.objects.filter(blocked_by=user_profile).values_list('user',flat=True)
+
+        #fetch username, and user profile picture of each user in the user liked  list
+        my_blocked_users_data = UserProfile.objects.filter(user__id__in=my_blocked_list).values('user__username','user__id','profile_picture')
+
+        return Response({
+            'message': 'Success',
+            'my_blocked_user_count': my_blocked_user_count,
+            'my_blocked_users_data':my_blocked_users_data,
         }, status=status.HTTP_200_OK)
     
