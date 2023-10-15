@@ -79,11 +79,26 @@ class RegisterView(GenericAPIView):
     
 
 class VerifyAccount(GenericAPIView):
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'otp': openapi.Schema(type=openapi.TYPE_STRING, description='The OTP'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='The email'),
+                'type': openapi.Schema(type=openapi.TYPE_STRING, description='Type (login or account_active(for account activation))'),
+            }
+        ),
+        responses={
+            200: "Account Verified Successfully",
+            400: "Bad Request",
+            403: "Forbidden",
+            500: "Internal Server Error",
+        },
+    )
     def post(self, request):
         try:
 
             otp = request.data.get('otp')
-            method = request.data.get('method')
             email = request.data.get('email')
             type = request.data.get('type') #login, account_active
             
@@ -115,8 +130,21 @@ class VerifyAccount(GenericAPIView):
             
 class sendOTP(GenericAPIView):
     
-    def post(self, request):
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'type': openapi.Schema(type=openapi.TYPE_STRING, description='Type (e.g., login, account_active)'),
+                'method': openapi.Schema(type=openapi.TYPE_STRING, description='Method (whatsapp or email)'),
+            }
+        ),
+        responses={
+            200: "Success",
+        },
+    )
+    def post(self, request):
+        type = request.data.get('type')
         method = request.data.get('method')
         print(f"user:{self.request.user.id}")
         user = User.objects.get(id = request.user.id)
@@ -127,10 +155,15 @@ class sendOTP(GenericAPIView):
             message = send_otp_whatsapp()
             return Response(message)
         elif method == 'email':
-            send_otp_via_mail(email=email, type='register')
-            return Response(f"Login Otp sent into your email")
+            send_otp_via_mail(email=email, type=type)
+            return Response(f"{type} Otp sent into your email")
         
 class LogoutView(GenericAPIView):
+    @swagger_auto_schema(
+        responses={
+            200: "User Logout Successful",
+        },
+    )
     def post(self, request):
         user = User.objects.get(id = request.user.id)
         # token = RefreshToken(request.data.get('token'))

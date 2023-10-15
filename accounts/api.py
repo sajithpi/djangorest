@@ -408,7 +408,11 @@ class UpdateProfilePreference(GenericAPIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
 class GetProfileMatches(GenericAPIView):
-    
+    @swagger_auto_schema(
+        responses={
+            200: "Success",
+        },
+    )
     def get(self, request):
         # Retrieve the user's preferences
         user = self.request.user
@@ -542,6 +546,12 @@ class GetProfileMatches(GenericAPIView):
         return Response({'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
 
 class Enable2FA(GenericAPIView):
+    
+    @swagger_auto_schema(
+        responses={
+            200: "2FA Enabled Successfully",
+        },
+    )
     def post(self, request):
         
         user = User.objects.get(id = self.request.user.id)
