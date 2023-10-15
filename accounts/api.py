@@ -531,7 +531,7 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id[user_id]['height'] = profile.height
             preferences_by_user_id[user_id]['languages'] = [language.name for language in profile.languages.all()]
             favorite_status = True if Favorite.objects.filter(user = profile, favored_by = user_profile).first() else False
-            preferences_by_user_id[user_id]['favourite_status'] = favorite_status
+            preferences_by_user_id[user_id]['favorite_status'] = favorite_status
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():

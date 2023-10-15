@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
+from decouple import config
+
 from datetime import datetime, timedelta
 
 import pytz
@@ -27,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=1(l+42ife-$=o#9p-perk6@6#7fe6-$o^4-q(@k3)a*xq+$5t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default = False, cast=bool)
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['*']
@@ -196,13 +198,13 @@ MEDIA_ROOT = BASE_DIR/'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Email Configuration
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'sajithviolin96@gmail.com'
-EMAIL_HOST_PASSWORD = 'kdofppdwydfdnucc'
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
 
 
-TWILIO_ACCOUNT_SID = 'ACf0a1c37967ba963c2dffb1e331351d3a'
-TWILIO_AUTH_TOKEN = '694081a0440b7b4322e222218bf89455'
-TWILIO_PHONE_NUMBER = '+14155238886'
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
