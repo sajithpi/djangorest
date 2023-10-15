@@ -20,7 +20,25 @@ class TwoFactorAuthRequired(permissions.BasePermission):
             if user.has_2fa_enabled and not user.has_2fa_passed:
                 return False #Return false to deny the access
             return True
+class Test(GenericAPIView):
+    permission_classes = []
+    def get(self, request):
+        user_agent_string = request.META.get('HTTP_USER_AGENT')
+        user_agent = parse(user_agent_string)
 
+
+        
+        print(f"user agent details:{user_agent}, agent device:{user_agent.browser.family}")
+        os = user_agent.os.family
+        pc_device = user_agent.device.family
+        browser = user_agent.browser.family
+        # device = user_agent.device.family
+        print(f"os:{os}\npc_device:{pc_device}")
+
+
+    
+        print(f"browser:{browser}")
+        return Response(f"User Agent:{user_agent} device:{user_agent.device} browser:{user_agent.browser.family}")
 class GetUserData(GenericAPIView):
     permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
     
@@ -41,7 +59,7 @@ class GetUserData(GenericAPIView):
         client_ip = request.META.get('REMOTE_ADDR')
         print(f"my ip:{client_ip}")
 
-        print(f"browser:{user_agent.browser}")
+        print(f"browser:{user_agent.browser.family}")
 
          #get the user's profile 
         profile = UserProfile.objects.get(user=user)
