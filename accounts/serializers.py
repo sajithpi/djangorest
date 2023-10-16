@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -217,21 +217,51 @@ class CombinedSerializer(serializers.Serializer):
     data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
 
 class ProfilePreferenceSerializer(serializers.ModelSerializer):
+    family_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=FamilyPlanChoice.objects.all()
+    )
+    drink_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=DrinkChoice.objects.all()
+    )
+    religion_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=Religion.objects.all()
+    )
+    education_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=EducationType.objects.all()
+    )
+    relationship_choices = serializers.SlugRelatedField(
+        many =True,
+        slug_field='name',
+        queryset=RelationShipGoal.objects.all()
+    )
+    workout_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=Workout.objects.all()
+    )
+    smoke_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=SmokeChoice.objects.all()
+    )
+    languages_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=Language.objects.all()
+    )
     class Meta:
         model = ProfilePreference
         fields = '__all__'
 
         
-    # def update(self, instance, validated_data):
-    #         # Implement your custom update logic here
-    #         # For example:
-    #         instance.family_choices.set(validated_data.get('family_choices', instance.family_choices.all()))
-    #         instance.drink_choices.set(validated_data.get('drink_choices', instance.drink_choices.all()))
-    #         instance.religion_choices.set(validated_data.get('religion_choices', instance.religion_choices.all()))
-    #         # Repeat for other fields
-
-    #         instance.save()
-    #         return instance
 
 class NotificationSerializer(serializers.ModelSerializer):
     from_user = serializers.CharField(source='from_user.user.username', read_only=True)

@@ -42,6 +42,7 @@ class Test(GenericAPIView):
     
         print(f"browser:{browser}")
         return Response(f"User Agent:{user_agent} device:{user_agent.device} browser:{user_agent.browser.family}")
+
 class GetUserData(GenericAPIView):
     permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
     
@@ -77,7 +78,8 @@ class GetUserData(GenericAPIView):
         
           # Add interests to the serialized data
         data['interests'] = InterestSerializer(interests, many=True).data
-        
+    
+    
         return Response(data, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
@@ -172,6 +174,21 @@ class GetUserData(GenericAPIView):
         # Return a success response
         return Response({'message': 'User information updated successfully'})
     
+
+class GetMyPreferences(GenericAPIView):
+    @swagger_auto_schema(
+        operation_description="Get user preferences",  # Describe the operation
+        responses={200: ProfilePreferenceSerializer()},  # Define the response schema
+        tags=["User"],  # Categorize the endpoint using tags
+    )
+    def get(self, request):
+
+        user_profile = UserProfile.objects.get(user = self.request.user)
+        my_preferences = ProfilePreference.objects.get(user_profile = user_profile)
+        my_preference_serializer = ProfilePreferenceSerializer(my_preferences)
+        # print(f"data:{my_preference_serializer.data}")
+        return Response(my_preference_serializer.data, status=status.HTTP_200_OK)
+
 class UpdateProfilePhoto(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     
