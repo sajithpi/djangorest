@@ -50,7 +50,7 @@ class RegisterView(GenericAPIView):
             with transaction.atomic():
                 # Save the user
                 user = serializer.save()
-                send_otp_via_mail(email=serializer.data['email'], type='register')
+                # send_otp_via_mail(email=serializer.data['email'], type='register')
                 # Associate cover photos with the user's profile if provided
                 if cover_photos_data:
                     user_profile = UserProfile.objects.get(user=user)
