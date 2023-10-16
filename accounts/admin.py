@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -39,6 +39,7 @@ admin.site.register(Interest, InterestAdmin)
 admin.site.register(DrinkChoice, ChoiceAdmin)
 admin.site.register(Workout, ChoiceAdmin)
 admin.site.register(Religion, ChoiceAdmin)
+admin.site.register(FamilyPlanChoice, ChoiceAdmin)
 admin.site.register(RelationShipGoal, ChoiceAdmin)
 admin.site.register(SmokeChoice, ChoiceAdmin)
 admin.site.register(EducationType, ChoiceAdmin)

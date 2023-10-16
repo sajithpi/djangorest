@@ -404,6 +404,7 @@ class GetFollowers(GenericAPIView):
 
         return Response({'message':'success'}, status=status.HTTP_200_OK)
 
+
 class UpdateProfilePreference(GenericAPIView):
         
         @swagger_auto_schema(
@@ -421,6 +422,15 @@ class UpdateProfilePreference(GenericAPIView):
             except ProfilePreference.DoesNotExist:
                 return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
             
+            self.update_choices(Language, request.data, 'languages_choices', 'languages_choices')
+            self.update_choices(FamilyPlanChoice, request.data, 'family_choices', 'family_choices')
+            self.update_choices(RelationShipGoal, request.data, 'relationship_choices', 'relationship_choices')
+            self.update_choices(DrinkChoice, request.data, 'drink_choices', 'drink_choices')
+            self.update_choices(Religion, request.data, 'religion_choices','religion_choices')
+            self.update_choices(EducationType, request.data, 'education_choices', 'education_choices')
+            self.update_choices(Workout, request.data, 'workout_choices', 'workout_choices')
+            self.update_choices(SmokeChoice, request.data, 'smoke_choices', 'smoke_choices')
+            # request.data['languages_choices'] = language_ids
             #Clear existing preferences
             profile_preference.family_choices.clear()
             profile_preference.drink_choices.clear()
@@ -438,6 +448,13 @@ class UpdateProfilePreference(GenericAPIView):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        def update_choices(self, model, data, choice_key, field_name):
+            if choice_key in data:
+                choice_list = data[choice_key]
+                choice_values = [choice.get('value','') for choice in choice_list]
+                choice_id_mapping = {choice.name:choice.id for choice in model.objects.filter(name__in=choice_values)}
+                choice_values_ids = [choice_id_mapping.get(value) for value in choice_values]
+                data[field_name] = choice_values_ids
 
 def get_blocked_users_data(user_profile):
         """
