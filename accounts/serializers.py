@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -49,7 +49,12 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     
     cover_photos = serializers.ListField(child = serializers.ImageField(), required = False)
-
+    # languages = serializers.ListField(
+    #             child = serializers.DictField(
+    #                 child = serializers.CharField(max_length=100),
+    #             ),
+    #             required = False
+    #             )
     class Meta:
         model = UserProfile
         fields = [
@@ -62,7 +67,7 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
             'relationship_goals',
             'workout',
             'smoke',
-            'languages',
+            # 'languages',
             'cover_photos',
              
             'address_line1',
@@ -124,7 +129,10 @@ class CoverPhotoSerializer(serializers.ModelSerializer):
         model = CoverPhoto
         fields = '__all__'
         
-        
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = '__all__'
     
 class InterestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -134,7 +142,19 @@ class InterestSerializer(serializers.ModelSerializer):
         
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializers()
+    drink = serializers.CharField(source='drink.name', read_only=True)
+    family_plan = serializers.CharField(source='familyplan.name', read_only=True)
+    religion = serializers.CharField(source='religion.name', read_only=True)
+    education = serializers.CharField(source='education.name', read_only=True)
+    relationship_goals = serializers.CharField(source='relationshipgoal.name', read_only=True)
+    workout = serializers.CharField(source='workout.name', read_only=True)
+    smoke = serializers.CharField(source='smoke.name', read_only=True)
+    # languages = serializers.CharField(source='languages.name', many = True, read_only=True)
+    languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
+    
+    # def get_drink_name(self, obj):
+        # return obj.drink.drinkchoice.name
 
     class Meta:
         model = UserProfile
@@ -142,6 +162,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
             'profile_picture',
             'cover_photos',  # Use 'cover_photos' (plural) here
+            'family_plan',
+            'drink',
+            'religion',
+            'education',
+            'relationship_goals',
+            'workout',
+            'smoke',
+            'languages',
             'address_line1',
             'address_line2',
             'interests',

@@ -112,12 +112,25 @@ class GetUserData(GenericAPIView):
                         old_profile_picture.delete(save=False)
                     else:
                         print("profile picture not exist")
-                profile_serializer.save()
                 
-   
+                
+                #save languages
+                language_data = request.data.get('languages',[])
+                language_list = [item['value'] for item in language_data]
+                profile.languages.clear()
+                for language_value in language_list:
+                    print(f"language value:{language_value}")
+                    # language = Language.objects.get(name=language_value)
+                    language = Language.objects.get(name=language_value)
+                
+                    print(f"language obj:{language}")
+                    profile.languages.add(language)
+
+                profile_serializer.save()
             else:
                 return Response(profile_serializer.errors, status=400) # Return validation errors
-            
+
+
             # interest_name = request.data.get('interests',None)
             # if interest_name:
             #     interest_name = interest_name.strip('"')

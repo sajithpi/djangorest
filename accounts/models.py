@@ -121,7 +121,7 @@ class UserProfile(models.Model):
     
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
     height = models.PositiveIntegerField(blank=True, null=True)  # Add the 'height' field here
-    drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True)
+    drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True, related_name='drink_choice')
     religion = models.ForeignKey("Religion", on_delete=models.SET_NULL, blank=True, null=True)
     education = models.ForeignKey("EducationType", on_delete=models.SET_NULL, blank=True, null=True)
     relationship_goals = models.ForeignKey("RelationShipGoal", on_delete=models.SET_NULL, blank=True, null=True)
