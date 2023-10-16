@@ -350,7 +350,7 @@ class GetPreferences(GenericAPIView):
         relationship_goals_data = [{'id': goal.id, 'name': goal.name} for goal in relationship_goals]
         smoke_choices_data = [{'id': choice.id, 'name': choice.name} for choice in smoke_choices]
         education_types_data = [{'id': education.id, 'name': education.name} for education in education_types]
-        languages_data = [{'id': language.id, 'name': language.name} for language in languages]
+        languages_data = [{'label': language.name, 'value': language.name} for language in languages]
 
         # Create a response data dictionary
         data = {
