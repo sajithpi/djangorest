@@ -101,6 +101,21 @@ class GetUserData(GenericAPIView):
         # Update fields in the UserProfile model if provided
         try:
             profile = UserProfile.objects.get(user=user)
+            height = request.data.get('height')
+            if isinstance(height, list) and len(height) == 1:
+                feet = height[0].get('feet',0)
+                inches = height[0].get('inches',0)
+                print(f"height:{height}, feet:{feet}, inches:{inches}")
+                if feet:
+                    feet_in_cm = feet * 30.48
+                    inch_in_cm = inches * 2.54
+                    height = feet_in_cm + inch_in_cm
+                    print(f"height:{height}")
+                    request.data['height'] =  height
+
+            if request.data['height'] < 0:
+                return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
+
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
             if profile_serializer.is_valid():
                 

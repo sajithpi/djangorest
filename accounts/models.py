@@ -120,7 +120,7 @@ class UserProfile(models.Model):
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
     
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
-    height = models.PositiveIntegerField(blank=True, null=True)  # Add the 'height' field here
+    height= models.FloatField(blank=True, null=True, verbose_name='Height in cm')
     drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True, related_name='drink_choice')
     religion = models.ForeignKey("Religion", on_delete=models.SET_NULL, blank=True, null=True)
     education = models.ForeignKey("EducationType", on_delete=models.SET_NULL, blank=True, null=True)
