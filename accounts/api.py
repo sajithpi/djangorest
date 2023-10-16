@@ -325,7 +325,7 @@ class GetPreferences(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     
     @swagger_auto_schema(
-    operation_description="Get user data",  # Describe the operation
+    operation_description="Get preference list",  # Describe the operation
     responses={200: UserProfileSerializer},  # Define the response schema
     tags=["User"],  # Categorize the endpoint using tags
     )
