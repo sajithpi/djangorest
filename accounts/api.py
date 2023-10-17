@@ -101,23 +101,28 @@ class GetUserData(GenericAPIView):
             return Response(user_serializer.errors, status=400)
         
         # Update fields in the UserProfile model if provided
+        height = request.data.get('height')
+        print(f"height:{height}")
         try:
             profile = UserProfile.objects.get(user=user)
-            height = request.data.get('height')
-            if isinstance(height, list) and len(height) == 1:
-                feet = height[0].get('feet',0)
-                inches = height[0].get('inches',0)
+            if height:
+                feet = height['feet']
+                inches = height['inch']
+                cm = height['cm']
+                if not feet and not inches and not cm:
+                   request.data['height'] = 0
+                
                 print(f"height:{height}, feet:{feet}, inches:{inches}")
                 if feet:
-                    feet_in_cm = feet * 30.48
-                    inch_in_cm = inches * 2.54
+                    feet_in_cm = float(feet) * 30.48
+                    inch_in_cm = float(inches) * 2.54
                     height = feet_in_cm + inch_in_cm
                     print(f"height:{height}")
-                    request.data['height'] =  height
-
-            if request.data['height'] < 0:
-                return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
-
+                    request.data['height'] = round(float(height),2)
+                
+                    if float(height) < 0:
+                        return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
+            request.data['is_edited'] = True
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
             if profile_serializer.is_valid():
                 

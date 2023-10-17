@@ -70,10 +70,10 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
             # 'languages',
             'cover_photos',
              
-            'address_line1',
-            'address_line2',
+            'company',
+            'job_title',
             'country',
-            'state',
+            'is_edited',
             'city',
             'pin_code',
             
@@ -142,13 +142,6 @@ class InterestSerializer(serializers.ModelSerializer):
         
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializers()
-    drink = serializers.CharField(source='drink.name', read_only=True)
-    family_plan = serializers.CharField(source='familyplan.name', read_only=True)
-    religion = serializers.CharField(source='religion.name', read_only=True)
-    education = serializers.CharField(source='education.name', read_only=True)
-    relationship_goals = serializers.CharField(source='relationshipgoal.name', read_only=True)
-    workout = serializers.CharField(source='workout.name', read_only=True)
-    smoke = serializers.CharField(source='smoke.name', read_only=True)
     # languages = serializers.CharField(source='languages.name', many = True, read_only=True)
     languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
@@ -170,11 +163,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'workout',
             'smoke',
             'languages',
-            'address_line1',
-            'address_line2',
+            'company',
+            'job_title',
             'interests',
             'country',
-            'state',
+            'is_edited',
             'city',
             'pin_code',
             'created_at',
@@ -183,10 +176,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
     # Add a SerializerMethodField to include the user's interests
     interests = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
     
     def get_interests(self, obj):
          # Access the user's interests through the UserProfile's user field
         return [interest.name for interest in obj.user.interests.all()]
+    
+    def get_languages(self, obj):
+        
+        return [{'label':languages.name, 'value':languages.name} for languages in obj.languages.all()]
+    
+    
 
 
 class UploadCoverPhotoSerializer(serializers.ModelSerializer):
