@@ -25,7 +25,7 @@ class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]
 
     def create(self, validated_data):
         user = User.objects.create(email=validated_data['email'],
@@ -44,7 +44,7 @@ class UserSerializers(serializers.ModelSerializer):
 class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","phone_number",]  # Add other user fields as needed
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]  # Add other user fields as needed
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     
@@ -145,7 +145,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # languages = serializers.CharField(source='languages.name', many = True, read_only=True)
     languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
-    
+    height = serializers.SerializerMethodField()
     # def get_drink_name(self, obj):
         # return obj.drink.drinkchoice.name
 
@@ -158,6 +158,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'family_plan',
             'drink',
             'religion',
+            'height',
             'education',
             'relationship_goals',
             'workout',
@@ -186,8 +187,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         
         return [{'label':languages.name, 'value':languages.name} for languages in obj.languages.all()]
     
-    
-
+    def get_height(self, obj):
+        feet = inches = 0
+        # Calculate the total inches
+        if obj.height:
+            total_inches = float(obj.height) / 2.54
+            # Calculate the number of feet
+            feet = int(total_inches//12)
+            # Calculate the remaining inches
+            inches = int(total_inches % 12) 
+        
+        return {'cm':obj.height , 'feet':feet, 'inches':inches}
 
 class UploadCoverPhotoSerializer(serializers.ModelSerializer):
     

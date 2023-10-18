@@ -119,9 +119,11 @@ class GetUserData(GenericAPIView):
                     height = feet_in_cm + inch_in_cm
                     print(f"height:{height}")
                     request.data['height'] = round(float(height),2)
-                
-                    if float(height) < 0:
-                        return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
+                else:
+                   request.data['height'] = cm 
+                   
+            if request.data['height'] < 0:
+                return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
             request.data['is_edited'] = True
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
             if profile_serializer.is_valid():
@@ -391,16 +393,31 @@ class GetPreferences(GenericAPIView):
         education_types = EducationType.objects.all()
         languages = Language.objects.all()
 
-        # Create dictionaries for each model's data
-        interests_data = [{'id': interest.id, 'name': interest.name} for interest in interests]
-        drink_choices_data = [{'id': choice.id, 'name': choice.name} for choice in drink_choices]
-        family_plan_choices_data = [{'id': choice.id, 'name': choice.name} for choice in family_plan_choices]
-        workouts_data = [{'id': workout.id, 'name': workout.name} for workout in workouts]
-        religions_data = [{'id': religion.id, 'name': religion.name} for religion in religions]
-        relationship_goals_data = [{'id': goal.id, 'name': goal.name} for goal in relationship_goals]
-        smoke_choices_data = [{'id': choice.id, 'name': choice.name} for choice in smoke_choices]
-        education_types_data = [{'id': education.id, 'name': education.name} for education in education_types]
-        languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+        api_type = request.query_params.get('api_type')
+        print(f"api_type:{api_type}")
+        if api_type == 'settings':
+              # Create dictionaries for each model's data
+            interests_data = [{'id': interest.id, 'name': interest.name} for interest in interests]
+            drink_choices_data = [{'label': choice.id, 'name': choice.name} for choice in drink_choices]
+            family_plan_choices_data = [{'label': choice.id, 'name': choice.name} for choice in family_plan_choices]
+            workouts_data = [{'label': workout.id, 'name': workout.name} for workout in workouts]
+            religions_data = [{'label': religion.id, 'name': religion.name} for religion in religions]
+            relationship_goals_data = [{'label': goal.id, 'name': goal.name} for goal in relationship_goals]
+            smoke_choices_data = [{'label': choice.id, 'name': choice.name} for choice in smoke_choices]
+            education_types_data = [{'label': education.id, 'name': education.name} for education in education_types]
+            languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+        else:
+        
+            # Create dictionaries for each model's data
+            interests_data = [{'id': interest.id, 'name': interest.name} for interest in interests]
+            drink_choices_data = [{'label': choice.name, 'value': choice.name} for choice in drink_choices]
+            family_plan_choices_data = [{'label': choice.name, 'value': choice.name} for choice in family_plan_choices]
+            workouts_data = [{'label': workout.name, 'value': workout.name} for workout in workouts]
+            religions_data = [{'label': religion.name, 'value': religion.name} for religion in religions]
+            relationship_goals_data = [{'label': goal.name, 'value': goal.name} for goal in relationship_goals]
+            smoke_choices_data = [{'label': choice.name, 'value': choice.name} for choice in smoke_choices]
+            education_types_data = [{'label': education.name, 'value': education.name} for education in education_types]
+            languages_data = [{'label': language.name, 'value': language.name} for language in languages]
 
         # Create a response data dictionary
         data = {
