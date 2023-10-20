@@ -64,7 +64,9 @@ class GetUserData(GenericAPIView):
         print(f"my ip:{client_ip}")
 
         print(f"browser:{user_agent.browser.family}")
-
+        device = request.headers.get('device','web')
+        # device = request.headers['device'] if request.headers['device'] else 'web'
+        print(f"device:{device}")
          #get the user's profile 
         profile = UserProfile.objects.get(user=user)
         
@@ -72,10 +74,11 @@ class GetUserData(GenericAPIView):
         interests = profile.user.interests.all()
         
         # Serialize profile data with interests
-        profile_serializer = UserProfileSerializer(profile)
+        profile_serializer = UserProfileSerializer(profile, context = {'device':device})
+        
         
         data = profile_serializer.data
-        
+        print(f"data:{data}")
           # Add interests to the serialized data
         data['interests'] = InterestSerializer(interests, many=True).data
     
@@ -91,7 +94,23 @@ class GetUserData(GenericAPIView):
     def put(self, request):
         user = self.request.user
 
-            
+        user_agent_string = request.META.get('HTTP_USER_AGENT')
+        user_agent = parse(user_agent_string)
+
+
+        
+        user_agent_string = request.META.get('HTTP_USER_AGENT')
+        user_agent = parse(user_agent_string)
+
+        user = self.request.user
+        print(f"user agent details:{user_agent}")
+        device = user_agent.device
+        print(f"device:{device}")
+        client_ip = request.META.get('REMOTE_ADDR')
+        print(f"my ip:{client_ip}")
+
+        device = request.headers['device'] if request.headers['device'] else 'web'
+        print(f"browser:{user_agent.browser.family}")
             
         #Update fields in the User model if provided
         user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
@@ -101,30 +120,33 @@ class GetUserData(GenericAPIView):
             return Response(user_serializer.errors, status=400)
         
         # Update fields in the UserProfile model if provided
-        height = request.data.get('height')
-        print(f"height:{height}")
+ 
         try:
             profile = UserProfile.objects.get(user=user)
-            if height:
-                feet = height['feet']
-                inches = height['inch']
-                cm = height['cm']
-                if not feet and not inches and not cm:
-                   request.data['height'] = 0
-                
-                print(f"height:{height}, feet:{feet}, inches:{inches}")
-                if feet:
-                    feet_in_cm = float(feet) * 30.48
-                    inch_in_cm = float(inches) * 2.54
-                    height = feet_in_cm + inch_in_cm
-                    print(f"height:{height}")
-                    request.data['height'] = round(float(height),2)
-                else:
-                   request.data['height'] = cm 
-                   
-            if request.data['height'] < 0:
-                return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
+            if request.data.get('height'):
+                height = request.data.get('height')
+                print(f"height:{height}")
+                if height:
+                    feet = height['feet']
+                    inches = height['inches']
+                    cm = height['cm']
+                    if not feet and not inches and not cm:
+                        request.data['height'] = 0
+                    
+                    print(f"height:{height}, feet:{feet}, inches:{inches}")
+                    if feet:
+                        feet_in_cm = float(feet) * 30.48
+                        inch_in_cm = float(inches) * 2.54
+                        height = feet_in_cm + inch_in_cm
+                        print(f"height:{height}")
+                        request.data['height'] = round(float(height),2)
+                    else:
+                        request.data['height'] = cm 
+                    
+                if request.data['height'] < 0:
+                    return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
             request.data['is_edited'] = True
+            print(f"data:{request.data}")
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
             if profile_serializer.is_valid():
                 
@@ -140,12 +162,16 @@ class GetUserData(GenericAPIView):
                 
                 #save languages
                 language_data = request.data.get('languages',[])
-                language_list = [item['value'] for item in language_data]
+                language_list = [item['value'] for item in language_data] if not device == 'mobile' else language_data
+                # language_list = [item['value'] for item in language_data]
                 profile.languages.clear()
                 for language_value in language_list:
                     print(f"language value:{language_value}")
                     # language = Language.objects.get(name=language_value)
-                    language = Language.objects.get(name=language_value)
+                    if device == 'mobile':
+                        language = Language.objects.get(id = language_value)
+                    else:
+                        language = Language.objects.get(name=language_value)
                 
                     print(f"language obj:{language}")
                     profile.languages.add(language)
@@ -194,7 +220,18 @@ class GetMyPreferences(GenericAPIView):
         my_preferences = ProfilePreference.objects.get(user_profile = user_profile)
         my_preference_serializer = ProfilePreferenceSerializer(my_preferences)
         # print(f"data:{my_preference_serializer.data}")
-        return Response(my_preference_serializer.data, status=status.HTTP_200_OK)
+         # Customize the response format for the languages_choices field
+        data = {}
+
+        for field_name in my_preference_serializer.data:
+            field_value = my_preference_serializer.data[field_name]
+
+            if isinstance(field_value, list):
+                data[field_name] = [{'label': value, 'value': value} for value in field_value]
+            else:
+                data[field_name] = [{'label': field_value, 'value': field_value}]
+
+        return Response(data, status=status.HTTP_200_OK)
 
 class UpdateProfilePhoto(GenericAPIView):
     permission_classes = (IsAuthenticated,)
@@ -393,19 +430,25 @@ class GetPreferences(GenericAPIView):
         education_types = EducationType.objects.all()
         languages = Language.objects.all()
 
-        api_type = request.query_params.get('api_type')
+        api_type = request.headers.get('api_type')
+        # Get the value of a specific header
+        device = request.headers['device']
+        print(f"user agent:{device}")
         print(f"api_type:{api_type}")
         if api_type == 'settings':
               # Create dictionaries for each model's data
             interests_data = [{'id': interest.id, 'name': interest.name} for interest in interests]
-            drink_choices_data = [{'label': choice.id, 'name': choice.name} for choice in drink_choices]
-            family_plan_choices_data = [{'label': choice.id, 'name': choice.name} for choice in family_plan_choices]
-            workouts_data = [{'label': workout.id, 'name': workout.name} for workout in workouts]
-            religions_data = [{'label': religion.id, 'name': religion.name} for religion in religions]
-            relationship_goals_data = [{'label': goal.id, 'name': goal.name} for goal in relationship_goals]
-            smoke_choices_data = [{'label': choice.id, 'name': choice.name} for choice in smoke_choices]
-            education_types_data = [{'label': education.id, 'name': education.name} for education in education_types]
-            languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+            drink_choices_data = [{'id': choice.id, 'name': choice.name} for choice in drink_choices]
+            family_plan_choices_data = [{'id': choice.id, 'name': choice.name} for choice in family_plan_choices]
+            workouts_data = [{'id': workout.id, 'name': workout.name} for workout in workouts]
+            religions_data = [{'id': religion.id, 'name': religion.name} for religion in religions]
+            relationship_goals_data = [{'id': goal.id, 'name': goal.name} for goal in relationship_goals]
+            smoke_choices_data = [{'id': choice.id, 'name': choice.name} for choice in smoke_choices]
+            education_types_data = [{'id': education.id, 'name': education.name} for education in education_types]
+            if device == 'mobile':
+                languages_data = [{'id': language.id, 'name': language.name} for language in languages]
+            else:
+                languages_data = [{'label': language.name, 'value': language.name} for language in languages]
         else:
         
             # Create dictionaries for each model's data
@@ -418,6 +461,10 @@ class GetPreferences(GenericAPIView):
             smoke_choices_data = [{'label': choice.name, 'value': choice.name} for choice in smoke_choices]
             education_types_data = [{'label': education.name, 'value': education.name} for education in education_types]
             languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+            if device == 'mobile':
+                languages_data = [{'id': language.id, 'name': language.name} for language in languages]
+            else:
+                languages_data = [{'label': language.name, 'value': language.name} for language in languages]
 
         # Create a response data dictionary
         data = {
@@ -453,6 +500,8 @@ class UpdateProfilePreference(GenericAPIView):
         )
         def put(self, request):
             user = self.request.user
+            
+        
             user_profile = UserProfile.objects.get(user=user)
             try:
                 print(f"user:{user} profile:{user_profile}")
@@ -460,7 +509,7 @@ class UpdateProfilePreference(GenericAPIView):
                 
             except ProfilePreference.DoesNotExist:
                 return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
-            
+            print(f"request.data:{request.data}")
             self.update_choices(Language, request.data, 'languages_choices', 'languages_choices')
             self.update_choices(FamilyPlanChoice, request.data, 'family_choices', 'family_choices')
             self.update_choices(RelationShipGoal, request.data, 'relationship_choices', 'relationship_choices')
@@ -490,10 +539,15 @@ class UpdateProfilePreference(GenericAPIView):
         def update_choices(self, model, data, choice_key, field_name):
             if choice_key in data:
                 choice_list = data[choice_key]
+                print(f"choice_list{choice_list}")
                 choice_values = [choice.get('value','') for choice in choice_list]
+                print(f"choice_values:{choice_values}")
                 choice_id_mapping = {choice.name:choice.id for choice in model.objects.filter(name__in=choice_values)}
+                print(f"choice_id_mapping:{choice_id_mapping}")
                 choice_values_ids = [choice_id_mapping.get(value) for value in choice_values]
-                data[field_name] = choice_values_ids
+                print(f"choice_values_ids:{choice_values_ids}")
+                
+                data[field_name] = choice_values
 
 def get_blocked_users_data(user_profile):
         """
@@ -533,28 +587,28 @@ class GetProfileMatches(GenericAPIView):
     def get(self, request):
         # Retrieve the user's preferences
         user = self.request.user
-        user_profile = UserProfile.objects.get(user = user)
+        user_profile = UserProfile.objects.get(user=user)
         user_gender = user_profile.user.gender
         user_orientation = user_profile.user.orientation
         print(f"USER {user} GENDER:{user_gender}, ORIENTATION:{user_orientation}")
-        user_preferences = ProfilePreference.objects.get(user_profile = user_profile)
+        user_preferences = ProfilePreference.objects.get(user_profile=user_profile)
         print(f"user preferences:{user_preferences}")
         print(f"family preference:{user_preferences.family_choices.all()}")
         
         blocked_users = get_blocked_users_data(user_profile=user_profile)
         print(f"blocked users:{blocked_users}")
         user_orientation_filter = {
-            ('M','Hetero'):'F',
-            ('M','Homo'):'M',
+            ('M', 'Hetero'): 'F',
+            ('M', 'Homo'): 'M',
             
-            ('F','Hetro'):'M',
-            ('F','Homo'):'F',
+            ('F', 'Hetro'): 'M',
+            ('F', 'Homo'): 'F',
 
-            ('TM','Hetero'):'TF',
-            ('TM','Homo'):'TM',
+            ('TM', 'Hetero'): 'TF',
+            ('TM', 'Homo'): 'TM',
 
-            ('TF','Hetero'):'TM',
-            ('TF','Homo'):'TF',
+            ('TF', 'Hetero'): 'TM',
+            ('TF', 'Homo'): 'TF',
         }
         
         user_partner_gender_preference = user_orientation_filter.get((user_gender, user_orientation))
@@ -571,51 +625,6 @@ class GetProfileMatches(GenericAPIView):
         }
 
         choice_count = len(preferences_to_check)
-        #create a dictionary to store matched preference
-        matched_preferences = {}
-        match_count = 0
-        
-        for queryset_attr, preference_key in preferences_to_check.items():
-            queryset = getattr(user_preferences, queryset_attr).all()
-            if queryset.exists():
-                matched_preferences[preference_key] = [str(choice) for choice in queryset]
-        # Create a list of Q objects to match at least one preference in each category
-        preferences_filters = []
-
-
-        preference_fields = {
-            'family_plan': 'family_choices',
-            'drink': 'drink_choices',
-            'religion': 'religion_choices',
-            'education': 'education_choices',
-            'relationship_goals': 'relationship_choices',
-            'workout': 'workout_choices',
-            'smoke': 'smoke_choices',
-            'languages': 'languages_choices'
-        }
-            
-        preferences_filters = []
-
-        for preference, queryset_name in preference_fields.items():
-            queryset = getattr(user_preferences, queryset_name).all()
-            if queryset.exists():
-                field_name = f"{preference}__in"
-                preferences_filters.append(Q(**{field_name: queryset}))
-
-        # Add similar checks for other preference categories
-
-        # Combine the Q objects using the OR operator (|)
-        combined_filter = Q()
-        for q_obj in preferences_filters:
-            combined_filter |= q_obj
-        # Create a Q object to represent the exclusion condition
-        exclude_blocked_users = Q(user__id__in=blocked_users)
-
-        # Query to find matching user profiles
-        matching_profiles = UserProfile.objects.filter(combined_filter & ~exclude_blocked_users, user__gender=user_partner_gender_preference, user__orientation = user_orientation)
-
-        # Serialize the matching user profiles
-        serializer = UserProfileSerializer(matching_profiles, many=True)
         
         # Create a dictionary to map field names to choices
         field_mapping = {
@@ -628,46 +637,96 @@ class GetProfileMatches(GenericAPIView):
             'smoke': user_preferences.smoke_choices,
             'languages': user_preferences.languages_choices,
         }
-
+        # Create a list to store preferences for each user
+        preferences_list = []
         
-        # Create a dictionary to store preferences by user ID
-        preferences_by_user_id = {}
+        for queryset_attr, preference_key in preferences_to_check.items():
+            queryset = getattr(user_preferences, queryset_attr).all()
+            if queryset.exists():
+                matched_preferences = [str(choice) for choice in queryset]
+                user_preferences_dict = {
+                    'preference_key': preference_key,
+                    'matched_preferences': matched_preferences
+                }
+                preferences_list.append(user_preferences_dict)
 
+        # Create a list of Q objects to match at least one preference in each category
+        preferences_filters = []
+
+        preference_fields = {
+            'family_plan': 'family_choices',
+            'drink': 'drink_choices',
+            'religion': 'religion_choices',
+            'education': 'education_choices',
+            'relationship_goals': 'relationship_choices',
+            'workout': 'workout_choices',
+            'smoke': 'smoke_choices',
+            'languages': 'languages_choices'
+        }
+            
+        for preference, queryset_name in preference_fields.items():
+            queryset = getattr(user_preferences, queryset_name).all()
+            if queryset.exists():
+                field_name = f"{preference}__in"
+                preferences_filters.append(Q(**{field_name: queryset}))
+
+        # Combine the Q objects using the OR operator (|)
+        combined_filter = Q()
+        for q_obj in preferences_filters:
+            combined_filter |= q_obj
+        # Create a Q object to represent the exclusion condition
+        exclude_blocked_users = Q(user__id__in=blocked_users)
+
+        # Query to find matching user profiles
+        matching_profiles = UserProfile.objects.filter(
+            combined_filter & ~exclude_blocked_users,
+            user__gender=user_partner_gender_preference,
+            user__orientation=user_orientation
+        )
+
+        # Create a list to store user preferences
+        preferences_list = []
         current_date = datetime.now()
         for profile in matching_profiles:
             user_id = profile.user.id
+            cover_photos = CoverPhoto.objects.filter(user_profile = profile)
+            
+          
             matches_count = 0
-        
-            # user_preferences = ProfilePreference.objects.get(user_profile=profile)
-            preferences_by_user_id[user_id] = {}
-            preferences_by_user_id[user_id]['id'] = profile.user.id
-            preferences_by_user_id[user_id]['username'] = profile.user.username
-            preferences_by_user_id[user_id]['interests'] = [interests.name for interests in profile.user.interests.all()]
-            preferences_by_user_id[user_id]['date_of_birth'] = profile.user.date_of_birth
+            preferences_by_user_id = {}
+            preferences_by_user_id['id'] = profile.user.id
+            preferences_by_user_id['username'] = profile.user.username
+            preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
+            preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
             age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
-            preferences_by_user_id[user_id]['age'] =age
-            preferences_by_user_id[user_id]['profile_picture'] = str(profile.profile_picture) if profile.profile_picture  else None
-            preferences_by_user_id[user_id]['height'] = profile.height
-            preferences_by_user_id[user_id]['languages'] = [language.name for language in profile.languages.all()]
-            favorite_status = True if Favorite.objects.filter(user = profile, favored_by = user_profile).first() else False
-            like_status = True if Like.objects.filter(user = profile, liked_by = user_profile).first() else False
-            preferences_by_user_id[user_id]['favorite_status'] = favorite_status
-            preferences_by_user_id[user_id]['like_status'] = like_status
+            preferences_by_user_id['age'] = age
+            preferences_by_user_id['profile_picture'] = {
+                'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
+            if cover_photos:
+                preferences_by_user_id['cover_photos'] = [{'id':i, 'image':str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
+            preferences_by_user_id['height'] = profile.height
+            preferences_by_user_id['languages'] = [language.name for language in profile.languages.all()]
+            favorite_status = True if Favorite.objects.filter(user=profile, favored_by=user_profile).first() else False
+            like_status = True if Like.objects.filter(user=profile, liked_by=user_profile).first() else False
+            preferences_by_user_id['favorite_status'] = favorite_status
+            preferences_by_user_id['like_status'] = like_status
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():
                         profile_value = str(getattr(profile, field_name))
                         if profile_value == str(choice):
                             matches_count += 1
-                            preferences_by_user_id[user_id][field_name] = profile_value
+                            preferences_by_user_id[field_name] = profile_value
             print(f"choice count:{choice_count} matches count:{matches_count}")
-            preferences_by_user_id[user_id]['match_percentage'] = (matches_count / choice_count)  * 100        
-            match_percentage = ( matches_count / choice_count) * 100
+            preferences_by_user_id['match_percentage'] = (matches_count / choice_count) * 100        
+            match_percentage = (matches_count / choice_count) * 100
             print(f"match percentage:{match_percentage}")
-                            
+            
+            preferences_list.append(preferences_by_user_id)
         
-        # return Response({'matching_profiles': serializer.data, 'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
-        return Response({'preferences_by_user_id': preferences_by_user_id}, status=status.HTTP_200_OK)
+        # Return the list of preferences
+        return Response({'preferences_by_user_id': preferences_list}, status=status.HTTP_200_OK)
+
 
 class Enable2FA(GenericAPIView):
     

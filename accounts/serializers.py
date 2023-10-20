@@ -184,8 +184,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return [interest.name for interest in obj.user.interests.all()]
     
     def get_languages(self, obj):
-        
-        return [{'label':languages.name, 'value':languages.name} for languages in obj.languages.all()]
+        device = self.context.get('device')
+        print(f"device:{device}")
+        if device == 'mobile':
+            language_ids = list(obj.languages.values_list('id', flat=True))
+            return language_ids
+        else:
+            language_data = [{'label': language.name, 'value': language.name} for language in obj.languages.all()]
+            return language_data
     
     def get_height(self, obj):
         feet = inches = 0
