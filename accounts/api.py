@@ -118,11 +118,13 @@ class GetUserData(GenericAPIView):
             profile = UserProfile.objects.get(user=user)
             if request.data.get('height'):
                 height = request.data.get('height')
+                print(f"height type:{type(height)}")
                 print(f"height:{height}")
                 if height:
-                    feet = height['feet']
-                    inches = height['inches']
-                    cm = height['cm']
+                    feet = str(height[0]['feet'])
+                    print(f"feet:{feet}")
+                    inches = height[0]['inches']
+                    cm = height[0]['cm']
                     if not feet and not inches and not cm:
                         request.data['height'] = 0
                     
