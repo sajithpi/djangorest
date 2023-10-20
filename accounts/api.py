@@ -103,14 +103,7 @@ class GetUserData(GenericAPIView):
         user_agent = parse(user_agent_string)
 
         user = self.request.user
-        print(f"user agent details:{user_agent}")
-        device = user_agent.device
-        print(f"device:{device}")
-        client_ip = request.META.get('REMOTE_ADDR')
-        print(f"my ip:{client_ip}")
-
-        device = request.headers['device'] if request.headers['device'] else 'web'
-        print(f"browser:{user_agent.browser.family}")
+        device = request.headers.get('device','web')
             
         #Update fields in the User model if provided
         user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
@@ -430,9 +423,10 @@ class GetPreferences(GenericAPIView):
         education_types = EducationType.objects.all()
         languages = Language.objects.all()
 
-        api_type = request.headers.get('api_type')
+        api_type = request.headers.get('settingsType')
         # Get the value of a specific header
-        device = request.headers['device']
+        # device = request.headers.get('device','web')
+        device = request.headers.get('device','web')
         print(f"user agent:{device}")
         print(f"api_type:{api_type}")
         if api_type == 'settings':
