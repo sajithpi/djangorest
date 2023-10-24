@@ -107,9 +107,9 @@ class GetUserData(GenericAPIView):
         device = request.headers.get('device','web')
         # Create a mutable copy of request.data
         print(f"request data:{request.data}")
-        mutable_data = QueryDict(request.data.urlencode(), mutable=True)
+        # mutable_data = QueryDict(request.data.urlencode(), mutable=True)
         #Update fields in the User model if provided
-        user_serializer = UpdateUserSerializer(user, data = mutable_data, partial = True)
+        user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
         if user_serializer.is_valid():
             user_serializer.save()
         else:
@@ -124,7 +124,7 @@ class GetUserData(GenericAPIView):
                 print(f"height type:{type(height)}")
                 print(f"height:{height}")
                 if height:
-                    feet = str(height[0]['feet'])
+                    feet = height[0]['feet']
                     print(f"feet:{feet}")
                     inches = height[0]['inches']
                     cm = height[0]['cm']
