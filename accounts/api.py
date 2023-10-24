@@ -13,6 +13,7 @@ from datetime import datetime
 from user_agents import parse
 from django.core import serializers
 import json
+from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser
 
 class TwoFactorAuthRequired(permissions.BasePermission):
@@ -104,9 +105,11 @@ class GetUserData(GenericAPIView):
 
         user = self.request.user
         device = request.headers.get('device','web')
-            
+        # Create a mutable copy of request.data
+        print(f"request data:{request.data}")
+        mutable_data = QueryDict(request.data.urlencode(), mutable=True)
         #Update fields in the User model if provided
-        user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
+        user_serializer = UpdateUserSerializer(user, data = mutable_data, partial = True)
         if user_serializer.is_valid():
             user_serializer.save()
         else:
@@ -379,13 +382,17 @@ class RemoveUserInterestView(GenericAPIView):
             
                         # Update user interests
             # interests_data = json.loads(request.data.get('interest_id', '[]'))
+            device = request.headers.get('device','web')
             interests_data = request.data.get('interest_id', [])
             print(f"interests_data:{interests_data}")
             user = User.objects.get(id=user_id)
             if interests_data:
                 for interest_id in interests_data:
                     print(f"interest_id:{interest_id}")
-                    interest= Interest.objects.get(id=interest_id)
+                    if device == 'mobile':
+                        interest= Interest.objects.get(name=interest_id)
+                    else:
+                        interest= Interest.objects.get(id=interest_id)
                     if interest:
                         # user.user_ interests.add(interest)                        
                         user.interests.remove(interest)
