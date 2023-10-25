@@ -3,7 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
-from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
+from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from rest_framework import status, permissions
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -213,17 +213,20 @@ class GetMyPreferences(GenericAPIView):
         tags=["User"],  # Categorize the endpoint using tags
     )
     def get(self, request):
+        device = request.headers.get('device','web')
 
         user_profile = UserProfile.objects.get(user = self.request.user)
         my_preferences = ProfilePreference.objects.get(user_profile = user_profile)
+        if device == 'mobile':
+            my_preference_serializer = ProfilePreferenceSerializerForMobile(my_preferences)
+            return Response(my_preference_serializer.data, status=status.HTTP_200_OK)
         my_preference_serializer = ProfilePreferenceSerializer(my_preferences)
         # print(f"data:{my_preference_serializer.data}")
          # Customize the response format for the languages_choices field
         data = {}
-
         for field_name in my_preference_serializer.data:
             field_value = my_preference_serializer.data[field_name]
-
+            
             if isinstance(field_value, list):
                 data[field_name] = [{'label': value, 'value': value} for value in field_value]
             else:
@@ -685,16 +688,17 @@ class GetProfileMatches(GenericAPIView):
             combined_filter & ~exclude_blocked_users,
             user__gender=user_partner_gender_preference,
             user__orientation=user_orientation
-        )
-
+                )
+        # Get unique user IDs from matching profiles
+        unique_user_ids = matching_profiles.distinct()
         # Create a list to store user preferences
         preferences_list = []
         current_date = datetime.now()
-        for profile in matching_profiles:
+        for profile in unique_user_ids:
             user_id = profile.user.id
             cover_photos = CoverPhoto.objects.filter(user_profile = profile)
             
-          
+            print(f"user_id:{user_id}")
             matches_count = 0
             preferences_by_user_id = {}
             preferences_by_user_id['id'] = profile.user.id
@@ -707,6 +711,8 @@ class GetProfileMatches(GenericAPIView):
                 'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
             if cover_photos:
                 preferences_by_user_id['cover_photos'] = [{'id':i, 'image':str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
+            else:
+                preferences_by_user_id['cover_photos'] = []
             preferences_by_user_id['height'] = profile.height
             preferences_by_user_id['languages'] = [language.name for language in profile.languages.all()]
             favorite_status = True if Favorite.objects.filter(user=profile, favored_by=user_profile).first() else False

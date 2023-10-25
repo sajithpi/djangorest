@@ -277,7 +277,11 @@ class ProfilePreferenceSerializer(serializers.ModelSerializer):
         model = ProfilePreference
         fields = '__all__'
 
-        
+class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
 
 class NotificationSerializer(serializers.ModelSerializer):
     from_user = serializers.CharField(source='from_user.user.username', read_only=True)

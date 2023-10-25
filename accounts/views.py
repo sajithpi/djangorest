@@ -178,6 +178,27 @@ class ForgotPassword(GenericAPIView):
     def post(self, request):
         pass
 class RequestPasswordResetEmail(GenericAPIView):
+    """
+    An endpoint for requesting a password reset email.
+
+    Use this endpoint to request a password reset email. It will send an email with a link to reset the password.
+
+    """
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='The email address of the user.'),
+            },
+            required=['email']
+        ),
+        responses={
+            200: "Success. An email will be sent to the user.",
+            400: "Bad request. Invalid email provided.",
+            404: "User with the provided email not found."
+        },
+    )
     def post(self, request):
         
         serializer = ResetPasswordEmailSerializer(data = request.data)
