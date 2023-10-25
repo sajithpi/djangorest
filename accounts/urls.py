@@ -31,5 +31,7 @@ urlpatterns = [
     path('api/password-reset/<uidb64>/<token>/',PasswordTokenCheckAPI.as_view(),name='password_reset_confirm'),
     path('api/password-reset-complete',SetNewPasswordAPI.as_view(), name='password-reset-complete'), 
     path('api/send-otp',sendOTP.as_view(), name='send-otp'),
-    path('api/enable-2fa',Enable2FA.as_view(), name='enable-2fa')
+    path('api/enable-2fa',Enable2FA.as_view(), name='enable-2fa'),
+    
+    path('api/follow/',include('followers.urls')),
 ]

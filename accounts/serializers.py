@@ -276,6 +276,50 @@ class ProfilePreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfilePreference
         fields = '__all__'
+class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
+    family_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=FamilyPlanChoice.objects.all()
+    )
+    drink_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=DrinkChoice.objects.all()
+    )
+    religion_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=Religion.objects.all()
+    )
+    education_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=EducationType.objects.all()
+    )
+    relationship_choices = serializers.SlugRelatedField(
+        many =True,
+        slug_field='id',
+        queryset=RelationShipGoal.objects.all()
+    )
+    workout_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=Workout.objects.all()
+    )
+    smoke_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=SmokeChoice.objects.all()
+    )
+    languages_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=Language.objects.all()
+    )
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
 
 class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
 

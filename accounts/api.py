@@ -516,14 +516,15 @@ class UpdateProfilePreference(GenericAPIView):
             except ProfilePreference.DoesNotExist:
                 return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
             print(f"request.data:{request.data}")
-            self.update_choices(Language, request.data, 'languages_choices', 'languages_choices')
-            self.update_choices(FamilyPlanChoice, request.data, 'family_choices', 'family_choices')
-            self.update_choices(RelationShipGoal, request.data, 'relationship_choices', 'relationship_choices')
-            self.update_choices(DrinkChoice, request.data, 'drink_choices', 'drink_choices')
-            self.update_choices(Religion, request.data, 'religion_choices','religion_choices')
-            self.update_choices(EducationType, request.data, 'education_choices', 'education_choices')
-            self.update_choices(Workout, request.data, 'workout_choices', 'workout_choices')
-            self.update_choices(SmokeChoice, request.data, 'smoke_choices', 'smoke_choices')
+            device = request.headers.get('device','web')
+            self.update_choices(Language, request.data, 'languages_choices', 'languages_choices', device)
+            self.update_choices(FamilyPlanChoice, request.data, 'family_choices', 'family_choices', device)
+            self.update_choices(RelationShipGoal, request.data, 'relationship_choices', 'relationship_choices', device)
+            self.update_choices(DrinkChoice, request.data, 'drink_choices', 'drink_choices', device)
+            self.update_choices(Religion, request.data, 'religion_choices','religion_choices', device)
+            self.update_choices(EducationType, request.data, 'education_choices', 'education_choices', device)
+            self.update_choices(Workout, request.data, 'workout_choices', 'workout_choices', device)
+            self.update_choices(SmokeChoice, request.data, 'smoke_choices', 'smoke_choices', device)
             # request.data['languages_choices'] = language_ids
             #Clear existing preferences
             profile_preference.family_choices.clear()
@@ -534,26 +535,44 @@ class UpdateProfilePreference(GenericAPIView):
             profile_preference.workout_choices.clear()
             profile_preference.smoke_choices.clear()
             profile_preference.languages_choices.clear()
-            
-            serializer = ProfilePreferenceSerializer(profile_preference, data=request.data, partial =True)
+            # if device == 'mobile':
+            serializer = ProfilePreferenceSerializer(profile_preference, data=request.data,  partial =True)
+            # else:
+            #      serializer = ProfilePreferenceSerializerForMobile(profile_preference, data=request.data,  partial =True)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'message':"User Preference Updated Successfully", 'data':serializer.data}, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        def update_choices(self, model, data, choice_key, field_name):
-            if choice_key in data:
-                choice_list = data[choice_key]
-                print(f"choice_list{choice_list}")
-                choice_values = [choice.get('value','') for choice in choice_list]
-                print(f"choice_values:{choice_values}")
-                choice_id_mapping = {choice.name:choice.id for choice in model.objects.filter(name__in=choice_values)}
-                print(f"choice_id_mapping:{choice_id_mapping}")
-                choice_values_ids = [choice_id_mapping.get(value) for value in choice_values]
-                print(f"choice_values_ids:{choice_values_ids}")
+        def update_choices(self, model, data, choice_key, field_name, device):
+            if device == 'web':
+                if choice_key in data:
+                    choice_list = data[choice_key]
+                    print(f"choice_list{choice_list}")
+                    choice_values = [choice.get('value','') for choice in choice_list]
+                    print(f"choice_values:{choice_values}")
+                    choice_id_mapping = {choice.name:choice.id for choice in model.objects.filter(name__in=choice_values)}
+                    print(f"choice_id_mapping:{choice_id_mapping}")
+                    choice_values_ids = [choice_id_mapping.get(value) for value in choice_values]
+                    print(f"choice_values_ids:{choice_values_ids}")
+                    
+                    data[field_name] = choice_values
+                    
                 
-                data[field_name] = choice_values
+            else:
+                if choice_key in data:
+                    choice_ids = data[choice_key]
+                    choice_names = []
+
+                    for choice_id in choice_ids:
+                        choice_name = model.objects.filter(id=choice_id).values_list('name', flat=True).first()
+                        if choice_name:
+                            choice_names.append(choice_name)
+
+                    data[choice_key] = choice_names
+
+
 
 def get_blocked_users_data(user_profile):
         """

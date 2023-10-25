@@ -209,13 +209,15 @@ class RequestPasswordResetEmail(GenericAPIView):
                 uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
                 token = PasswordResetTokenGenerator().make_token(user)
                 current_site = get_current_site(request=request).domain
-                relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
-                absurl = 'http://'+current_site+relativeLink
+                current_site = f'localhost:3000/reset-password/{uidb64}/{token}'
+                # relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
+                absurl = 'http://'+current_site
                 email_body = 'Hello, \n Use link below to reset your password \n' + absurl
                 data = {'email_body':email_body, 'to_email':user.email,
                         'email_subject':'Reset your password'}
                 Util.send_mail(data)
-
+        else:
+            return Response({'Error':'Email does not Exists in this system'}, status=status.HTTP_404_NOT_FOUND)
 
         return Response({'success':'We have sent you a link to reset your password'}, status=status.HTTP_200_OK)
     
