@@ -13,6 +13,8 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
 from .models import Favorite, Like, BlockedUser
+from django.db.models import F, Func, ExpressionWrapper, DateTimeField
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from accounts.models import User, UserProfile
@@ -74,6 +76,12 @@ class AddRemoveFavorite(GenericAPIView):
                             status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
             return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
+# Calculate age based on date of birth
+def calculate_age(date_of_birth):
+    now = settings.NOW
+    today = now
+    age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+    return age
         
 class GetFavoriteUsers(GenericAPIView):
     @swagger_auto_schema(
@@ -83,7 +91,8 @@ class GetFavoriteUsers(GenericAPIView):
             404: "User not found",
         },
     )
-    
+   
+
     def get(self, request):
         """
         Get favorite users and admire count. Note:User Must be login
@@ -99,19 +108,37 @@ class GetFavoriteUsers(GenericAPIView):
         admire_count = Favorite.objects.filter(user=user_profile).count()
         my_favorites = Favorite.objects.filter(favored_by=user_profile).count()
         
+        
+        
         # Get the list of users following the current user
         my_admire_list = Favorite.objects.filter(user=user_profile).values_list('favored_by', flat=True)
 
     
         #fetch username, and user profile picture of each user in the users_following_current_user list
-        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
-
+        # my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list)\
+        #                                     .annotate(
+        #                                         age = ExpressionWrapper(
+        #                                             Func(now - F('user__date_of_birth'), function = 'DATE_PART', template = 'year'),
+        #                                             output_field=DateTimeField()
+        #                                             )
+        #                                         )\
+        #                                     .values('user__username','user__id','profile_picture', 'age').exclude(user__id__in=blocked_users)
+        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list)\
+                                            .values('user__username','user__id','profile_picture', 'user__date_of_birth').exclude(user__id__in=blocked_users)
+        
+        for user_data in my_admires_data:
+            date_of_birth = user_data['user__date_of_birth']
+            user_data['age'] = calculate_age(date_of_birth)
+        
         #get the list of users where the current user following
         my_favorite_list = Favorite.objects.filter(favored_by=user_profile).values_list('user',flat=True)
 
         #fetch username, and user profile picture of each user in the users_following_current_user list
-        my_favorite_data = UserProfile.objects.filter(user__id__in=my_favorite_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
+        my_favorite_data = UserProfile.objects.filter(user__id__in=my_favorite_list).values('user__username','user__id','profile_picture', 'user__date_of_birth').exclude(user__id__in=blocked_users)
 
+        for user_data in my_favorite_data:
+            date_of_birth = user_data['user__date_of_birth']
+            user_data['age'] = calculate_age(date_of_birth)
         return Response({
             'message': 'Success',
             'description': 'User follow action success',
@@ -196,14 +223,19 @@ class GetLikeUsers(GenericAPIView):
         my_admire_list = Like.objects.filter(user=user_profile).values_list('liked_by', flat=True)
 
         #fetch username, and user profile picture of each user in the users_liked current_user list
-        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
-
+        my_admires_data = UserProfile.objects.filter(user__id__in=my_admire_list).values('user__username','user__id','profile_picture', 'user__date_of_birth').exclude(user__id__in=blocked_users)
+        for user_data in my_admires_data:
+            date_of_birth = user_data['user__date_of_birth']
+            user_data['age'] = calculate_age(date_of_birth)
         #get the list of users where the current user liked
         my_like_list = Like.objects.filter(liked_by=user_profile).values_list('user',flat=True)
 
         #fetch username, and user profile picture of each user in the user liked  list
-        my_like_data = UserProfile.objects.filter(user__id__in=my_like_list).values('user__username','user__id','profile_picture').exclude(user__id__in=blocked_users)
+        my_like_data = UserProfile.objects.filter(user__id__in=my_like_list).values('user__username','user__id','profile_picture','user__date_of_birth').exclude(user__id__in=blocked_users)
         
+        for user_data in my_like_data:
+            date_of_birth = user_data['user__date_of_birth']
+            user_data['age'] = calculate_age(date_of_birth)
         return Response({
             'message': 'Success',
             'admire_count': admire_count,
