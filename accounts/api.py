@@ -12,6 +12,7 @@ from rest_framework.serializers import Serializer
 from datetime import datetime
 from user_agents import parse
 from django.core import serializers
+from django.conf import settings
 import json
 from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser
@@ -204,7 +205,67 @@ class GetUserData(GenericAPIView):
         return Response({'message':'User Profile updated successfully'})
         # Return a success response
         return Response({'message': 'User information updated successfully'})
+  
+# Calculate age based on date of birth
+def calculate_age(date_of_birth):
+    now = settings.NOW
+    today = now
+    age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+    return age
+
+lorem_ipsum = """
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+"""
+class GetProfileDetails(GenericAPIView):
     
+    permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
+    
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('user_id', openapi.IN_QUERY, description="User ID", type=openapi.TYPE_INTEGER),
+            openapi.Parameter('device', openapi.IN_HEADER, description="Device type", type=openapi.TYPE_STRING, enum=["web", "mobile"]),
+        ],
+        responses={200: 'Success', 400: 'Bad Request', 404: 'Not Found'},
+    )
+    def get(self, request):
+        user_id = request.data.get('user_id')
+        device = request.headers.get('device','web')
+        
+        if not user_id:
+            return Response({"message": "Missing 'user_id' header"}, status=400)
+
+        try:
+            user = User.objects.get(id=user_id)
+            # user_profile = UserProfile.objects.filter(user=user).values('user__username', 'user__date_of_birth', 'user__interests', 'user__cover').first()
+            profile = UserProfile.objects.get(user=user)
+        
+                # Fetch user interests
+            interests = profile.user.interests.all()
+            
+            # Serialize profile data with interests
+            profile_serializer = UserProfileSerializer(profile, context = {'device':device})
+            
+            
+            data = profile_serializer.data
+            print(f"data:{data}")
+            # Add interests to the serialized data
+            data['interests'] = InterestSerializer(interests, many=True).data
+
+            profile_data = {
+                'username':data['user']['username'],
+                'about_me':lorem_ipsum,
+                'age':calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')),
+                'profile_picture':data['profile_picture'],
+                'distance':'5Km',
+                'interests':data['interests'],
+                'cover_photos':data['cover_photos'],
+                
+            }
+            
+            return Response(profile_data, status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            return Response({"message": "User not found"}, status=404)
 
 class GetMyPreferences(GenericAPIView):
     @swagger_auto_schema(
