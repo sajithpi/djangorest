@@ -721,6 +721,8 @@ class GetProfileMatches(GenericAPIView):
         user_gender = user_profile.user.gender
         user_orientation = user_profile.user.orientation
     
+
+        device = request.headers.get('device','web')
         print(f"USER {user} GENDER:{user_gender}, ORIENTATION:{user_orientation}")
         user_preferences = ProfilePreference.objects.get(user_profile=user_profile)
         print(f"user preferences:{user_preferences}")
@@ -828,7 +830,10 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id = {}
             preferences_by_user_id['id'] = profile.user.id
             preferences_by_user_id['username'] = profile.user.username
-            preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
+            if device == 'mobile':
+                preferences_by_user_id['interests'] = [interests.id for interests in profile.user.interests.all()]
+            else:    
+                preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
             preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
             age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
             preferences_by_user_id['age'] = age
