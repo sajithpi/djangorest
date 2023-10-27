@@ -228,14 +228,16 @@ class GetProfileDetails(GenericAPIView):
         responses={200: 'Success', 400: 'Bad Request', 404: 'Not Found'},
     )
     def get(self, request):
-        user_id = request.data.get('user_id')
+        username = request.GET.get('username')
         device = request.headers.get('device','web')
         
-        if not user_id:
+        if not username:
             return Response({"message": "Missing 'user_id' header"}, status=400)
 
         try:
-            user = User.objects.get(id=user_id)
+            current_user = User.objects.get(id = request.user.id)
+            current_user_profile = UserProfile.objects.get(user = current_user)
+            user = User.objects.get(username=username)
             # user_profile = UserProfile.objects.filter(user=user).values('user__username', 'user__date_of_birth', 'user__interests', 'user__cover').first()
             profile = UserProfile.objects.get(user=user)
         
@@ -250,7 +252,9 @@ class GetProfileDetails(GenericAPIView):
             print(f"data:{data}")
             # Add interests to the serialized data
             data['interests'] = InterestSerializer(interests, many=True).data
-
+            favorite_status = True if Favorite.objects.filter(user=profile, favored_by=current_user_profile).first() else False
+            like_status = True if Like.objects.filter(user=profile, liked_by=current_user_profile).first() else False
+            block_status = True if BlockedUser.objects.filter(user=profile, blocked_by = current_user_profile).first() else False
             profile_data = {
                 'username':data['user']['username'],
                 'about_me':lorem_ipsum,
@@ -259,7 +263,10 @@ class GetProfileDetails(GenericAPIView):
                 'distance':'5Km',
                 'interests':data['interests'],
                 'cover_photos':data['cover_photos'],
-                
+                'favorite_status':favorite_status,
+                'like_status':like_status,
+                'block_status':block_status,
+                          
             }
             
             return Response(profile_data, status=status.HTTP_200_OK)
