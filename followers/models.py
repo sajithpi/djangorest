@@ -18,3 +18,7 @@ class Like(models.Model):
 class BlockedUser(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_user')
     blocked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_by')
+
+class Poke(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='poke')
+    poked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='poked_by')

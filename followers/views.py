@@ -12,7 +12,7 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .models import Favorite, Like, BlockedUser
+from .models import Favorite, Like, BlockedUser, Poke
 from django.db.models import F, Func, ExpressionWrapper, DateTimeField
 from django.conf import settings
 from django.shortcuts import get_object_or_404
@@ -21,7 +21,7 @@ from accounts.models import User, UserProfile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 import json
-from accounts.api import get_blocked_users_data, add_notification
+from accounts.api import get_blocked_users_data, add_notification, remove_notification
 # Create your views here.
 """_summary_
     First two classes for Favorites
@@ -60,7 +60,7 @@ class AddRemoveFavorite(GenericAPIView):
             
             if exists:
                 exists.delete()
-
+                remove_notification(from_user = favored_by, to_user=user, type='follow')
                 return Response({'status':'True', 
                                 'message': f"{favored_by.user.username} is already Favorited {user.user.username} so user in unfavored this user",
                                 'action':f"{favored_by.user.username}' is unfavored {user.user.username}"
@@ -183,6 +183,7 @@ class LikeDislike(GenericAPIView):
             exists = Like.objects.filter(user = user, liked_by = liked_by).first()
             if exists:
                 exists.delete()
+                remove_notification(from_user=liked_by, to_user=user, type='like')
                 return Response({'status':'True', 
                                 'action':f"{liked_by.user.username}' is disliked {user.user.username}"
                                 }, 
@@ -322,3 +323,72 @@ class GetBlockedUsers(GenericAPIView):
             'my_blocked_users_data':my_blocked_users_data,
         }, status=status.HTTP_200_OK)
     
+class PokeUser(GenericAPIView):
+ 
+    def post(self, request):
+        """
+        Like/Dislike a user.
+        """
+        try:
+            print(f"request data:{request.data}")
+            user = request.data.get('user')
+            poked_by = UserProfile.objects.get(user__id = request.user.id)
+            user = UserProfile.objects.get(user = user)
+            # favoured_user = UserProfile.objects.get(user = liked_by)
+            
+            poke = Poke.objects.create(user = user, poked_by = poked_by)
+            poke.save()
+            description = f"{poked_by.user.username} is poked {user.user.username}'"
+            add_notification(from_user=poked_by, to_user=user, type='poke', description=description)
+            print(f"user:{user} poked:{request.user}")
+            return Response({'message':'Success', 
+                            'description':f"{poked_by.user.username} is poked {user.user.username} Successfully"},
+                            status=status.HTTP_200_OK)
+        except UserProfile.DoesNotExist as e:
+            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
+
+
+class GetPokedUsers(GenericAPIView):
+    
+    def get(self, request):
+            """
+            Get favorite users and admire count. Note: User must be logged in.
+            """
+            user_id = request.user.id
+            
+            # Ensure the user exists or return a 404 response if not found
+            user = get_object_or_404(User, id=user_id)
+            user_profile = UserProfile.objects.get(user = user)
+            # Calculate total likes you got and your likes 
+            poked_me_count = Poke.objects.filter(user=user_profile).count()
+            my_pokes = Poke.objects.filter(liked_by=user_profile).count()
+
+            blocked_users = get_blocked_users_data(user_profile=user_profile)
+
+            # Get the list of users liked the current user
+            poked_me_list = Poke.objects.filter(user=user_profile).values_list('poked_by', flat=True)
+
+            #fetch username, and user profile picture of each user in the users_liked current_user list
+            users_who_poked_me = UserProfile.objects.filter(user__id__in=poked_me_list).values('user__username','user__id','profile_picture', 'user__date_of_birth').exclude(user__id__in=blocked_users)
+            for user_data in users_who_poked_me:
+                date_of_birth = user_data['user__date_of_birth']
+                if date_of_birth:
+                    user_data['age'] = calculate_age(date_of_birth)
+            #get the list of users where the current user liked
+            my_poke_list = Like.objects.filter(liked_by=user_profile).values_list('user',flat=True)
+
+            #fetch username, and user profile picture of each user in the user liked  list
+            my_poke_data = UserProfile.objects.filter(user__id__in=my_poke_list).values('user__username','user__id','profile_picture','user__date_of_birth').exclude(user__id__in=blocked_users)
+            
+            for user_data in my_poke_data:
+                date_of_birth = user_data['user__date_of_birth']
+                if date_of_birth:
+                    user_data['age'] = calculate_age(date_of_birth)
+            return Response({
+                'message': 'Success',
+                'poked_me_count': poked_me_count,
+                'my_pokes': my_pokes,
+                'users_who_poked_me': users_who_poked_me,
+                'my_poke_data':my_poke_data,
+            }, status=status.HTTP_200_OK)
+        

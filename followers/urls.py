@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AddRemoveFavorite, GetFavoriteUsers, LikeDislike, GetLikeUsers, BLockUser, GetBlockedUsers
+from .views import AddRemoveFavorite, GetFavoriteUsers, LikeDislike, GetLikeUsers, BLockUser, GetBlockedUsers, PokeUser, GetPokedUsers 
 
 urlpatterns = [
     # Favorites
@@ -13,4 +13,8 @@ urlpatterns = [
     # Block
     path('user/block-unblock-user',BLockUser.as_view(),name='block-unblock-user'),
     path('user/get-blocked-users',GetBlockedUsers.as_view(),name='get-blocked-users'),
+
+    # Poke
+    path('user/poke-user',PokeUser.as_view(),name='poke-user'),
+    path('user/get-poke-list',GetPokedUsers.as_view(),name='get-poke-list'),
 ]
