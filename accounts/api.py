@@ -16,6 +16,7 @@ from django.conf import settings
 import json
 from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser
+import math
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -200,12 +201,27 @@ class GetUserData(GenericAPIView):
                             # user.user_ interests.add(interest)
                             user.interests.add(interest)
                 
+            return Response({'message':'User Profile updated successfully'})
         except UserProfile.DoesNotExist:
             return Response({'error':'UserProfile does not exist for this user.'}, status=404)
-        return Response({'message':'User Profile updated successfully'})
-        # Return a success response
-        return Response({'message': 'User information updated successfully'})
   
+class UpdateUserLocation(GenericAPIView):
+    permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
+
+    def post(self, request):
+        try:
+            user = User.objects.get(username=self.request.user)
+            user_profile = UserProfile.objects.get(user=user)
+            if self.request.data.get('longitude') and self.request.data.get('latitude'):
+                user_profile.longitude = self.request.data.get('longitude')
+                user_profile.latitude = self.request.data.get('latitude')
+                user_profile.city = self.request.data.get('city','city')
+                user_profile.save()
+                return Response('Location Updated Successfully', status=status.HTTP_200_OK)
+            return Response('Location arguments missing',status = status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(f"Error in Location:{e}")
+            return Response(f'Error in location updation:{str(e)}',status = status.HTTP_400_BAD_REQUEST)
 # Calculate age based on date of birth
 def calculate_age(date_of_birth):
     now = settings.NOW
@@ -213,6 +229,27 @@ def calculate_age(date_of_birth):
     age = today.year - date_of_birth.year - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
     return age
 
+def haversine_distance(lat1, lon1, lat2, lon2):
+    # Convert latitude and longitude from degrees to radians
+    if not lat1 or not lon1 or not lat2 or not lon2:
+        return 0
+    
+    lat1 = math.radians(lat1)
+    lon1 = math.radians(lon1)
+    lat2 = math.radians(lat2)
+    lon2 = math.radians(lon2)
+
+    # Radius of the Earth in kilometers
+    earth_radius = 6371.0  # Approximate value for Earth's radius
+
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance = earth_radius * c
+
+    return round(distance,2)
 lorem_ipsum = """
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 """
@@ -260,7 +297,7 @@ class GetProfileDetails(GenericAPIView):
                 'about_me':lorem_ipsum,
                 'age':calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')),
                 'profile_picture':data['profile_picture'],
-                'distance':'5Km',
+                'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
                 'interests':data['interests'],
                 'cover_photos':data['cover_photos'],
                 'favorite_status':favorite_status,
@@ -683,6 +720,7 @@ class GetProfileMatches(GenericAPIView):
         user_profile = UserProfile.objects.get(user=user)
         user_gender = user_profile.user.gender
         user_orientation = user_profile.user.orientation
+    
         print(f"USER {user} GENDER:{user_gender}, ORIENTATION:{user_orientation}")
         user_preferences = ProfilePreference.objects.get(user_profile=user_profile)
         print(f"user preferences:{user_preferences}")
@@ -806,6 +844,7 @@ class GetProfileMatches(GenericAPIView):
             like_status = True if Like.objects.filter(user=profile, liked_by=user_profile).first() else False
             preferences_by_user_id['favorite_status'] = favorite_status
             preferences_by_user_id['like_status'] = like_status
+            preferences_by_user_id['distance'] = haversine_distance(user_profile.latitude, user_profile.longitude, profile.latitude, profile.longitude)
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():

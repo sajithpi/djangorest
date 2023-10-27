@@ -119,7 +119,7 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
-    
+    about_me = models.CharField(max_length=75, blank=True, null=True)
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
     height= models.FloatField(blank=True, null=True, verbose_name='Height in cm')
     drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True, related_name='drink_choice')
@@ -134,6 +134,8 @@ class UserProfile(models.Model):
     country = models.CharField(max_length=50, blank=True, null=True)
     is_edited = models.BooleanField(default=False)
     city = models.CharField(max_length=50, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     pin_code = models.CharField(max_length=6, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
