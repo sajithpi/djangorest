@@ -687,7 +687,7 @@ class GetProfileMatches(GenericAPIView):
             ('M', 'Hetero'): 'F',
             ('M', 'Homo'): 'M',
             
-            ('F', 'Hetro'): 'M',
+            ('F', 'Hetero'): 'M',
             ('F', 'Homo'): 'F',
 
             ('TM', 'Hetero'): 'TF',
