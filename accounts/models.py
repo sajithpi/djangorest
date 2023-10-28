@@ -119,7 +119,7 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to=user_profile_picture_upload_path ,blank=True,null=True)
     
     # cover_photo = models.ManyToManyField('CoverPhoto', related_name='user_profiles', blank=True)
-    about_me = models.CharField(max_length=75, blank=True, null=True)
+    about_me = models.CharField(max_length=1000, blank=True, null=True)
     family_plan = models.ForeignKey("FamilyPlanChoice", on_delete=models.SET_NULL, blank=True, null=True)
     height= models.FloatField(blank=True, null=True, verbose_name='Height in cm')
     drink = models.ForeignKey("DrinkChoice", on_delete=models.SET_NULL, blank=True, null=True, related_name='drink_choice')

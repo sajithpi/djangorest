@@ -44,7 +44,7 @@ class UserSerializers(serializers.ModelSerializer):
 class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id","email","username","password","about_me","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]  # Add other user fields as needed
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]  # Add other user fields as needed
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     
@@ -66,10 +66,10 @@ class UpdateUserProfileSerializer(serializers.ModelSerializer):
             'education',
             'relationship_goals',
             'workout',
+            'about_me',
             'smoke',
             # 'languages',
             'cover_photos',
-             
             'company',
             'job_title',
             'country',
@@ -155,6 +155,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
             'profile_picture',
             'cover_photos',  # Use 'cover_photos' (plural) here
+            'about_me',
             'family_plan',
             'drink',
             'religion',

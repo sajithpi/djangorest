@@ -16,6 +16,7 @@ from django.conf import settings
 import json
 from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser
+from html import escape
 import math
 
 class TwoFactorAuthRequired(permissions.BasePermission):
@@ -109,6 +110,11 @@ class GetUserData(GenericAPIView):
         device = request.headers.get('device','web')
         # Create a mutable copy of request.data
         print(f"request data:{request.data}")
+        if 'about_me' in request.data:
+            html_content = request.data['about_me']
+            # escaped_html = escape(html_content)
+            json_data = json.dumps(html_content)
+            request.data['about_me'] = json_data
         # mutable_data = QueryDict(request.data.urlencode(), mutable=True)
         #Update fields in the User model if provided
         user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
@@ -293,6 +299,7 @@ class GetProfileDetails(GenericAPIView):
             like_status = True if Like.objects.filter(user=profile, liked_by=current_user_profile).first() else False
             block_status = True if BlockedUser.objects.filter(user=profile, blocked_by = current_user_profile).first() else False
             profile_data = {
+                'id':data['user']['id'],
                 'username':data['user']['username'],
                 'about_me':lorem_ipsum,
                 'age':calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')),
@@ -831,7 +838,7 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id['id'] = profile.user.id
             preferences_by_user_id['username'] = profile.user.username
             if device == 'mobile':
-                preferences_by_user_id['interests'] = [interests.id for interests in profile.user.interests.all()]
+                preferences_by_user_id['interests'] = [{'id':interests.id, 'name':interests.name }for interests in profile.user.interests.all()]
             else:    
                 preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
             preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.shortcuts import render
 from rest_framework.views import APIView
-from .serializers import FavoriteSerializer
+from .serializers import FavoriteSerializer, RatingSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.generics import GenericAPIView
@@ -12,7 +12,7 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .models import Favorite, Like, BlockedUser, Poke
+from .models import Favorite, Like, BlockedUser, Poke, CoverPhoto
 from django.db.models import F, Func, ExpressionWrapper, DateTimeField
 from django.conf import settings
 from django.shortcuts import get_object_or_404
@@ -392,3 +392,20 @@ class GetPokedUsers(GenericAPIView):
                 'my_poke_data':my_poke_data,
             }, status=status.HTTP_200_OK)
         
+class RateUserCoverPhoto(GenericAPIView):
+    
+    def post(self, request):
+        try:
+            rated_user = User.objects.get(username = request.user)
+            rated_user_profile = UserProfile.objects.get(user = rated_user)
+            
+            user = User.objects.get(username = request.user)
+            user_profile = UserProfile.objects.get(user = user)
+            
+            cover_photo = CoverPhoto.objects.get(id = request.data.get('cover_photo'))
+            print(f"")
+        
+            return Response('Cover Photo Rating Successfull', status=status.HTTP_200_OK)
+        except Exception as e:
+            
+            return Response(f"Error :{e}", status=status.HTTP_400_BAD_REQUEST)
