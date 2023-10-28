@@ -299,6 +299,20 @@ class GetProfileDetails(GenericAPIView):
             like_status = True if Like.objects.filter(user=profile, liked_by=current_user_profile).first() else False
             block_status = True if BlockedUser.objects.filter(user=profile, blocked_by = current_user_profile).first() else False
             rating_users = [{'id':rating.cover_photo_id, 'rating':rating.rate_count} for rating in Rating.objects.filter(user = profile, rated_by = current_user_profile).all()]
+            # Create a mapping from cover_photo_id to rating
+            cover_photo_rating_map = {rating['id']: rating['rating'] for rating in rating_users}
+
+            # Iterate through the cover photos and add the rating
+            for cover_photo in data['cover_photos']:
+                cover_photo_id = cover_photo['id']
+                
+                # Check if a rating exists for this cover photo ID
+                if cover_photo_id in cover_photo_rating_map:
+                    cover_photo['rating'] = cover_photo_rating_map[cover_photo_id]
+                else:
+                    # Handle the case where no rating is available for this cover photo
+                    cover_photo['rating'] = None
+            
             profile_data = {
                 'id':data['user']['id'],
                 'username':data['user']['username'],
@@ -307,7 +321,6 @@ class GetProfileDetails(GenericAPIView):
                 'profile_picture':data['profile_picture'],
                 'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
                 'interests':data['interests'],
-                'rating_users':rating_users if rating_users else [],
                 'cover_photos':data['cover_photos'],
                 'favorite_status':favorite_status,
                 'like_status':like_status,
@@ -320,6 +333,11 @@ class GetProfileDetails(GenericAPIView):
         except User.DoesNotExist:
             return Response({"message": "User not found"}, status=404)
 
+class getLoginUserData(GenericAPIView):
+    def get(self, request):
+        user = User.objects.get(username = self.request.user)
+        print(f"user:{user.user_profile}")
+        return Response('Success', status=status.HTTP_200_OK)
 class GetMyPreferences(GenericAPIView):
     @swagger_auto_schema(
         operation_description="Get user preferences",  # Describe the operation

@@ -395,19 +395,6 @@ class GetPokedUsers(GenericAPIView):
 class RateUserCoverPhoto(GenericAPIView):
     
     
-    def get(self, request):
-        try:
-            rated_user = User.objects.get(username=request.user)
-            rated_user_profile = UserProfile.objects.get(user=rated_user)
-            
-            user = User.objects.get(username=request.data.get('username'))
-            user_profile = UserProfile.objects.get(user=user)
-            
-            cover_photo_id = request.data.get('cover_photo')
-            cover_photo = CoverPhoto.objects.get(id=cover_photo_id)
-        except Exception as e:
-            print(f"Error:{e}")
-    
     def post(self, request):
         try:
             rated_user = User.objects.get(username=request.user)
