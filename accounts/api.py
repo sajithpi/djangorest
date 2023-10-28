@@ -336,8 +336,10 @@ class GetProfileDetails(GenericAPIView):
 class getLoginUserData(GenericAPIView):
     def get(self, request):
         user = User.objects.get(username = self.request.user)
-        print(f"user:{user.user_profile}")
-        return Response('Success', status=status.HTTP_200_OK)
+        user_profile = UserProfile.objects.get(user = user)
+        data =  {'username':user.username, 'profile_picture':str(user_profile.profile_picture)}
+        return Response(data, status=status.HTTP_200_OK)
+    
 class GetMyPreferences(GenericAPIView):
     @swagger_auto_schema(
         operation_description="Get user preferences",  # Describe the operation
