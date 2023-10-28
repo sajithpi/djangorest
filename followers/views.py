@@ -12,7 +12,7 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .models import Favorite, Like, BlockedUser, Poke, CoverPhoto
+from .models import Favorite, Like, BlockedUser, Poke, CoverPhoto, Rating
 from django.db.models import F, Func, ExpressionWrapper, DateTimeField
 from django.conf import settings
 from django.shortcuts import get_object_or_404
@@ -394,18 +394,43 @@ class GetPokedUsers(GenericAPIView):
         
 class RateUserCoverPhoto(GenericAPIView):
     
+    
+    def get(self, request):
+        try:
+            rated_user = User.objects.get(username=request.user)
+            rated_user_profile = UserProfile.objects.get(user=rated_user)
+            
+            user = User.objects.get(username=request.data.get('username'))
+            user_profile = UserProfile.objects.get(user=user)
+            
+            cover_photo_id = request.data.get('cover_photo')
+            cover_photo = CoverPhoto.objects.get(id=cover_photo_id)
+        except Exception as e:
+            print(f"Error:{e}")
+    
     def post(self, request):
         try:
-            rated_user = User.objects.get(username = request.user)
-            rated_user_profile = UserProfile.objects.get(user = rated_user)
+            rated_user = User.objects.get(username=request.user)
+            rated_user_profile = UserProfile.objects.get(user=rated_user)
             
-            user = User.objects.get(username = request.user)
-            user_profile = UserProfile.objects.get(user = user)
+            user = User.objects.get(username=request.data.get('username'))
+            user_profile = UserProfile.objects.get(user=user)
             
-            cover_photo = CoverPhoto.objects.get(id = request.data.get('cover_photo'))
-            print(f"")
+            cover_photo_id = request.data.get('cover_photo')
+            cover_photo = CoverPhoto.objects.get(id=cover_photo_id)
+            
+            print(f"cover photo link:{cover_photo.image}")
+            
+            rating_count = request.data.get('rate_count')
+            
+            Rating.objects.create(user=user_profile, rated_by=rated_user_profile, cover_photo=cover_photo, rate_count=rating_count)
         
-            return Response('Cover Photo Rating Successfull', status=status.HTTP_200_OK)
+            return Response({'message': 'Cover Photo Rating Successful'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+        except CoverPhoto.DoesNotExist:
+            return Response({'error': 'Cover photo does not exist.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            
-            return Response(f"Error :{e}", status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)

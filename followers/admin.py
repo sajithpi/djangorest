@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import Favorite, Like, BlockedUser, Poke
+from . models import Favorite, Like, BlockedUser, Poke, Rating
 # Register your models here.
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'favored_by')
@@ -20,8 +20,14 @@ class PokeAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'poked_by')
     list_filter = ('user', 'poked_by')
     search_fields = ('user', 'poked_by')
+    
+class RatingsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'cover_photo_id','rated_by','rate_count')
+    list_filter = ('user', 'rated_by')
+    search_fields = ('user', 'rated_by')
 
 admin.site.register(Favorite, FavoriteAdmin)
 admin.site.register(Like, LikeAdmin)
 admin.site.register(BlockedUser, BlockAdmin)
 admin.site.register(Poke, PokeAdmin)
+admin.site.register(Rating, RatingsAdmin)
