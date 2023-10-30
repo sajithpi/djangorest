@@ -918,8 +918,9 @@ def add_notification(from_user, to_user, type, description ):
     notification.save()
 def remove_notification(from_user, to_user, type):
     try:
-        notification = Notification.objects.get(from_user=from_user, to_user=to_user, type=type)
-        notification.delete()
+        notification = Notification.objects.filter(from_user=from_user, to_user=to_user, type=type).first()
+        if notification:
+            notification.delete()
     except Notification.DoesNotExist:
         # Handle the case when the notification does not exist
         print(f"Notification not found")

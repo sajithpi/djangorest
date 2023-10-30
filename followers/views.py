@@ -60,6 +60,7 @@ class AddRemoveFavorite(GenericAPIView):
             
             if exists:
                 exists.delete()
+                
                 remove_notification(from_user = favored_by, to_user=user, type='follow')
                 return Response({'status':'True', 
                                 'message': f"{favored_by.user.username} is already Favorited {user.user.username} so user in unfavored this user",
@@ -69,6 +70,7 @@ class AddRemoveFavorite(GenericAPIView):
             favorite = Favorite.objects.create(user = user, favored_by = favored_by)
             favorite.save()
             description = f"{favored_by.user.username} is Favorited {user.user.username}'"
+            
             add_notification(from_user=favored_by, to_user=user, type='follow', description=description)
             print(f"user:{user} favored_user:{request.user}")
             return Response({'message':'Success', 
@@ -172,32 +174,56 @@ class LikeDislike(GenericAPIView):
     )
     def post(self, request):
         """
-        Like/Dislike a user.
+        Like/Dislike a user. This is a view for liking or disliking a user profile.
         """
         try:
+            # Print the request data for debugging purposes
             print(f"request data:{request.data}")
+            
+            # Get the user to be liked/disliked from the request data
             user = request.data.get('user')
-            liked_by = UserProfile.objects.get(user__id = request.user.id)
-            user = UserProfile.objects.get(user = user)
-            # favoured_user = UserProfile.objects.get(user = liked_by)
-            exists = Like.objects.filter(user = user, liked_by = liked_by).first()
+            
+            # Get the UserProfile of the user who is performing the action (the one liking/disliking)
+            liked_by = UserProfile.objects.get(user__id=request.user.id)
+            
+            # Get the UserProfile of the user being liked/disliked
+            user = UserProfile.objects.get(user=user)
+            
+            # Check if a 'Like' entry already exists for the given user and liker
+            exists = Like.objects.filter(user=user, liked_by=liked_by).first()
+            
             if exists:
+                # If a 'Like' entry already exists, delete it (dislike)
                 exists.delete()
+                
+                # Remove the notification related to the dislike action
                 remove_notification(from_user=liked_by, to_user=user, type='like')
-                return Response({'status':'True', 
-                                'action':f"{liked_by.user.username}' is disliked {user.user.username}"
+                
+                return Response({'status': 'True', 
+                                'action': f"{liked_by.user.username} is disliked {user.user.username}"
                                 }, 
                                 status=status.HTTP_200_OK)
-            like = Like.objects.create(user = user, liked_by = liked_by)
-            like.save()
-            description = f"{liked_by.user.username} is liked {user.user.username}'"
-            add_notification(from_user=liked_by, to_user=user, type='like', description=description)
-            print(f"user:{user} favored_user:{request.user}")
-            return Response({'message':'Success', 
-                            'description':f"{liked_by.user.username} is liked {user.user.username} Successfully"},
-                            status=status.HTTP_200_OK)
+            else:
+                # If a 'Like' entry does not exist, create a new one (like)
+                like = Like.objects.create(user=user, liked_by=liked_by)
+                like.save()
+                
+                # Create a description for the like action
+                description = f"{liked_by.user.username} is liked {user.user.username}"
+                
+                # Add a notification for the like action
+                add_notification(from_user=liked_by, to_user=user, type='like', description=description)
+                
+                # Print user and favored_user for debugging purposes
+                print(f"user:{user} favored_user:{request.user}")
+                
+                return Response({'message': 'Success', 
+                                'description': f"{liked_by.user.username} is liked {user.user.username} Successfully"
+                                },
+                                status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
-            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
+            # Handle the case where the UserProfile does not exist
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GetLikeUsers(GenericAPIView):
     @swagger_auto_schema(
@@ -261,34 +287,57 @@ class BLockUser(GenericAPIView):
     def post(self, request):
         """
         Block or unblock a user. Note: User must be logged in.
-        """        
+        """
         try:
+            # Print the request data for debugging purposes
             print(f"request data:{request.data}")
-            user = request.data.get('user')
-            blocked_by = UserProfile.objects.get(user__id = request.user.id)
-            user = UserProfile.objects.get(user = user)
             
-            blocked_user = BlockedUser.objects.filter(user = user, blocked_by = blocked_by).first()
+            # Get the user to be blocked/unblocked from the request data
+            user = request.data.get('user')
+            
+            # Get the UserProfile of the user who is performing the action (the one blocking/unblocking)
+            blocked_by = UserProfile.objects.get(user__id=request.user.id)
+            
+            # Get the UserProfile of the user being blocked/unblocked
+            user = UserProfile.objects.get(user=user)
+            
+            # Check if a 'BlockedUser' entry already exists for the given user and blocker
+            blocked_user = BlockedUser.objects.filter(user=user, blocked_by=blocked_by).first()
+            
             if blocked_user:
-                blocked_user.delete() #unblock if the user is blocked
-                return Response({'status':'True', 
-                                'action':f"{blocked_by.user.username}' is unbloked {user.user.username}"
+                # If a 'BlockedUser' entry already exists, delete it (unblock)
+                blocked_user.delete()
+                
+                return Response({'status': 'True', 
+                                'action': f"{blocked_by.user.username} is unblocked {user.user.username}"
                                 }, 
                                 status=status.HTTP_200_OK)
-            block_user = BlockedUser.objects.create(user = user, blocked_by = blocked_by)
-            block_user.save()
-            remove_favorite = Favorite.objects.filter(Q(user = user) | Q(user = blocked_by), 
-                                                      Q(favored_by = blocked_by) | Q(favored_by = user))
-            remove_favorite.delete()
-            remove_likes = Like.objects.filter(Q(user = user) | Q(user=blocked_by),
-                                                Q(liked_by=blocked_by) | Q(user = user))
-            remove_likes.delete()
-            return Response({'message':'Success', 
-                            'description':f"{blocked_by.user.username} is blocked {user.user.username} Successfully"},
-                            status=status.HTTP_200_OK)
+            else:
+                # If a 'BlockedUser' entry does not exist, create a new one (block)
+                block_user = BlockedUser.objects.create(user=user, blocked_by=blocked_by)
+                block_user.save()
+                
+                # Remove favorite entries related to either user
+                remove_favorite = Favorite.objects.filter(
+                    Q(user=user) | Q(user=blocked_by),
+                    Q(favored_by=blocked_by) | Q(favored_by=user)
+                )
+                remove_favorite.delete()
+                
+                # Remove like entries related to either user
+                remove_likes = Like.objects.filter(
+                    Q(user=user) | Q(user=blocked_by),
+                    Q(liked_by=blocked_by) | Q(user=user)
+                )
+                remove_likes.delete()
+                
+                return Response({'message': 'Success', 
+                                'description': f"{blocked_by.user.username} is blocked {user.user.username} Successfully"
+                                },
+                                status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
-            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
-
+            # Handle the case where the UserProfile does not exist
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class GetBlockedUsers(GenericAPIView):
     @swagger_auto_schema(
@@ -327,25 +376,41 @@ class PokeUser(GenericAPIView):
  
     def post(self, request):
         """
-        Like/Dislike a user.
+        This view is used to perform a 'poke' action on a user.
         """
         try:
+            # Print the request data for debugging purposes
             print(f"request data:{request.data}")
-            user = request.data.get('user')
-            poked_by = UserProfile.objects.get(user__id = request.user.id)
-            user = UserProfile.objects.get(user = user)
-            # favoured_user = UserProfile.objects.get(user = liked_by)
             
-            poke = Poke.objects.create(user = user, poked_by = poked_by)
+            # Get the user to be poked from the request data
+            user = request.data.get('user')
+            
+            # Get the UserProfile of the user who is performing the action (the one poking)
+            poked_by = UserProfile.objects.get(user__id=request.user.id)
+            
+            # Get the UserProfile of the user being poked
+            user = UserProfile.objects.get(user=user)
+            
+            # Create a 'Poke' entry to record the poke action
+            poke = Poke.objects.create(user=user, poked_by=poked_by)
             poke.save()
-            description = f"{poked_by.user.username} is poked {user.user.username}'"
+            
+            # Create a description for the poke action
+            description = f"{poked_by.user.username} is poked {user.user.username}"
+            
+            # Add a notification for the poke action
             add_notification(from_user=poked_by, to_user=user, type='poke', description=description)
+            
+            # Print user and poked information for debugging purposes
             print(f"user:{user} poked:{request.user}")
-            return Response({'message':'Success', 
-                            'description':f"{poked_by.user.username} is poked {user.user.username} Successfully"},
+            
+            return Response({'message': 'Success', 
+                            'description': f"{poked_by.user.username} is poked {user.user.username} Successfully"
+                            },
                             status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
-            return Response({'error':str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)   
+            # Handle the case where the UserProfile does not exist
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GetPokedUsers(GenericAPIView):
@@ -359,25 +424,25 @@ class GetPokedUsers(GenericAPIView):
             # Ensure the user exists or return a 404 response if not found
             user = get_object_or_404(User, id=user_id)
             user_profile = UserProfile.objects.get(user = user)
-            # Calculate total likes you got and your likes 
+            # Calculate total pokes you got and your pokes 
             poked_me_count = Poke.objects.filter(user=user_profile).count()
             my_pokes = Poke.objects.filter(liked_by=user_profile).count()
 
             blocked_users = get_blocked_users_data(user_profile=user_profile)
 
-            # Get the list of users liked the current user
+            # Get the list of users poked the current user
             poked_me_list = Poke.objects.filter(user=user_profile).values_list('poked_by', flat=True)
 
-            #fetch username, and user profile picture of each user in the users_liked current_user list
+            #fetch username, and user profile picture of each user in the users_poked current_user list
             users_who_poked_me = UserProfile.objects.filter(user__id__in=poked_me_list).values('user__username','user__id','profile_picture', 'user__date_of_birth').exclude(user__id__in=blocked_users)
             for user_data in users_who_poked_me:
                 date_of_birth = user_data['user__date_of_birth']
                 if date_of_birth:
                     user_data['age'] = calculate_age(date_of_birth)
-            #get the list of users where the current user liked
+            #get the list of users where the current user poked
             my_poke_list = Like.objects.filter(liked_by=user_profile).values_list('user',flat=True)
 
-            #fetch username, and user profile picture of each user in the user liked  list
+            #fetch username, and user profile picture of each user in the user poked  list
             my_poke_data = UserProfile.objects.filter(user__id__in=my_poke_list).values('user__username','user__id','profile_picture','user__date_of_birth').exclude(user__id__in=blocked_users)
             
             for user_data in my_poke_data:
@@ -397,27 +462,56 @@ class RateUserCoverPhoto(GenericAPIView):
     
     def post(self, request):
         try:
+            # Get the User object for the user making the request
             rated_user = User.objects.get(username=request.user)
+            
+            # Get the UserProfile object associated with the rated user
             rated_user_profile = UserProfile.objects.get(user=rated_user)
             
+            # Get the User object for the user to be rated (from the request data)
             user = User.objects.get(username=request.data.get('username'))
+            
+            # Get the UserProfile object associated with the user to be rated
             user_profile = UserProfile.objects.get(user=user)
             
+            # Get the ID of the cover photo from the request data
             cover_photo_id = request.data.get('cover_photo')
+            
+            # Get the CoverPhoto object using the cover photo ID
             cover_photo = CoverPhoto.objects.get(id=cover_photo_id)
             
+            # Print the cover photo link for debugging purposes
             print(f"cover photo link:{cover_photo.image}")
             
+            # Get the rating count from the request data
             rating_count = request.data.get('rate_count')
             
-            Rating.objects.create(user=user_profile, rated_by=rated_user_profile, cover_photo=cover_photo, rate_count=rating_count)
-        
+            
+            # Check if a rating entry already exists for the given user, rated user, and cover photo
+            existing_rating = Rating.objects.filter(user = user_profile, rated_by = rated_user_profile, cover_photo = cover_photo)
+            if existing_rating:
+                print(f"already exists")
+                existing_rating.rate_count = rating_count
+                print(f"rate:{existing_rating.rate_count}")
+                existing_rating.update()
+            else:
+                print(f"creating new rating")
+                # Create a new Rating entry to record the rating
+                Rating.objects.create(user=user_profile, rated_by=rated_user_profile, cover_photo=cover_photo, rate_count=rating_count)
+            # Add a notification for the raging action
+          
+            add_notification(from_user=rated_user_profile, to_user=user_profile, type='poke', description=rating_count)
+            
             return Response({'message': 'Cover Photo Rating Successful'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
+            # Handle the case where the user does not exist
             return Response({'error': 'User does not exist.'}, status=status.HTTP_404_NOT_FOUND)
         except UserProfile.DoesNotExist:
+            # Handle the case where the user profile does not exist
             return Response({'error': 'User profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
         except CoverPhoto.DoesNotExist:
+            # Handle the case where the cover photo does not exist
             return Response({'error': 'Cover photo does not exist.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            # Handle other exceptions with a generic error message
             return Response({'error': f"Error: {e}"}, status=status.HTTP_400_BAD_REQUEST)
