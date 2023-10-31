@@ -37,4 +37,5 @@ urlpatterns = [
     path('api/enable-2fa',Enable2FA.as_view(), name='enable-2fa'),
     
     path('api/follow/',include('followers.urls')),
+    path('api/social-auth/',include('social_auth.urls')),
 ]

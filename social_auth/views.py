@@ -20,6 +20,9 @@ import json
 
 class GoogleSocialAuthView(generics.GenericAPIView):
     
+    permission_classes = [AllowAny]
+    
+    
     serializer_class = GoogleSocialAuthSerializer
 
     def post(self, request):
@@ -31,10 +34,13 @@ class GoogleSocialAuthView(generics.GenericAPIView):
         Send an idtoken as from google to get user information
 
         """
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = ((serializer.validated_data)['auth_token'])
-        return Response(data, status=status.HTTP_200_OK)
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = ((serializer.validated_data)['auth_token'])
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e), status = status.HTTP_401_UNAUTHORIZED)
     
 class FacebookSocialAuthView(generics.GenericAPIView):
 
