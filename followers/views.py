@@ -45,6 +45,7 @@ class AddRemoveFavorite(GenericAPIView):
             400: "Bad request or user is already favorited/unfavorited",
             500: "Internal server error",
         },
+        tags=["Favorite"],
     )
     def post(self, request):
         """
@@ -92,6 +93,7 @@ class GetFavoriteUsers(GenericAPIView):
             200: "Successful response with admire count and favorite user data",
             404: "User not found",
         },
+        tags=["Favorite"],
     )
    
 
@@ -165,12 +167,14 @@ class LikeDislike(GenericAPIView):
                 ),
             },
             required=['user'],
+            
         ),
         responses={
             200: "Like/Dislike action was successful",
             400: "Bad request or user is already Liked",
             500: "Internal server error",
         },
+        tags=["Like"],
     )
     def post(self, request):
         """
@@ -232,6 +236,7 @@ class GetLikeUsers(GenericAPIView):
             200: "Successful response with admire count and favorite user data",
             404: "User not found",
         },
+        tags=["Like"],
     )
     def get(self, request):
         """
@@ -283,6 +288,7 @@ class BLockUser(GenericAPIView):
             200: "Successful response with block/unblock message",
             404: "User not found",
         },
+        tags=["Block"],
     )
     def post(self, request):
         """
@@ -346,6 +352,7 @@ class GetBlockedUsers(GenericAPIView):
             200: "Successful response with blocked users' data",
             404: "User not found",
         },
+        tags=["Block"],
     )
     def get(self, request):
         """

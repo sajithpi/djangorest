@@ -269,6 +269,7 @@ class GetProfileDetails(GenericAPIView):
             openapi.Parameter('device', openapi.IN_HEADER, description="Device type", type=openapi.TYPE_STRING, enum=["web", "mobile"]),
         ],
         responses={200: 'Success', 400: 'Bad Request', 404: 'Not Found'},
+        tags=["User Profile"],
     )
     def get(self, request):
         username = request.GET.get('username')
@@ -337,14 +338,14 @@ class getLoginUserData(GenericAPIView):
     def get(self, request):
         user = User.objects.get(username = self.request.user)
         user_profile = UserProfile.objects.get(user = user)
-        data =  {'username':user.username, 'profile_picture':str(user_profile.profile_picture)}
+        data =  {'user_id':user.id ,'username':user.username, 'profile_picture':str(user_profile.profile_picture)}
         return Response(data, status=status.HTTP_200_OK)
     
 class GetMyPreferences(GenericAPIView):
     @swagger_auto_schema(
         operation_description="Get user preferences",  # Describe the operation
         responses={200: ProfilePreferenceSerializer()},  # Define the response schema
-        tags=["User"],  # Categorize the endpoint using tags
+        tags=["Preference"],  # Categorize the endpoint using tags
     )
     def get(self, request):
         device = request.headers.get('device','web')
@@ -385,7 +386,7 @@ class UpdateProfilePhoto(GenericAPIView):
             required=['profile_picture'],
         ),
         responses={200: "Success", 400: "Bad Request"},
-        tags=["User"],
+        tags=["UserProfile"],
     )
     def put(self, request):
         user = self.request.user
@@ -428,7 +429,7 @@ class DeleteCoverPhoto(GenericAPIView):
             required=['image_id'],
         ),
         responses={200: "Success", 400: "Bad Request", 404: "Not Found"},
-        tags=["User"],
+        tags=["UserProfile"],
     )
     def put(self, request):
         user = self.request.user
@@ -555,7 +556,7 @@ class GetPreferences(GenericAPIView):
     @swagger_auto_schema(
     operation_description="Get preference list",  # Describe the operation
     responses={200: UserProfileSerializer},  # Define the response schema
-    tags=["User"],  # Categorize the endpoint using tags
+    tags=["Preference"],  # Categorize the endpoint using tags
     )
     def get(self, request):
         # Fetch data from each model
@@ -637,6 +638,7 @@ class UpdateProfilePreference(GenericAPIView):
         operation_description="Update the user's profile preferences",
         request_body=ProfilePreferenceSerializer,
         responses={200: ProfilePreferenceSerializer, 400: "Bad Request"},
+        tags=["Preference"],
         )
         def put(self, request):
             user = self.request.user
@@ -742,6 +744,7 @@ class GetProfileMatches(GenericAPIView):
         responses={
             200: "Success",
         },
+        tags=["Preference"],
     )
     def get(self, request):
         # Retrieve the user's preferences
@@ -925,15 +928,34 @@ def remove_notification(from_user, to_user, type):
         # Handle the case when the notification does not exist
         print(f"Notification not found")
 
-class GetNotifications(GenericAPIView):
+class UserNotifications(GenericAPIView):
 
     def get(self, request):
         user_profile = UserProfile.objects.get(user = self.request.user)
         notifications = Notification.objects.filter(to_user = user_profile)
-        notifications .update(user_has_seen = True)
+        unseen_notifications_count = Notification.objects.filter(to_user=user_profile, user_has_seen=False).count()
+        print(f"unseen_notifications_count:{unseen_notifications_count}")
+        # notifications.update(user_has_seen = True)
         
         # Serialize the notifications using your custom serializer
         serializer = NotificationSerializer(notifications, many = True)
         serializer_data = serializer.data
-
-        return Response({'status':True, 'notifications':serializer_data}, status=status.HTTP_200_OK)
+        return Response({'status':True, 'notifications':serializer_data, "unseen_notifications_count":unseen_notifications_count}, status=status.HTTP_200_OK)
+    
+    
+    @swagger_auto_schema(
+    operation_summary="Mark Notifications as Seen",
+    operation_description="Mark all unread notifications as seen for the current user.",
+    responses={200: "Notifications marked as seen successfully", 400: "Error message if any"},
+    tags=["Notification"],
+    )
+    
+    def post(self, request):
+        try:
+            user_profile = UserProfile.objects.get(user = self.request.user)
+            notification = Notification.objects.filter(to_user = user_profile, user_has_seen = False)
+            notification.update(user_has_seen = True)
+            
+            return Response({'status':True, 'message':'User Seen Notification Successfully'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"status":False, "message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
