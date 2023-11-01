@@ -916,7 +916,7 @@ class Enable2FA(GenericAPIView):
         else:
             user.has_2fa_enabled = True
         user.save()
-        return Response(f"{action} 2FF for user {self.request.user}", status=status.HTTP_200_OK)
+        return Response({"status":True, "message":f"{action} 2FF for user {self.request.user}"}, status=status.HTTP_200_OK)
     
 def add_notification(from_user, to_user, type, description ):
 
