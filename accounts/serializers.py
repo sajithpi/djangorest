@@ -5,6 +5,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
+from . models import User, UserProfile
 from . otp import send_otp_via_mail
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -25,7 +26,7 @@ class UserSerializers(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","has_2fa_enabled","showDistance","phone_number",]
 
     def create(self, validated_data):
         user = User.objects.create(email=validated_data['email'],
@@ -329,9 +330,35 @@ class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
         fields = '__all__'
 
 class NotificationSerializer(serializers.ModelSerializer):
+    from_user_id = serializers.SerializerMethodField()
     from_user = serializers.CharField(source='from_user.user.username', read_only=True)
     to_user = serializers.CharField(source='to_user.user.username', read_only=True)
-
+    profile_picture = serializers.SerializerMethodField()
+    
+    
     class Meta:
         model = Notification
-        fields = ['from_user', 'to_user', 'type', 'description', 'user_has_seen', 'date_added']
+        fields = ['from_user', 'from_user_id', 'to_user', 'type', 'description', 'user_has_seen', 'profile_picture', 'date_added']
+        
+    def get_from_user_id(self, obj):
+        try:
+            user = User.objects.filter(username = obj.from_user).values('id').first()
+            print(f"id:{user}")
+            return user['id']
+        except Exception as e:
+            raise e
+            return None
+            # Handle the case when the user does not exist
+    def get_profile_picture(self, obj):
+        try:
+            # Assuming you have a 'user' ForeignKey on your UserProfile model
+            user = obj.from_user
+            user = User.objects.get(username = user)
+            user_profile = UserProfile.objects.filter(user = user).first()
+            if user_profile.profile_picture:
+                return str(user_profile.profile_picture.url)
+            else:
+                return None
+            #    print(f"user:{user_profile}")
+        except Exception as e:
+            raise e

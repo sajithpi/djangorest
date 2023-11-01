@@ -907,12 +907,16 @@ class Enable2FA(GenericAPIView):
             200: "2FA Enabled Successfully",
         },
     )
-    def post(self, request):
-        
+    def patch(self, request):
+        action = 'Enabled'
         user = User.objects.get(id = self.request.user.id)
-        user.has_2fa_enabled = True
+        if user.has_2fa_enabled == True:
+             user.has_2fa_enabled = False
+             action = 'Disabled'
+        else:
+            user.has_2fa_enabled = True
         user.save()
-        return Response(f"Enabled 2FF for user {self.request.user}", status=status.HTTP_200_OK)
+        return Response(f"{action} 2FF for user {self.request.user}", status=status.HTTP_200_OK)
     
 def add_notification(from_user, to_user, type, description ):
 
@@ -928,34 +932,59 @@ def remove_notification(from_user, to_user, type):
         # Handle the case when the notification does not exist
         print(f"Notification not found")
 
+
 class UserNotifications(GenericAPIView):
 
-    def get(self, request):
-        user_profile = UserProfile.objects.get(user = self.request.user)
-        notifications = Notification.objects.filter(to_user = user_profile)
-        unseen_notifications_count = Notification.objects.filter(to_user=user_profile, user_has_seen=False).count()
-        print(f"unseen_notifications_count:{unseen_notifications_count}")
-        # notifications.update(user_has_seen = True)
-        
-        # Serialize the notifications using your custom serializer
-        serializer = NotificationSerializer(notifications, many = True)
-        serializer_data = serializer.data
-        return Response({'status':True, 'notifications':serializer_data, "unseen_notifications_count":unseen_notifications_count}, status=status.HTTP_200_OK)
-    
-    
     @swagger_auto_schema(
-    operation_summary="Mark Notifications as Seen",
-    operation_description="Mark all unread notifications as seen for the current user.",
-    responses={200: "Notifications marked as seen successfully", 400: "Error message if any"},
-    tags=["Notification"],
+        operation_summary="List Notifications",
+        operation_description="List all notifications for the current user.",
+        tags=["Notification"],
+        responses={200: NotificationSerializer(many=True), 400: "Error message if any"},
     )
-    
-    def post(self, request):
+    def get(self, request):
+        user_profile = UserProfile.objects.get(user=self.request.user)
+        notifications = Notification.objects.filter(to_user=user_profile)
+        unseen_notifications_count = Notification.objects.filter(to_user=user_profile, user_has_seen=False).count()
+
+        # Serialize the notifications using your custom serializer
+        serializer = NotificationSerializer(notifications, many=True)
+        serializer_data = serializer.data
+
+        response_data = {
+            'status': True,
+            'notifications': serializer_data,
+            'unseen_notifications_count': unseen_notifications_count
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_summary="Mark Notifications as Seen",
+        operation_description="Mark all unread notifications as seen for the current user.",
+        responses={200: "Notifications marked as seen successfully", 400: "Error message if any"},
+        tags=["Notification"],
+    )
+    def patch(self, request):
         try:
-            user_profile = UserProfile.objects.get(user = self.request.user)
-            notification = Notification.objects.filter(to_user = user_profile, user_has_seen = False)
-            notification.update(user_has_seen = True)
-            
-            return Response({'status':True, 'message':'User Seen Notification Successfully'}, status=status.HTTP_200_OK)
+            user_profile = UserProfile.objects.get(user=self.request.user)
+            notifications = Notification.objects.filter(to_user=user_profile, user_has_seen=False)
+            notifications.update(user_has_seen=True)
+
+            return Response({'status': True, 'message': 'User Seen Notification Successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({"status":False, "message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_summary="Clear Notifications",
+        operation_description="Clear all notifications for the current user.",
+        responses={200: "Notifications cleared successfully", 400: "Error message if any"},
+        tags=["Notification"],
+    )
+    def delete(self, request):
+        try:
+            user_profile = UserProfile.objects.get(user=self.request.user)
+            notifications = Notification.objects.filter(to_user=user_profile)
+            notifications.delete()
+
+            return Response({'status': True, 'message': 'Notifications cleared successfully'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'status': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

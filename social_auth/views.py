@@ -63,6 +63,6 @@ class FacebookSocialAuthView(generics.GenericAPIView):
             
             return Response({'status':True,'message':'Registration Using Facebook Successfully'}, status=status.HTTP_200_OK)
         except json.JSONDecodeError as e:
-            return Response({'status':False,'error': 'Invalid auth_token format'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status':False,'error': f'Invalid auth_token format, {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'status':False,'error': 'An error occurred during user registration'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'status':False,'error': f'An error occurred during user registration, {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
