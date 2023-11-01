@@ -54,14 +54,15 @@ class FacebookSocialAuthView(generics.GenericAPIView):
             auth_token = json.loads(auth_token)
             print(f"auth_token:{auth_token}")
         
-            register_social_user(
+            message = register_social_user(
                     provider='facebook',
                     user_id=auth_token['userID'], 
                     email=auth_token['email'], 
                     name=auth_token['name'],
                     )
             
-            return Response({'status':True,'message':'Registration Using Facebook Successfully'}, status=status.HTTP_200_OK)
+            
+            return Response({'status':True,'message':'Registration Using Facebook Successfully', 'data':message}, status=status.HTTP_200_OK)
         except json.JSONDecodeError as e:
             return Response({'status':False,'error': f'Invalid auth_token format, {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
