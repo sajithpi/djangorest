@@ -148,7 +148,7 @@ class sendOTP(GenericAPIView):
             200: "Success",
         },
     )
-    def post(self, request):
+    def put(self, request):
         type = request.data.get('type')
         method = request.data.get('method')
         print(f"user:{self.request.user.id}")
@@ -169,7 +169,7 @@ class LogoutView(GenericAPIView):
             200: "User Logout Successful",
         },
     )
-    def post(self, request):
+    def put(self, request):
         user = User.objects.get(id = request.user.id)
         # token = RefreshToken(request.data.get('token'))
         # token.blacklist()
