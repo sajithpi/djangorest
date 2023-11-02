@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'social_auth',
     'followers',
     'chat',
+    'travel',
 
 
     'rest_framework',

@@ -95,6 +95,7 @@ class VerifyAccount(GenericAPIView):
             500: "Internal Server Error",
         },
     )
+
     def post(self, request):
         try:
 
@@ -120,8 +121,11 @@ class VerifyAccount(GenericAPIView):
                     return Response(f"Otp validity expired", status=status.HTTP_403_FORBIDDEN)
                 user.has_2fa_passed = True
                 user.login_status = True
+                print(f"user password:{user.password}")
                 user.save()
-                return Response({'status':'success','message':'Login otp verification successful'}, status=status.HTTP_200_OK)
+                refresh = RefreshToken.for_user(user)
+                return Response({'status':'success','message':'Login otp verification successful', 'refresh_token':str(refresh),
+                    'access_token':str(refresh.access_token)}, status=status.HTTP_200_OK)
         except User.DoesNotExist as e:
             return Response(f"User does't exist with this email", status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
@@ -137,6 +141,7 @@ class sendOTP(GenericAPIView):
             properties={
                 'type': openapi.Schema(type=openapi.TYPE_STRING, description='Type (e.g., login, account_active)'),
                 'method': openapi.Schema(type=openapi.TYPE_STRING, description='Method (whatsapp or email)'),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email of user'),
             }
         ),
         responses={

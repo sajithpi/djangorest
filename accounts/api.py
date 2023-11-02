@@ -953,7 +953,8 @@ class UserNotifications(GenericAPIView):
         response_data = {
             'status': True,
             'notifications': serializer_data,
-            'unseen_notifications_count': unseen_notifications_count
+            'unseen_notifications_count': unseen_notifications_count,
+            'seen_status': True if not unseen_notifications_count else False
         }
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -969,7 +970,7 @@ class UserNotifications(GenericAPIView):
             notifications = Notification.objects.filter(to_user=user_profile, user_has_seen=False)
             notifications.update(user_has_seen=True)
 
-            return Response({'status': True, 'message': 'User Seen Notification Successfully'}, status=status.HTTP_200_OK)
+            return Response({'status': True, 'seen_status':True,'message': 'User Seen Notification Successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"status": False, "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -985,6 +986,6 @@ class UserNotifications(GenericAPIView):
             notifications = Notification.objects.filter(to_user=user_profile)
             notifications.delete()
 
-            return Response({'status': True, 'message': 'Notifications cleared successfully'}, status=status.HTTP_200_OK)
+            return Response({'status': True, '':'seen_status', 'message': 'Notifications cleared successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
