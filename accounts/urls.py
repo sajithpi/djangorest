@@ -38,4 +38,6 @@ urlpatterns = [
     
     path('api/follow/',include('followers.urls')),
     path('api/social-auth/',include('social_auth.urls')),
+    path('api/travel/', include('travel.urls')),
+
 ]

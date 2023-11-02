@@ -2,13 +2,14 @@ from django.db import migrations
 from ..models import TravelAim
 
 TravelAims_List = [
-    "Christian",
-    "Jude",
-    "Islam",
-    "Buddhism",
-    "Hinduism",
-    "Sikhism",
-    "Other"
+    "Honeymoon Planning Partner",
+    "Adventure and Romance",
+    "Foodie Date Companion",
+    "Outdoor Date Enthusiast",
+    "Museum and Art Date",
+    "Travel and Love Connection",
+    "Festival Date and Romance",
+    "Nature's Love Haven",
 ]
 
 def addTravelAimChoices(apps, schema_editor):
