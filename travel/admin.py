@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import TravelAim,TravelPlan, TravelRequest
+from . models import TravelAim,MyTrip, TravelRequest
 # Register your models here.
 
 class TravelAimAdmin(admin.ModelAdmin):
@@ -7,7 +7,7 @@ class TravelAimAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     search_fields = ('name','id')
 
-class TravelPlanAdmin(admin.ModelAdmin):
+class MyTripAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'travel_date', 'days', 'description', 'status')
     list_filter = ('user', 'status')
     search_fields = ('user', 'status')
@@ -19,5 +19,5 @@ class TravelRequestAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TravelAim, TravelAimAdmin)
-admin.site.register(TravelPlan, TravelPlanAdmin)
+admin.site.register(MyTrip, MyTripAdmin)
 admin.site.register(TravelRequest, TravelRequestAdmin)

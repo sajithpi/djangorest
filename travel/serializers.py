@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import TravelAim, TravelPlan, TravelRequest
+from . models import TravelAim, MyTrip, TravelRequest
 
 class TravelAimSerializers(serializers.ModelSerializer):
 
@@ -21,12 +21,12 @@ class TravelAimSerializers(serializers.ModelSerializer):
             return super.to_representation(instance)
         
 
-class TravelPlanSerializer(serializers.ModelSerializer):
+class MyTripSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = TravelPlan
-        fields = ['id', 'user', 'latitude', 'longitude', 'travel_date', 'days', 'description']
-
+        model = MyTrip
+        fields = ['id', 'user', 'latitude', 'longitude', 'travel_date', 'days', 'description','status']
+    
 class TripRequestSerializer(serializers.ModelSerializer):
 
     # trip_id = serializers.SerializerMethodField()

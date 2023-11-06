@@ -2,17 +2,18 @@ from django.db import models
 from accounts.models import User, UserProfile
 # Create your models here.
 
-class TravelPlan(models.Model):
+class MyTrip(models.Model):
    
     TRAVEL_CHOICES = (
-        ('INITIATED', 'INITIATED'),
-        ('COMPLETED', 'COMPLETED'),
-        ('CANCELED', 'CANCELED'),
-        ('PENDING', 'PENDING')
+        ('planning', 'planning'),
+        ('completed', 'completed'),
+        ('canceled', 'canceled'),
+        ('pending', 'pending')
     )
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    location = models.CharField(max_length=50, null=True, blank=True)
     # looking_for = models.ForeignKey("LookingFor", on_delete=models.SET_NULL, blank=True, null=True)
     # type = models.ForeignKey("Type", on_delete=models.SET_NULL, blank=True, null=True)
     # intrested_users = models.ManyToManyField(UserProfile, related_name='Interested_user', blank=True)
@@ -21,7 +22,7 @@ class TravelPlan(models.Model):
     description = models.CharField(max_length=2500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=11, choices=TRAVEL_CHOICES, default='INITIATED', null=True, blank=True)
+    status = models.CharField(max_length=11, choices=TRAVEL_CHOICES, default='planning', null=True, blank=True)
     
 class TravelType(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -44,7 +45,7 @@ class TravelRequest(models.Model):
         (2,'REJECTED')
     )    
  
-    trip = models.ForeignKey(TravelPlan, on_delete=models.CASCADE, blank=False, null=False)
+    trip = models.ForeignKey(MyTrip, on_delete=models.CASCADE, blank=False, null=False)
     requested_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
     description = models.CharField(max_length=500, blank=True, null=True)
     status = models.CharField(max_length=1, default=0, choices=TRIP_REQUEST_CHOICES)
