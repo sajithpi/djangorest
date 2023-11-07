@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from . models import TravelAim, MyTrip
+from . models import TravelAim, MyTrip, TravelRequest
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -67,6 +67,8 @@ class TravelPlan(GenericAPIView):
         },
         tags=["Travel"],
     )
+    
+    
     def put(self, request):
         """
         Update an existing TravelPlan using 'travel_id'.
@@ -112,9 +114,12 @@ class TravelPlan(GenericAPIView):
         trip_id = request.data.get('trip_id')
         
         if trip_id is None:
-            return Response({'error': 'trip_id is required for updating.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'trip_id is required for deleting.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         my_trip = MyTrip.objects.get(id = trip_id, user = user_profile) 
-        print(f"my trip:{my_trip}")
+        if my_trip:
+            my_trip.delete()
+        
         return Response(f"Trip Deleted Successfully", status=status.HTTP_200_OK)
         
         
@@ -127,8 +132,18 @@ class RequestTrip(GenericAPIView):
         # try:
             user = User.objects.get(username = request.user)
             user_profile = UserProfile.objects.get(user = user)
+            trip = MyTrip.objects.get(id = request.data.get('trip'))
+            # travel_request = TravelRequest.objects.create(trip=trip, requested_user = user_profile,)
+            # return Response({"message": "Travel request created successfully"}, status=status.HTTP_201_CREATED)
+
             mutable_data = request.data.copy()
             mutable_data['requested_user'] = user_profile.id
+            mutable_data['trip'] = trip.id
+            check_trip_exists = TravelRequest.objects.get(trip = trip, requested_user = user_profile)
+            if check_trip_exists:
+                check_trip_exists.delete()
+                return Response({'message':'Trip Request cancelled successfully'}, status=status.HTTP_200_OK)
+            
             serializer = TripRequestSerializer(data = mutable_data, context = {'request':request}, partial = True)
             if serializer.is_valid():
                 serializer.save()
@@ -136,11 +151,4 @@ class RequestTrip(GenericAPIView):
             else:
                  # Return a response with validation errors
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def put(self, request):
-        user = User.objects.get(username = request.user)
-        mutable_data = request.data.copy()
-        mutable_data['requested_user'] = user.id
-        serializer = TripRequestSerializer(data = mutable_data, partial = True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':True, 'message':'trip requested successfully'},status=status.HTTP_200_OK)
+            

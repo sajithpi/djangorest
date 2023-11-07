@@ -866,9 +866,10 @@ class GetProfileMatches(GenericAPIView):
                 preferences_by_user_id['interests'] = [{'id':interests.id, 'name':interests.name }for interests in profile.user.interests.all()]
             else:    
                 preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
-            preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
-            age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
-            preferences_by_user_id['age'] = age
+            if profile.user.date_of_birth:
+                preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
+                age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
+                preferences_by_user_id['age'] = age
             preferences_by_user_id['profile_picture'] = {
                 'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
             if cover_photos:

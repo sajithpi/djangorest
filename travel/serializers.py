@@ -37,7 +37,7 @@ class TripRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Handle the creation logic here
         user = self.context['request'].user
-        validated_data['requested_user'] = user
+        # validated_data['requested_user']
         trip_request = TravelRequest.objects.create(**validated_data)
         return trip_request
     # def get_trip_id(self, obj):
