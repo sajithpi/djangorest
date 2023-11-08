@@ -10,11 +10,16 @@ class MyTrip(models.Model):
         ('canceled', 'canceled'),
         ('pending', 'pending')
     )
+    LOOKING_FOR_CHOICES = (
+        ('dating','dating'),
+        ('family','family')
+    )
+    
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     location = models.CharField(max_length=50, null=True, blank=True)
-    # looking_for = models.ForeignKey("LookingFor", on_delete=models.SET_NULL, blank=True, null=True)
+    looking_for = models.CharField(max_length=7, choices=LOOKING_FOR_CHOICES, null=True, blank=True)
     # type = models.ForeignKey("Type", on_delete=models.SET_NULL, blank=True, null=True)
     # intrested_users = models.ManyToManyField(UserProfile, related_name='Interested_user', blank=True)
     travel_date = models.DateTimeField(blank=True, null=True)

@@ -11,6 +11,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from accounts.api import get_blocked_users_data
 from django.db.models import Q
+from django.conf import settings
 
 # Create your views here.
 
@@ -205,11 +206,17 @@ class ListTrips(GenericAPIView):
     
     def get(self, request):
         try:
+            
             user = User.objects.get(username = self.request.user)
             user_profile = UserProfile.objects.get(user = user)
             user_gender = user_profile.user.gender
             user_orientation = user_profile.user.orientation
             
+            NOW = settings.NOW
+            
+            
+            looking_for = request.headers.get('looking_for','dating')
+            location = request.headers.get('location', 'any')
             
             user_orientation_filter = {
                 ('M', 'Hetero'): 'F',
@@ -233,11 +240,18 @@ class ListTrips(GenericAPIView):
             
             matching_Trips = MyTrip.objects.filter(
                 ~exclude_blocked_users,
-                user__user__gender=user_partner_gender_preference,
-                user__user__orientation=user_orientation,
+                looking_for = looking_for,
+                travel_date__gte = NOW,
+                
                 status = 'planning',
-                    ).exclude(user = user_profile)
+                    ).exclude(user = user_profile,)
             
+            if location != 'any':
+                matching_Trips = matching_Trips.filter(location = location)
+            
+            if looking_for != 'dating':
+                matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
+                user__user__orientation=user_orientation)
             
             
             trip_list = []
