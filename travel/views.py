@@ -9,6 +9,8 @@ from . serializers import TravelAimSerializers, MyTripSerializer, TripRequestSer
 from accounts.models import User, UserProfile
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from accounts.api import get_blocked_users_data
+from django.db.models import Q
 
 # Create your views here.
 
@@ -24,15 +26,41 @@ class TravelLookingFor(GenericAPIView):
     
 class TravelPlan(GenericAPIView):
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
-
+    
+ 
     @swagger_auto_schema(
-        request_body=MyTripSerializer,  # Specify the request body serializer
+        operation_description="Retrieve a list of the user's travel plans.",
         responses={
-            201: 'Created',  # Define response codes and descriptions
-            400: 'Bad Request',
-            500: 'Internal Server Error',
+            200: MyTripSerializer(many=True),
+            400: "Bad Request",
         },
-        tags=["Travel"],
+        tags=["Travel"]
+    )
+
+    def get(self, request):
+        try:
+            user = User.objects.get(username = self.request.user)
+            user_profile = UserProfile.objects.get(user = user)
+
+            my_trips = MyTrip.objects.filter(user = user_profile)
+            serializer = MyTripSerializer(data= my_trips, many = True)
+            
+            serializer.is_valid()
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"ERROR:{e}")
+            return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
+        
+    @swagger_auto_schema(
+        request_body=MyTripSerializer,
+        operation_description="Create a new TravelPlan.",
+        responses={
+            201: MyTripSerializer,
+            400: "Bad Request",
+            500: "Internal Server Error",
+        },
+        tags=["Travel"]
     )
     def post(self, request):
         """
@@ -57,18 +85,16 @@ class TravelPlan(GenericAPIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @swagger_auto_schema(
-        request_body=MyTripSerializer,  # Specify the request body serializer
-   
+        request_body=MyTripSerializer,
+        operation_description="Update an existing TravelPlan using 'trip_id' provided in the request body.",
         responses={
-            200: 'OK',  # Define response codes and descriptions
-            400: 'Bad Request',
-            404: 'Not Found',
-            500: 'Internal Server Error',
+            200: MyTripSerializer,
+            400: "Bad Request",
+            404: "Not Found",
+            500: "Internal Server Error",
         },
-        tags=["Travel"],
+        tags=["Travel"]
     )
-    
-    
     def put(self, request):
         """
         Update an existing TravelPlan using 'travel_id'.
@@ -106,7 +132,25 @@ class TravelPlan(GenericAPIView):
             return Response({'error': 'TravelPlan not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-       
+      
+    
+    @swagger_auto_schema(
+        operation_description="Delete a TravelPlan by specifying 'trip_id' in the request data.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'trip_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the TravelPlan to delete."),
+            },
+            required=['trip_id'],
+        ),
+        responses={
+            200: "Trip Deleted Successfully",
+            400: "Bad Request",
+            404: "Not Found",
+            500: "Internal Server Error",
+        },
+        tags=["Travel"]
+    )
     def delete(self, request):
         
         user = User.objects.get(username = self.request.user)
@@ -139,12 +183,16 @@ class RequestTrip(GenericAPIView):
             mutable_data = request.data.copy()
             mutable_data['requested_user'] = user_profile.id
             mutable_data['trip'] = trip.id
+            
+             # Check if a travel request for the specified trip and user exists
             check_trip_exists = TravelRequest.objects.get(trip = trip, requested_user = user_profile)
+            
             if check_trip_exists:
                 check_trip_exists.delete()
                 return Response({'message':'Trip Request cancelled successfully'}, status=status.HTTP_200_OK)
             
             serializer = TripRequestSerializer(data = mutable_data, context = {'request':request}, partial = True)
+            
             if serializer.is_valid():
                 serializer.save()
                 return Response({'status':True, 'message':'trip requested successfully'},status=status.HTTP_200_OK)
@@ -152,3 +200,65 @@ class RequestTrip(GenericAPIView):
                  # Return a response with validation errors
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
+
+class ListTrips(GenericAPIView):
+    
+    def get(self, request):
+        try:
+            user = User.objects.get(username = self.request.user)
+            user_profile = UserProfile.objects.get(user = user)
+            user_gender = user_profile.user.gender
+            user_orientation = user_profile.user.orientation
+            
+            
+            user_orientation_filter = {
+                ('M', 'Hetero'): 'F',
+                ('M', 'Homo'): 'M',
+                
+                ('F', 'Hetero'): 'M',
+                ('F', 'Homo'): 'F',
+
+                ('TM', 'Hetero'): 'TF',
+                ('TM', 'Homo'): 'TM',
+
+                ('TF', 'Hetero'): 'TM',
+                ('TF', 'Homo'): 'TF',
+            }
+            
+            user_partner_gender_preference = user_orientation_filter.get((user_gender, user_orientation))
+            
+            blocked_users = get_blocked_users_data(user_profile=user_profile)
+            
+            exclude_blocked_users = Q(user__id__in=blocked_users)
+            
+            matching_Trips = MyTrip.objects.filter(
+                ~exclude_blocked_users,
+                user__user__gender=user_partner_gender_preference,
+                user__user__orientation=user_orientation,
+                status = 'planning',
+                    ).exclude(user = user_profile)
+            
+            
+            
+            trip_list = []
+            if matching_Trips:
+                for matching_Trip in matching_Trips:
+                    trip = {}
+                    trip['user'] = matching_Trip.user.user.username
+                    trip['trip_id'] = matching_Trip.id
+                    trip['profile_picture'] = str(matching_Trip.user.profile_picture)
+                    trip['days'] = matching_Trip.days
+                    trip['description'] = matching_Trip.description
+                    trip['date'] = matching_Trip.travel_date
+                    trip['status'] = matching_Trip.status
+                    
+                    trip_list.append(trip)
+                    
+            print(f"matching trip:{matching_Trips}")
+            
+           
+            return Response({"trip list": trip_list}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            print(f"error:{e}")
+            return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
