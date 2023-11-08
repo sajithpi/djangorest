@@ -18,6 +18,7 @@ from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser, Rating
 from html import escape
 import math
+from geopy.geocoders import Nominatim
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):

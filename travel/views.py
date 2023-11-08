@@ -12,8 +12,21 @@ from drf_yasg.utils import swagger_auto_schema
 from accounts.api import get_blocked_users_data
 from django.db.models import Q
 from django.conf import settings
+from geopy.geocoders import Nominatim
+
+def get_country_from_coordinates(latitude, longitude):
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    location = geolocator.reverse(f"{latitude}, {longitude}")
+    
+    if location.raw.get("address"):
+        country = location.raw["address"].get("country")
+        if country:
+            return country
+    print("Country information not found")
+    return 0
 
 # Create your views here.
+
 
 class TravelLookingFor(GenericAPIView):
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
@@ -72,12 +85,17 @@ class TravelPlan(GenericAPIView):
             user_profile = UserProfile.objects.get(user=user)
             mutable_data = request.data.copy()
             mutable_data['user'] = user.id
+            
+            country = get_country_from_coordinates(mutable_data['latitude'], mutable_data['longitude'])
+            if country:
+                mutable_data['country'] = country
+                
             serializer = MyTripSerializer(data=mutable_data, partial=True)
 
             if serializer.is_valid():
                 # Save the validated data as a new TravelPlan instance
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -276,3 +294,4 @@ class ListTrips(GenericAPIView):
         except Exception as e:
             print(f"error:{e}")
             return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
+        

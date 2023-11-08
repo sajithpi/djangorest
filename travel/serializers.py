@@ -25,7 +25,7 @@ class MyTripSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyTrip
-        fields = ['id', 'user', 'latitude', 'longitude', 'looking_for', 'location', 'travel_date', 'days', 'description','status']
+        fields = ['id', 'user', 'latitude', 'longitude', 'looking_for', 'location', 'country', 'travel_date', 'days', 'description','status']
     
 class TripRequestSerializer(serializers.ModelSerializer):
 

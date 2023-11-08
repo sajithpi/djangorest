@@ -8,7 +8,7 @@ class TravelAimAdmin(admin.ModelAdmin):
     search_fields = ('name','id')
 
 class MyTripAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'travel_date', 'location', 'looking_for', 'days', 'description', 'status')
+    list_display = ('id', 'user', 'travel_date', 'latitude', 'longitude', 'location', 'country', 'looking_for', 'days', 'description', 'status')
     list_filter = ('user', 'status')
     search_fields = ('user', 'status')
 
