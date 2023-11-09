@@ -274,3 +274,4 @@ class CheckUserExists(APIView):
             return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
         
 
+
