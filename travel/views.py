@@ -57,6 +57,7 @@ class TravelPlan(GenericAPIView):
             user_profile = UserProfile.objects.get(user = user)
 
             my_trips = MyTrip.objects.filter(user = user_profile)
+            
             serializer = MyTripSerializer(data= my_trips, many = True)
             
             serializer.is_valid()
@@ -171,19 +172,31 @@ class TravelPlan(GenericAPIView):
         tags=["Travel"]
     )
     def delete(self, request):
-        
-        user = User.objects.get(username = self.request.user)
-        user_profile = UserProfile.objects.get(user = user)
-        trip_id = request.data.get('trip_id')
-        
-        if trip_id is None:
-            return Response({'error': 'trip_id is required for deleting.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        my_trip = MyTrip.objects.get(id = trip_id, user = user_profile) 
-        if my_trip:
+        try:
+            user = User.objects.get(username=self.request.user)
+            user_profile = UserProfile.objects.get(user=user)
+            trip_id = request.data.get('trip_id')
+            print(f"TRIP ID: {trip_id}")
+
+            if trip_id is None:
+                return Response({'error': 'trip_id is required for deleting.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                my_trip = MyTrip.objects.get(id=trip_id, user=user_profile)
+            except MyTrip.DoesNotExist:
+                return Response({'error': 'The specified trip does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
             my_trip.delete()
-        
-        return Response(f"Trip Deleted Successfully", status=status.HTTP_200_OK)
+            return Response("Trip Deleted Successfully", status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         
  
@@ -192,36 +205,96 @@ class RequestTrip(GenericAPIView):
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
 
     def post(self, request):
-        # try:
-            user = User.objects.get(username = request.user)
-            user_profile = UserProfile.objects.get(user = user)
-            trip = MyTrip.objects.get(id = request.data.get('trip'))
-            # travel_request = TravelRequest.objects.create(trip=trip, requested_user = user_profile,)
-            # return Response({"message": "Travel request created successfully"}, status=status.HTTP_201_CREATED)
+        try:
+            user = User.objects.get(username=request.user)
+            user_profile = UserProfile.objects.get(user=user)
+            trip = MyTrip.objects.get(id=request.data.get('trip'))
 
             mutable_data = request.data.copy()
             mutable_data['requested_user'] = user_profile.id
             mutable_data['trip'] = trip.id
+
+            try:
+                # Check if a travel request for the specified trip and user exists
+                check_trip_exists = TravelRequest.objects.get(trip=trip, requested_user=user_profile)
+                
+                if check_trip_exists:
+                    check_trip_exists.delete()
+                    return Response({'message': 'Trip Request canceled successfully'}, status=status.HTTP_200_OK)
+            except TravelRequest.DoesNotExist:
+                # The specified travel request does not exist, continue with creating a new one
+                pass
             
-             # Check if a travel request for the specified trip and user exists
-            check_trip_exists = TravelRequest.objects.get(trip = trip, requested_user = user_profile)
-            
-            if check_trip_exists:
-                check_trip_exists.delete()
-                return Response({'message':'Trip Request cancelled successfully'}, status=status.HTTP_200_OK)
-            
-            serializer = TripRequestSerializer(data = mutable_data, context = {'request':request}, partial = True)
-            
+            serializer = TripRequestSerializer(data=mutable_data, context={'request': request}, partial=True)
+
             if serializer.is_valid():
                 serializer.save()
-                return Response({'status':True, 'message':'trip requested successfully'},status=status.HTTP_200_OK)
+                return Response({'status': True, 'message': 'Trip requested successfully'}, status=status.HTTP_200_OK)
             else:
-                 # Return a response with validation errors
+                # Return a response with validation errors
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except MyTrip.DoesNotExist:
+            return Response({'error': 'Trip not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
 
 class ListTrips(GenericAPIView):
-    
+    @swagger_auto_schema(
+        operation_summary="List Matching Trips",
+        operation_description="Get a list of matching trips based on user preferences.",
+        manual_parameters=[
+            openapi.Parameter(
+                name="looking_for",
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                description="The type of trip you are looking for (e.g., 'dating').",
+                required=False,
+            ),
+            openapi.Parameter(
+                name="location",
+                in_=openapi.IN_HEADER,
+                type=openapi.TYPE_STRING,
+                description="The location you are interested in (e.g., 'any').",
+                required=False,
+            ),
+        ],
+        responses={
+            200: openapi.Response(
+                description="List of matching trips",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "trip list": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "user": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "trip_id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    "profile_picture": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "days": openapi.Schema(type=openapi.TYPE_INTEGER),
+                                    "description": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "date": openapi.Schema(type=openapi.TYPE_STRING),
+                                    "status": openapi.Schema(type=openapi.TYPE_STRING),
+                                },
+                            ),
+                        ),
+                    },
+                ),
+            ),
+            400: "Bad Request",
+        },
+        tags=["Travel"],
+    )
     def get(self, request):
         try:
             
@@ -289,7 +362,7 @@ class ListTrips(GenericAPIView):
             print(f"matching trip:{matching_Trips}")
             
            
-            return Response({"trip list": trip_list}, status=status.HTTP_200_OK)
+            return Response({"trip_list": trip_list}, status=status.HTTP_200_OK)
         
         except Exception as e:
             print(f"error:{e}")
