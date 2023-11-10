@@ -203,7 +203,25 @@ class TravelPlan(GenericAPIView):
 class RequestTrip(GenericAPIView):
 
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
-
+    @swagger_auto_schema(
+        operation_summary="Request or cancel a trip",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'trip': openapi.Schema(type=openapi.TYPE_INTEGER, description='Trip ID'),
+                # Add other properties from your request data here
+            },
+            required=['trip']
+        ),
+        responses={
+            200: 'Trip requested or canceled successfully',
+            400: 'Bad request. Validation errors may occur.',
+            404: 'User, user profile, or trip not found.',
+            500: 'Internal Server Error'
+        },
+        tags=["Travel"]
+        
+    )
     def post(self, request):
         try:
             user = User.objects.get(username=request.user)
@@ -220,7 +238,7 @@ class RequestTrip(GenericAPIView):
                 
                 if check_trip_exists:
                     check_trip_exists.delete()
-                    return Response({'message': 'Trip Request canceled successfully'}, status=status.HTTP_200_OK)
+                    return Response({'status':'cancel','message': 'Trip Request canceled successfully'}, status=status.HTTP_200_OK)
             except TravelRequest.DoesNotExist:
                 # The specified travel request does not exist, continue with creating a new one
                 pass
@@ -229,7 +247,7 @@ class RequestTrip(GenericAPIView):
 
             if serializer.is_valid():
                 serializer.save()
-                return Response({'status': True, 'message': 'Trip requested successfully'}, status=status.HTTP_200_OK)
+                return Response({'status': 'request', 'message': 'Trip requested successfully'}, status=status.HTTP_200_OK)
             else:
                 # Return a response with validation errors
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -248,12 +266,34 @@ class RequestTrip(GenericAPIView):
             
 
 class ListTrips(GenericAPIView):
+    
+    def get_request_status(self, trip_id, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+            print(f"get_request_status")
+            print(f"user:{user}")
+            user_profile = UserProfile.objects.get(user=user)
+            trip = MyTrip.objects.get(id=trip_id)
+            status = TravelRequest.objects.get(trip=trip, requested_user=user_profile)
+            
+            print(f"REQUEST STATUS: get_request_status{status} trip:{trip_id}")
+            return True
+        # except User.DoesNotExist:
+        #     raise Http404("User not found.")
+        # except UserProfile.DoesNotExist:
+        #     raise Http404("User profile not found.")
+        # except MyTrip.DoesNotExist:
+        #     raise Http404("Trip not found.")
+        except TravelRequest.DoesNotExist:
+            print(f"TravelRequest Does't exist")
+            return False  # TravelRequest not found, returning False
+    
     @swagger_auto_schema(
         operation_summary="List Matching Trips",
         operation_description="Get a list of matching trips based on user preferences.",
         manual_parameters=[
             openapi.Parameter(
-                name="looking_for",
+                name="type",
                 in_=openapi.IN_HEADER,
                 type=openapi.TYPE_STRING,
                 description="The type of trip you are looking for (e.g., 'dating').",
@@ -305,9 +345,19 @@ class ListTrips(GenericAPIView):
             
             NOW = settings.NOW
             
-            
-            looking_for = request.headers.get('looking_for','dating')
+            looking_for = request.headers.get('type','dating')
             location = request.headers.get('location', 'any')
+            trip_date_range = request.headers.get('tripdate',NOW)
+            
+            
+            if looking_for == '':
+                looking_for = 'dating'
+            if location == '':
+                location = 'any'
+            
+            print(f'looking_for:{request.headers.get("type")}')
+            print(f'Location:{request.headers.get("location")}')
+            print(f"trip_date:{trip_date_range}")
             
             user_orientation_filter = {
                 ('M', 'Hetero'): 'F',
@@ -338,7 +388,7 @@ class ListTrips(GenericAPIView):
                     ).exclude(user = user_profile,)
             
             if location != 'any':
-                matching_Trips = matching_Trips.filter(location = location)
+                matching_Trips = matching_Trips.filter(location = location.lower())
             
             if looking_for != 'dating':
                 matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
@@ -350,7 +400,10 @@ class ListTrips(GenericAPIView):
                 for matching_Trip in matching_Trips:
                     trip = {}
                     trip['user'] = matching_Trip.user.user.username
+                    trip['user_id'] = matching_Trip.user.user.id
                     trip['trip_id'] = matching_Trip.id
+                    trip['request_status'] = self.get_request_status(matching_Trip.id, user.id)
+                    trip['location'] = matching_Trip.location
                     trip['profile_picture'] = str(matching_Trip.user.profile_picture)
                     trip['days'] = matching_Trip.days
                     trip['description'] = matching_Trip.description

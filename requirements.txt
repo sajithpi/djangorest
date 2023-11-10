@@ -43,6 +43,7 @@ multidict==6.0.4
 packaging==23.2
 Pillow==10.0.1
 protobuf==4.24.4
+psycopg2-binary==2.9.9
 pyasn1==0.5.0
 pyasn1-modules==0.3.0
 pycparser==2.21
