@@ -174,6 +174,17 @@ class CoverPhoto(models.Model):
     def __str__(self):
         return str(self.user_profile.user.username)
     
+class UserTestimonial(models.Model):
+    
+    STATUS_CHOICES = (
+        (0,0),
+        (1,1),
+        (2,2),
+    )
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='user_testimonial')
+    description = models.CharField(max_length=500, blank=False, null=False)
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
+    
 class Interest(models.Model):
     name = models.CharField(max_length=50, unique=True)
 

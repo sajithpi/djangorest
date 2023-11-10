@@ -15,7 +15,7 @@ from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
 from .otp import send_otp_via_mail, send_otp_whatsapp
 from .utils import Util
-from .models import User, UserProfile, CoverPhoto, Interest
+from .models import User, UserProfile, CoverPhoto, Interest, UserTestimonial
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
@@ -275,3 +275,35 @@ class CheckUserExists(APIView):
         
 
 
+class Testimonial(GenericAPIView):
+    
+    def post(self, request):
+        try:
+            user = User.objects.get(username = request.user)
+            user_profile = UserProfile.objects.get(user = user)
+            
+            description = request.data.get('description')
+            if testimonial:
+                testimonial = UserTestimonial.objects.create(user = user_profile, description = description)
+                return Response({"success": "Testimonial created successfully."}, status=status.HTTP_200_OK)
+            return Response({'warning':'you have to add description'})
+        
+        except User.DoesNotExist:
+              return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
+          
+    def put(self, request):
+        try:
+            user = User.objects.get(username = request.user)
+            if user.is_admin:
+                
+                testimonial_id = request.data.get('testimonial_id')
+                request_status = request.data.get('status') 
+                if testimonial_id and request_status:
+                    testimonial = UserTestimonial.objects.get(id = testimonial_id)
+                    
+                    testimonial.status = request_status
+                else:
+                    return Response({f'warning':'you have to pass '})
+                
+        except Exception as e:
+            print(f"ERROR:{e}")
