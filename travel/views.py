@@ -13,6 +13,7 @@ from accounts.api import get_blocked_users_data
 from django.db.models import Q
 from django.conf import settings
 from geopy.geocoders import Nominatim
+from datetime import datetime
 
 def get_country_from_coordinates(latitude, longitude):
     geolocator = Nominatim(user_agent="geoapiExercises")
@@ -345,17 +346,23 @@ class ListTrips(GenericAPIView):
             
             NOW = settings.NOW
             
-            looking_for = request.headers.get('type','dating')
+            travel_type = request.headers.get('type','dating')
             location = request.headers.get('location', 'any')
-            trip_date_range = request.headers.get('tripdate',NOW)
+            trip_date_range = request.headers.get('tripdate')
+            if trip_date_range:
+                trip_date_range = datetime.strptime(trip_date_range,'%Y-%m-%d')
+                # Set the time components to 23:59:59
+                trip_date_range = trip_date_range.replace(hour=23, minute=59, second=59)
+            else:
+                trip_date_range = NOW
+            print(f"trip_date_range:{trip_date_range}")
             
-            
-            if looking_for == '':
-                looking_for = 'dating'
+            if travel_type == '':
+                travel_type = 'dating'
             if location == '':
                 location = 'any'
             
-            print(f'looking_for:{request.headers.get("type")}')
+            print(f'travel_type:{request.headers.get("type")}')
             print(f'Location:{request.headers.get("location")}')
             print(f"trip_date:{trip_date_range}")
             
@@ -381,7 +388,7 @@ class ListTrips(GenericAPIView):
             
             matching_Trips = MyTrip.objects.filter(
                 ~exclude_blocked_users,
-                looking_for = looking_for,
+                looking_for = travel_type,
                 travel_date__gte = NOW,
                 
                 status = 'planning',
@@ -390,9 +397,14 @@ class ListTrips(GenericAPIView):
             if location != 'any':
                 matching_Trips = matching_Trips.filter(location = location.lower())
             
-            if looking_for != 'dating':
-                matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
+            if travel_type == 'dating':
+                # matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
+                # user__user__orientation=user_orientation)
+                matching_Trips = matching_Trips.filter(
                 user__user__orientation=user_orientation)
+                
+            if trip_date_range != '':
+                matching_Trips = matching_Trips.filter(travel_date__lte = trip_date_range)
             
             
             trip_list = []
