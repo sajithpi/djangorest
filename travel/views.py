@@ -348,14 +348,16 @@ class ListTrips(GenericAPIView):
             
             travel_type = request.headers.get('type','dating')
             location = request.headers.get('location', 'any')
-            trip_date_range = request.headers.get('tripdate')
-            if trip_date_range:
+            trip_date_range = request.headers.get('tripdate', '')
+            print(f"trip_date_range:{trip_date_range}")
+            try:
                 trip_date_range = datetime.strptime(trip_date_range,'%Y-%m-%d')
                 # Set the time components to 23:59:59
                 trip_date_range = trip_date_range.replace(hour=23, minute=59, second=59)
-            else:
-                trip_date_range = NOW
-            print(f"trip_date_range:{trip_date_range}")
+      
+                print(f"trip_date_range:{trip_date_range}")
+            except Exception as e:
+                trip_date_range = ''
             
             if travel_type == '':
                 travel_type = 'dating'
