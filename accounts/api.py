@@ -476,7 +476,8 @@ class CheckUserExists(GenericAPIView):
                     'message': openapi.Schema(type=openapi.TYPE_STRING, description="Error message")
                 }
             ),
-        }
+        },
+        tags=["UserProfile"]
     )
     def post(self, request):
         email = request.data.get('email', None)
@@ -504,7 +505,8 @@ class RemoveUserInterestView(GenericAPIView):
             status.HTTP_204_NO_CONTENT: "Interest removed successfully",
             status.HTTP_404_NOT_FOUND: "User or interest not found",
             status.HTTP_500_INTERNAL_SERVER_ERROR: "Internal server error",
-        }
+        },
+        tags=["interests"]
     )
     def put(self, request):
         try:

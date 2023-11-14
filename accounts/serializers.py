@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -141,6 +141,11 @@ class InterestSerializer(serializers.ModelSerializer):
         model = Interest
         fields = ['id','name']
 
+class TestimonialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserTestimonial
+        fields = ['id', 'description', 'status']
+        
         
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializers()

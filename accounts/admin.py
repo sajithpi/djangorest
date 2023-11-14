@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -25,6 +25,10 @@ class ProfilePreferenceAdmin(admin.ModelAdmin):
     list_display = ('id','user_profile')
     list_filter = ('id','user_profile')
     search_fields = ('id','user_profile')
+class TestimonialAdmin(admin.ModelAdmin):
+    list_display = ('id','user','description','status')
+    list_filter = ('id','user','description','status')
+    search_fields = ('id','user','description','status')
     
 class NotificationAdmin(admin.ModelAdmin):
     list_display = ('id','from_user','to_user','type', 'description', 'user_has_seen', 'date_added')
@@ -45,3 +49,4 @@ admin.site.register(SmokeChoice, ChoiceAdmin)
 admin.site.register(EducationType, ChoiceAdmin)
 admin.site.register(Language, ChoiceAdmin)
 admin.site.register(ProfilePreference, ProfilePreferenceAdmin)
+admin.site.register(UserTestimonial, TestimonialAdmin)

@@ -177,9 +177,9 @@ class CoverPhoto(models.Model):
 class UserTestimonial(models.Model):
     
     STATUS_CHOICES = (
-        (0,0),
-        (1,1),
-        (2,2),
+        (0,0), #pending
+        (1,1), #accepted
+        (2,2), #rejected
     )
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='user_testimonial')
     description = models.CharField(max_length=500, blank=False, null=False)

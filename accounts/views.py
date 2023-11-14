@@ -2,10 +2,11 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
-from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer
+from .serializers import UserSerializers, ResetPasswordEmailSerializer , SetNewPasswordSerializer, InterestSerializer, TestimonialSerializer
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.generics import GenericAPIView
+from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
@@ -94,6 +95,7 @@ class VerifyAccount(GenericAPIView):
             403: "Forbidden",
             500: "Internal Server Error",
         },
+        tags=["authentication"]
     )
 
     def post(self, request):
@@ -147,6 +149,7 @@ class sendOTP(GenericAPIView):
         responses={
             200: "Success",
         },
+        tags=["authentication"]
     )
     def put(self, request):
         type = request.data.get('type')
@@ -205,6 +208,7 @@ class RequestPasswordResetEmail(GenericAPIView):
             400: "Bad request. Invalid email provided.",
             404: "User with the provided email not found."
         },
+        tags=["authentication"]
     )
     def post(self, request):
         
@@ -277,20 +281,51 @@ class CheckUserExists(APIView):
 
 class Testimonial(GenericAPIView):
     
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['description'],
+            properties={
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description='Testimonial description'),
+            },
+        ),
+        responses={
+            200: openapi.Response('Testimonial created successfully'),
+            400: openapi.Response('Bad Request, description is required'),
+            404: openapi.Response('User does not exist'),
+        },
+        tags=['testimonial']
+    )
     def post(self, request):
         try:
             user = User.objects.get(username = request.user)
             user_profile = UserProfile.objects.get(user = user)
             
             description = request.data.get('description')
-            if testimonial:
+            if description:
                 testimonial = UserTestimonial.objects.create(user = user_profile, description = description)
                 return Response({"success": "Testimonial created successfully."}, status=status.HTTP_200_OK)
             return Response({'warning':'you have to add description'})
         
         except User.DoesNotExist:
               return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
-          
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['testimonial_id', 'status'],
+            properties={
+                'testimonial_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Testimonial ID'),
+                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Testimonial status'),
+            },
+        ),
+        responses={
+            200: openapi.Response('Testimonial updated successfully'),
+            400: openapi.Response('Bad Request, testimonial_id and status are required'),
+            404: openapi.Response('User does not exist or testimonial not found'),
+        },
+          tags=['testimonial']
+    )     
     def put(self, request):
         try:
             user = User.objects.get(username = request.user)
@@ -302,8 +337,78 @@ class Testimonial(GenericAPIView):
                     testimonial = UserTestimonial.objects.get(id = testimonial_id)
                     
                     testimonial.status = request_status
+                    testimonial.save()
+                    return Response(f'Testimonial updated successfully',status=status.HTTP_200_OK)
                 else:
                     return Response({f'warning':'you have to pass '})
                 
         except Exception as e:
             print(f"ERROR:{e}")
+   
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0 or 1)'),
+        ],
+        responses={
+            200: openapi.Response('Testimonials retrieved successfully'),
+            400: openapi.Response('Bad Request, an error occurred'),
+            403: openapi.Response('Forbidden, user is not an admin'),
+        },
+        tags=['testimonial']
+    )         
+    def get(self, request):
+        try:
+            user = User.objects.get(username = request.user)
+            type = request.headers.get('type',0)
+            
+            if user.is_admin:
+               
+                testimonials = UserTestimonial.objects.filter(status = type)
+                
+                serializer = TestimonialSerializer(data =testimonials, many = True)
+                
+                serializer.is_valid()
+                
+                return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            print(f"ERROR:{e}")
+            return Response(f"error:{e}",status=status.HTTP_400_BAD_REQUEST)
+                
+class PasswordReset(GenericAPIView):
+    
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'password': openapi.Schema(type=openapi.TYPE_STRING),
+                'new_password1': openapi.Schema(type=openapi.TYPE_STRING),
+                'new_password2': openapi.Schema(type=openapi.TYPE_STRING),
+            },
+            required=['password', 'new_password1', 'new_password2'],
+        ),
+        responses={
+            200: "Password updated successfully",
+            400: "Your Entered New password is not matching or Entered Password is not correct, please enter correct password",
+        },
+        operation_summary="Update Password",
+        operation_description="Update the user's password.",
+        tags=['account']
+    )
+    def put(self, request):
+        user = User.objects.get(username = request.user)
+        entered_password = request.data.get('password')
+        new_password1 = request.data.get('new_password1')
+        new_password2 = request.data.get('new_password2')
+        if new_password1 != new_password2:
+            return Response(f"Your Entered New password is not matching", status=status.HTTP_400_BAD_REQUEST)
+        
+        hashed_password = make_password(entered_password)
+        if check_password(entered_password, user.password):
+            user.set_password(new_password1)
+            user.save()
+            return Response("Password updated successfully", status=status.HTTP_200_OK)
+        
+        return Response("Entered Password is not correct, please enter correct password", status=status.HTTP_400_BAD_REQUEST)
+        
