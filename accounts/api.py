@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
 from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
+from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -993,3 +994,48 @@ class UserNotifications(GenericAPIView):
             return Response({'status': True, '':'seen_status', 'message': 'Notifications cleared successfully'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class chatRoom(GenericAPIView):
+    
+    
+    def get(self, request):
+        room_id = request.data.get('room_id')
+        room = RoomChat.objects.get(id = room_id)
+        chats = Chat.objects.filter(room = room)
+        chat_list = []
+        for chat in chats:
+            user_chat = {}
+            user_chat['message'] = chat.content if chat.content else 0
+            user_chat['photo'] = chat.photo if chat.photo else 0
+            user_chat['timestamp'] = chat.timestamp
+            user_chat['sender_user'] = chat.sender.user.username
+            user_chat['sender_user_profile_photo'] = str(chat.sender.profile_picture)
+            user_chat['received_user'] = chat.receiver.user.username
+            user_chat['received_user_profile_photo'] = str(chat.receiver.profile_picture)
+            user_chat['is_read'] = chat.is_read
+            chat_list.append(user_chat)
+        
+        # serializer.is_valid()
+                
+        return Response(chat_list, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        receiver_user = request.data.get('receiver_user')
+        
+        sender = User.objects.get(username = request.user)
+        sender_profile = UserProfile.objects.get(user = sender)
+        
+        receiver = User.objects.get(username = receiver_user)
+        receiver_profile = UserProfile.objects.get(user = receiver)
+        
+        if receiver_user:
+            room = RoomChat.objects.filter( ( Q(senderProfile = sender_profile) & Q(receiverProfile = receiver_profile) ) |
+                                              ( Q(senderProfile = receiver_profile) & Q(receiverProfile = sender_profile) ) 
+                                              ).first()
+            if room:
+                room_id = room.id
+            else:
+                room = RoomChat.objects.create(senderProfile = sender_profile, receiverProfile = receiver_profile)
+                room_id = room.id
+                
+        return Response({'room_id':room_id})

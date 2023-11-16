@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import User
+from accounts.models import User, UserProfile
 
 
 def user_profile_picture_upload_path(instance, filename):
@@ -14,8 +14,8 @@ class Chat(models.Model):
     content = models.CharField(max_length=1555,null=True)
     photo = models.ImageField(upload_to=user_profile_picture_upload_path, blank = True, null = True)
     timestamp = models.DateTimeField(auto_now=True)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="+")
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name="+")
+    sender = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="+")
+    receiver = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="+")
     room = models.ForeignKey('RoomChat',on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
 
@@ -31,12 +31,12 @@ class Chat(models.Model):
 class RoomChat(models.Model):
     receiver = models.CharField(max_length=1055)
     sender = models.CharField(max_length=1055)
-    sender_profile = models.ForeignKey(User,on_delete=models.CASCADE, related_name="+")
-    receiver_profile = models.ForeignKey(User,on_delete=models.CASCADE, related_name="+")
+    senderProfile = models.ForeignKey(UserProfile,on_delete=models.CASCADE, related_name="+")
+    receiverProfile = models.ForeignKey(UserProfile,on_delete=models.CASCADE, related_name="+")
     
 
 class Connected(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="connected")
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="connected")
     room = models.ForeignKey(RoomChat, on_delete=models.CASCADE, related_name="connected")
     channel_name = models.CharField(max_length=100, null=False)
     connect_date = models.DateTimeField(auto_now_add=True)

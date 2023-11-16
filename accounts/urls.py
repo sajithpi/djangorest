@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences
+from .api import GetUserData, GetProfileDetails, getLoginUserData, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, chatRoom
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -12,6 +12,8 @@ urlpatterns = [
     path('api/delete-cover-photo', DeleteCoverPhoto.as_view(), name='delete-cover-photo'),
 
     path('api/user-notifications', UserNotifications.as_view(), name='get-notifications'),
+    path('api/user-room',chatRoom.as_view(), name='user-room'),
+
     
     path('api/get-interests', IntrestListCreateView.as_view(), name='get-interests'),
     path('api/get-preferences', GetPreferences.as_view(), name='get-preferences'),
