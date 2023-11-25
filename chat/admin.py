@@ -3,7 +3,9 @@ from chat.models import Chat, RoomChat, Connected
 # Register your models here.
 
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ['sender','receiver','content','photo','timestamp','is_read']
+    list_display = ['room_id','sender','receiver','content','photo','timestamp','is_read']
+    list_filter = ['room_id']
+    search_fields = ['room_id']
 
 class RoomChatAdmin(admin.ModelAdmin):
     list_display = ['id','sender_username','receiver_username']

@@ -41,6 +41,7 @@ Markdown==3.4.4
 msgpack==1.0.7
 multidict==6.0.4
 packaging==23.2
+paypalrestsdk==1.13.3
 Pillow==10.0.1
 protobuf==4.24.4
 psycopg2-binary==2.9.9

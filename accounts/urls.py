@@ -3,6 +3,7 @@ from .api import GetUserData, GetProfileDetails, getLoginUserData, UpdateProfile
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
+from . paypal import PayPalPaymentView, CaptureOrderView
 urlpatterns = [
     path('api/test',Test.as_view(), name='test'),
     path('api/getUser-data', GetUserData.as_view(), name='getUser-data'),
@@ -45,6 +46,8 @@ urlpatterns = [
     path('api/chat/',include('chat.urls')),
     
     
+    path('api/paypal-create-order', PayPalPaymentView.as_view(), name="paypal-create-order"),
+    path('api/paypal-capture-order', CaptureOrderView.as_view(), name="paypal-capture-order"),
     path('api/user-testimonial',Testimonial.as_view(), name='testimonial'),
 
 ]

@@ -69,6 +69,9 @@ class chatRoom(GenericAPIView):
     )
     def get(self, request):
         try:
+            
+            user = User.objects.get(username = request.user)
+            user_profile = UserProfile.objects.get(user = user)
             # Get the room_id from the request data
             room_id = request.data.get('room_id')
             
@@ -92,7 +95,11 @@ class chatRoom(GenericAPIView):
                 user_chat['received_user'] = chat.receiver.user.username
                 user_chat['received_user_profile_photo'] = str(chat.receiver.profile_picture)
                 user_chat['is_read'] = chat.is_read
+                if chat.receiver.user.id != user_profile.user.id:
+                    chat.is_read = True
+                    chat.save()
                 chat_list.append(user_chat)
+                
 
             # Return the formatted chat data in the response
             return Response(chat_list, status=status.HTTP_200_OK)
@@ -182,9 +189,12 @@ class chatRoom(GenericAPIView):
                 if room:
                     room_id = room.id
                 else:
-                    room = RoomChat.objects.create(senderProfile=sender_profile, receiverProfile=receiver_profile)
-                    room_id = room.id
-
+                    if sender_profile.user.id != receiver_profile.user.id:
+                        room = RoomChat.objects.create(senderProfile=sender_profile, receiverProfile=receiver_profile)
+                        room_id = room.id
+                    else:
+                        return Response({f'Sender and receiver is same person'}, status= status.HTTP_400_BAD_REQUEST)
+                
                 return Response({'room_id': room_id}, status=status.HTTP_200_OK)
 
             else:
@@ -239,9 +249,13 @@ class GetChatRooms(GenericAPIView):
             rooms_list = []
             for room in rooms:
                 room_dict = {}
-                room_user = room.senderProfile if room.senderProfile != user_profile else room.receiverProfile
+                room_dict['room_id'] = room.id
+                room_user = room.senderProfile if room.senderProfile.user.id != user_profile.user.id else room.receiverProfile
                 room_dict['username'] = room_user.user.username
                 room_dict['profile_pic'] = str(room_user.profile_picture)
+                unread_messages = Chat.objects.filter(receiver = user_profile, is_read = False, room = room).count()
+                print(f"unread_messages:{unread_messages}")
+                room_dict['unread_messages'] = unread_messages if unread_messages else 0
                 rooms_list.append(room_dict)
 
             # Return the list of rooms in the API response

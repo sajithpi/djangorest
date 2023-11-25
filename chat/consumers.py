@@ -108,6 +108,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         room_id = text_data_json['room_id']
         sender_user = text_data_json['sender_user']
         received_user = text_data_json['received_user']
+        sender_profile_pic = text_data_json['sender_profile_pic']
+        receiver_profile_pic = text_data_json['receiver_profile_pic']
+        file = text_data_json['file']
 
         room = await database_sync_to_async(RoomChat.objects.get)(id=room_id)
 
@@ -122,6 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender=sender_user_profile,
             receiver=received_user_profile,
             room=room,
+            photo = file,
         )
         await database_sync_to_async(chat.save)()
 
@@ -134,6 +138,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender_user': sender_user.username,
                 'room_id': room_id,
                 'received_user': received_user.username,
+                'sender_profile_pic':sender_profile_pic,
+                'receiver_profile_pic':receiver_profile_pic,
+                'file':file,
             }
         )
         # Send a response to the sender
@@ -141,6 +148,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'response_message',
             'message': message,
+            'sender_profile_pic':sender_profile_pic,
+            'receiver_profile_pic':receiver_profile_pic,
+            'file':file,
         }))
 
     # Receive message from room group
@@ -149,12 +159,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender_user = event['sender_user']
         room_id = event['room_id']
         received_user = event['received_user']
+        sender_profile_pic = event['sender_profile_pic']
+        receiver_profile_pic = event['receiver_profile_pic']
+        file = event['file']
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
             'sender_user': sender_user,
             'room_id': room_id,
-            'received_user': received_user
+            'received_user': received_user,
+            'sender_profile_pic':sender_profile_pic,
+            'receiver_profile_pic':receiver_profile_pic,
+            'file':file,
+            
         }))
 
         print("room id from chat message:", room_id)
@@ -168,5 +185,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def response_message(self, event):
         # Handle the response message type if needed
         message = event['message']
+        sender_profile_pic = event['sender_profile_pic']
+        # receiver_profile_pic = event['receiver_profile_pic']
         # You can process or log the response message here if necessary
         print("Response message:", message)
