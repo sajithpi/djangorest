@@ -347,7 +347,7 @@ class Testimonial(GenericAPIView):
    
     @swagger_auto_schema(
         manual_parameters=[
-            openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0 or 1)'),
+            openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0:pending, 1:accepted, 2:rejected)'),
         ],
         responses={
             200: openapi.Response('Testimonials retrieved successfully'),
