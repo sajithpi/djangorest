@@ -87,8 +87,9 @@ class chatRoom(GenericAPIView):
             # Iterate through each chat and format the data
             for chat in chats:
                 user_chat = {}
-                user_chat['message'] = chat.content if chat.content else ''  # Use an empty string if content is None
-                user_chat['photo'] = chat.photo if chat.photo else ''  # Use an empty string if photo is None
+                print(f"MESSAGE:{chat.content}")
+                user_chat['message'] =chat.content if chat.content else ''  # Use an empty string if content is None
+                user_chat['photo'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
                 user_chat['timestamp'] = chat.timestamp
                 user_chat['sender_user'] = chat.sender.user.username
                 user_chat['sender_user_profile_photo'] = str(chat.sender.profile_picture)

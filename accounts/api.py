@@ -995,3 +995,7 @@ class UserNotifications(GenericAPIView):
         except Exception as e:
             return Response({'status': False, 'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+class GetClientId(GenericAPIView):
+    def get(self, request):
+        PAYPAL_CLIENT_ID = settings.PAYPAL_CLIENT_ID
+        return Response(PAYPAL_CLIENT_ID, status=status.HTTP_200_OK)

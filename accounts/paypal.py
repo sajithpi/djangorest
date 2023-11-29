@@ -3,18 +3,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from paypalrestsdk import Payment, Payout, Api
 from django.conf import settings
+from . models import Order
 import requests
 import json
 from django.http import JsonResponse
 
 PAYPAL_CLIENT_ID = settings.PAYPAL_CLIENT_ID
 PAYPAL_CLIENT_SECRET = settings.PAYPAL_CLIENT_SECRET
-
+PAYPAL_BASE_URL = settings.PAYPAL_BASE_URL
 
 def generate_access_token():
     client_id = PAYPAL_CLIENT_ID
     client_secret = PAYPAL_CLIENT_SECRET
-    token_url = 'https://api.sandbox.paypal.com/v1/oauth2/token'  # Replace with the production URL for live mode
+    token_url = f'https://{PAYPAL_BASE_URL}/v1/oauth2/token'  # Replace with the production URL for live mode
 
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -41,7 +42,7 @@ class PayPalPaymentView(APIView):
         access_token = generate_access_token()
 
         # Create the PayPal order
-        url = 'https://api.sandbox.paypal.com/v2/checkout/orders'  # Replace with the production URL for live mode
+        url = f'https://{PAYPAL_BASE_URL}/v2/checkout/orders'  # Replace with the production URL for live mode
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {access_token}',
@@ -71,7 +72,7 @@ class CaptureOrderView(APIView):
 
             if access_token:
                 # Capture the PayPal order
-                url = f'https://api.sandbox.paypal.com/v2/checkout/orders/{order_id}/capture'  # Replace with the production URL for live mode
+                url = f'https://{PAYPAL_BASE_URL}/v2/checkout/orders/{order_id}/capture'  # Replace with the production URL for live mode
                 headers = {
                     'Content-Type': 'application/json',
                     'Authorization': f'Bearer {access_token}',
@@ -82,6 +83,7 @@ class CaptureOrderView(APIView):
                 # Check if the PayPal order status is COMPLETED
                 if response.json().get('status') == 'COMPLETED':
                     print(f"PAYMENT IS COMPLETED")
+                    
                 
 
                 return Response(response.json(), status=status.HTTP_200_OK)

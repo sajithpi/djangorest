@@ -68,6 +68,8 @@ class User(AbstractBaseUser):
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
     orientation = models.CharField(max_length=7, choices=ORIENTATION_CHOICES, null=True, blank=True)
     #required
+    package = models.ForeignKey("Package", on_delete=models.SET_NULL, blank=True, null=True)
+    package_validity =  models.DateTimeField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
@@ -111,7 +113,26 @@ def user_cover_photo_upload_path(instance, filename):
     # Generate the upload path based on the user's ID
     return f'users/{instance.user_profile.user.username}/cover_photos/{filename}'
 
-
+class Package(models.Model):
+    
+    PACKAGE_CHOICES = (
+        ('Free', 'Free'),
+        ('Paid', 'Paid'),
+    )
+    
+    name = models.CharField(max_length = 50, blank=True, null=True)
+    price = models.FloatField(default = 0)
+    type = models.CharField(max_length = 10, choices = PACKAGE_CHOICES, blank = True, null = True)
+    validity = models.DateTimeField(blank = True, null = True)
+    
+class Order(models.Model):
+    user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
+    order_id = models.CharField(max_length = 100, blank = True, null = True)
+    package_id = models.ForeignKey(Package, on_delete =models.SET_NULL, blank = True, null = True)
+    price = models.CharField(max_length=10, default=None, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+    
 class UserProfile(models.Model):
     
    

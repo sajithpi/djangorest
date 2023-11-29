@@ -5,7 +5,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
-from . models import User, UserProfile
+from . models import User, UserProfile, Package
 from . otp import send_otp_via_mail
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -28,12 +28,14 @@ class UserSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","has_2fa_enabled","showDistance","phone_number",]
-
+  
     def create(self, validated_data):
+        freePackageID = Package.objects.get(type = 'Free')
         user = User.objects.create(email=validated_data['email'],
                                        username=validated_data['username'],
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
+                                       package = freePackageID,
                                        gender = validated_data["gender"],
                                        orientation = validated_data["orientation"],
                                        phone_number = validated_data.get('phone_number'),

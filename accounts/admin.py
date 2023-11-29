@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -16,6 +16,15 @@ class InterestAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
     list_filter = ('name',)
     search_fields = ('name', 'id')
+class PackageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name','price','type')
+    list_filter = ('name',)
+    search_fields = ('name', 'id')
+    
+class OrdersAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user_id','order_id','package_id','price','created_at','modified_at')
+    list_filter = ('id', 'user_id','order_id')
+    search_fields = ('id', 'user_id','order_id')
 # Register your models here.
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ('id','name')
@@ -37,6 +46,8 @@ class NotificationAdmin(admin.ModelAdmin):
     
 admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile)
+admin.site.register(Package, PackageAdmin)
+admin.site.register(Order, OrdersAdmin)
 admin.site.register(Notification, NotificationAdmin)
 admin.site.register(CoverPhoto, CoverPhotoAdmin)
 admin.site.register(Interest, InterestAdmin)

@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences
+from .api import GetUserData, GetProfileDetails, getLoginUserData, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -48,6 +48,7 @@ urlpatterns = [
     
     path('api/paypal-create-order', PayPalPaymentView.as_view(), name="paypal-create-order"),
     path('api/paypal-capture-order', CaptureOrderView.as_view(), name="paypal-capture-order"),
+    path('api/get-client-id',GetClientId.as_view(), name='get-client-id'),
     path('api/user-testimonial',Testimonial.as_view(), name='testimonial'),
 
 ]
