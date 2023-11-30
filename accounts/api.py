@@ -321,7 +321,7 @@ class GetProfileDetails(GenericAPIView):
                 'id':data['user']['id'],
                 'username':data['user']['username'],
                 'about_me':lorem_ipsum,
-                'age':calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')),
+                'age':calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')) if data['user']['date_of_birth'] else None,
                 'profile_picture':data['profile_picture'],
                 'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
                 'interests':data['interests'],
@@ -1005,12 +1005,18 @@ class PackageListView(GenericAPIView):
 
     serializer_class = PackageSerializer
     
-    def get_queryset(self):
-        return Package.objects.all()
-
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Successful package list retrieval', PackageSerializer(many=True)),
+            500: openapi.Response('Internal Server Error'),
+        },
+    )
     def get(self, request):
+        """
+        Retrieve a list of packages.
+        """
         packages = self.get_queryset()
-        serializer = self.serializer_class(packages, many = True)
+        serializer = self.serializer_class(packages, many=True)
         return Response(serializer.data)
 
     def post(self, request):
