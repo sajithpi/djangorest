@@ -111,6 +111,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender_profile_pic = text_data_json['sender_profile_pic']
         receiver_profile_pic = text_data_json['receiver_profile_pic']
         file = text_data_json['file']
+        timestamp = text_data_json['timestamp']
 
         room = await database_sync_to_async(RoomChat.objects.get)(id=room_id)
 
@@ -141,6 +142,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender_profile_pic':sender_profile_pic,
                 'receiver_profile_pic':receiver_profile_pic,
                 'file':file,
+                'timestamp':timestamp,
             }
         )
         # Send a response to the sender
@@ -151,6 +153,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender_profile_pic':sender_profile_pic,
             'receiver_profile_pic':receiver_profile_pic,
             'file':file,
+            'timestamp':timestamp,
         }))
 
     # Receive message from room group
@@ -162,6 +165,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         sender_profile_pic = event['sender_profile_pic']
         receiver_profile_pic = event['receiver_profile_pic']
         file = event['file']
+        timestamp = event['timestamp']
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message,
@@ -171,6 +175,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender_profile_pic':sender_profile_pic,
             'receiver_profile_pic':receiver_profile_pic,
             'file':file,
+            'timestamp':timestamp,
             
         }))
 

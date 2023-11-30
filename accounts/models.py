@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.conf import settings
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -123,7 +124,7 @@ class Package(models.Model):
     name = models.CharField(max_length = 50, blank=True, null=True)
     price = models.FloatField(default = 0)
     type = models.CharField(max_length = 10, choices = PACKAGE_CHOICES, blank = True, null = True)
-    validity = models.DateTimeField(blank = True, null = True)
+    validity = models.FloatField(default = 1)
     
 class Order(models.Model):
     user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
@@ -158,11 +159,16 @@ class UserProfile(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     pin_code = models.CharField(max_length=6, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, )
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.user.username
+    
+    def save(self, *args, **kwargs):
+        # Set modified_at to current time in the timezone specified in settings
+        self.modified_at = settings.NOW
+        super().save(*args, **kwargs)
 
 class Notification(models.Model):
     

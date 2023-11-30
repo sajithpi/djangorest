@@ -1,5 +1,5 @@
 from django.contrib import admin
-from chat.models import Chat, RoomChat, Connected
+from chat.models import Chat, RoomChat, Connected, Sticker
 # Register your models here.
 
 class ChatAdmin(admin.ModelAdmin):
@@ -17,7 +17,11 @@ class RoomChatAdmin(admin.ModelAdmin):
         return obj.receiverProfile.user.username
 class ConnectedAdmin(admin.ModelAdmin):
     list_display = ['user','room_id','channel_name','connect_date']
-
+    
+class StickerAdmin(admin.ModelAdmin):
+    list_display = ['id','photo']
+    
 admin.site.register(Chat,ChatAdmin)
+admin.site.register(Sticker, StickerAdmin)
 admin.site.register(RoomChat,RoomChatAdmin)
 admin.site.register(Connected,ConnectedAdmin)

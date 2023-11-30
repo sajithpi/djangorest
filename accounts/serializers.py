@@ -372,3 +372,15 @@ class NotificationSerializer(serializers.ModelSerializer):
             #    print(f"user:{user_profile}")
         except Exception as e:
             raise e
+        
+class PackageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Package
+        fields = '__all__'
+
+    # Set required=True only for the 'price' field
+    price = serializers.FloatField(required=True)
+    name = serializers.CharField(required=True)
+    validity = serializers.FloatField(required=True)
+    type = serializers.CharField(required=True)
+    

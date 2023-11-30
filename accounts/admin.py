@@ -3,10 +3,18 @@ from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Worko
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id','username')
+    list_display = ('id','username','gender','orientation','get_package_name','auth_provider','date_joined','has_2fa_enabled')
     list_filter = ('id','username')
     search_fields = ('id','username')
+    
+    def get_package_name(self, obj):
+        return obj.package.name if obj.package else None
 
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('id','user','created_at','modified_at')
+    list_filter = ('id','user',)
+    search_fields = ('id','user')
+    
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
     list_filter = ('user_profile',)
@@ -17,7 +25,7 @@ class InterestAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     search_fields = ('name', 'id')
 class PackageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name','price','type')
+    list_display = ('id', 'name','price','type','validity')
     list_filter = ('name',)
     search_fields = ('name', 'id')
     
@@ -45,7 +53,7 @@ class NotificationAdmin(admin.ModelAdmin):
     search_fields = ('id','from_user','to_user')
     
 admin.site.register(User, UserAdmin)
-admin.site.register(UserProfile)
+admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Package, PackageAdmin)
 admin.site.register(Order, OrdersAdmin)
 admin.site.register(Notification, NotificationAdmin)

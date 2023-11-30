@@ -5,10 +5,12 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 from django.utils import timezone
-from . models import RoomChat, Chat
+from . models import RoomChat, Chat, Sticker
+from . serializers import StickerSerializer
 from accounts.models import User, UserProfile
 from django.db.models import Q
 from rest_framework import status, generics
+from datetime import datetime
 import json
 
 
@@ -32,7 +34,7 @@ class chatRoom(GenericAPIView):
                             'photo': openapi.Schema(type=openapi.TYPE_STRING),
                             'timestamp': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME),
                             'sender_user': openapi.Schema(type=openapi.TYPE_STRING),
-                            'sender_user_profile_photo': openapi.Schema(type=openapi.TYPE_STRING),
+                            'sender_profile_pic': openapi.Schema(type=openapi.TYPE_STRING),
                             'received_user': openapi.Schema(type=openapi.TYPE_STRING),
                             'received_user_profile_photo': openapi.Schema(type=openapi.TYPE_STRING),
                             'is_read': openapi.Schema(type=openapi.TYPE_BOOLEAN),
@@ -46,7 +48,7 @@ class chatRoom(GenericAPIView):
                             "photo": "http://example.com/photo.jpg",
                             "timestamp": "2023-11-17T12:00:00Z",
                             "sender_user": "sender_username",
-                            "sender_user_profile_photo": "http://example.com/sender_photo.jpg",
+                            "sender_profile_pic": "http://example.com/sender_photo.jpg",
                             "received_user": "receiver_username",
                             "received_user_profile_photo": "http://example.com/receiver_photo.jpg",
                             "is_read": True
@@ -73,7 +75,8 @@ class chatRoom(GenericAPIView):
             user = User.objects.get(username = request.user)
             user_profile = UserProfile.objects.get(user = user)
             # Get the room_id from the request data
-            room_id = request.data.get('room_id')
+            # request.GET.get('username')
+            room_id =   request.GET.get('room_id')
             
             # Retrieve the RoomChat object based on the room_id
             room = RoomChat.objects.get(id=room_id)
@@ -87,15 +90,17 @@ class chatRoom(GenericAPIView):
             # Iterate through each chat and format the data
             for chat in chats:
                 user_chat = {}
-                print(f"MESSAGE:{chat.content}")
                 user_chat['message'] =chat.content if chat.content else ''  # Use an empty string if content is None
-                user_chat['photo'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
+                user_chat['file'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
                 user_chat['timestamp'] = chat.timestamp
                 user_chat['sender_user'] = chat.sender.user.username
-                user_chat['sender_user_profile_photo'] = str(chat.sender.profile_picture)
+                user_chat['sender_profile_pic'] = str(chat.sender.profile_picture)
                 user_chat['received_user'] = chat.receiver.user.username
                 user_chat['received_user_profile_photo'] = str(chat.receiver.profile_picture)
                 user_chat['is_read'] = chat.is_read
+                # formated_timestamp = datetime.strftime()
+                
+                user_chat['timestamp'] = chat.timestamp
                 if chat.receiver.user.id != user_profile.user.id:
                     chat.is_read = True
                     chat.save()
@@ -270,3 +275,48 @@ class GetChatRooms(GenericAPIView):
             return Response("Chat rooms not found", status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class StickersListCreateView(generics.ListCreateAPIView):
+    serializer_class = StickerSerializer
+
+
+    @swagger_auto_schema(
+        operation_description="Get a list of stickers",
+        responses={200: StickerSerializer(many=True)}
+    )
+    def get(self, request):
+        try:
+            stickers = Sticker.objects.all()
+            stickers_list = []
+            for sticker in stickers:
+                sticker_dict = {}
+                sticker_dict['id'] = sticker.id
+                sticker_dict['media'] = str(sticker.photo)
+                stickers_list.append(sticker_dict)
+            # serializer = self.serializer_class(stickers, many=True)
+            return Response(stickers_list, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @swagger_auto_schema(
+        operation_description="Create a new sticker",
+        request_body=StickerSerializer,
+        responses={201: "success", 400: "Bad Request", 500: "Internal Server Error"}
+    )
+    def post(self, request):
+        try:
+            user = User.objects.get(username = request.user)
+            if not user.is_admin:
+                return Response({'error': "User don't have privillage to add stickers"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            sticker_img = request.data.get('photo')
+            if not sticker_img:
+                return Response({'error': 'Photo is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            sticker = Sticker(photo=sticker_img)
+            sticker.save()
+            
+            return Response("success", status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

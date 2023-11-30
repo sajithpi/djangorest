@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
-from . serializers import UserSerializers, UpdateUserSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
+from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
 from drf_yasg import openapi
@@ -999,3 +1000,58 @@ class GetClientId(GenericAPIView):
     def get(self, request):
         PAYPAL_CLIENT_ID = settings.PAYPAL_CLIENT_ID
         return Response(PAYPAL_CLIENT_ID, status=status.HTTP_200_OK)
+    
+class PackageListView(GenericAPIView):
+
+    serializer_class = PackageSerializer
+    
+    def get_queryset(self):
+        return Package.objects.all()
+
+    def get(self, request):
+        packages = self.get_queryset()
+        serializer = self.serializer_class(packages, many = True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        
+        serializer = self.serializer_class(data = request.data, partial = False)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
+        
+    def put(self, request):
+        
+        package_id = request.data.get('id', None)
+        
+        if not package_id:
+            return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            package_instance = Package.objects.get(id=package_id)
+        except Package.DoesNotExist:
+            return Response({"detail": "Package not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.serializer_class(instance=package_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def delete(self, request):
+        package_id = request.data.get('id', None)
+        
+        if not package_id:
+            return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            package_instance = Package.objects.get(id = package_id)
+        except Package.DoesNotExist:
+            return Response({"detail": "Package not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        package_instance.delete()
+        return Response(f"Package Deleted Successfully", status=status.HTTP_200_OK)
+        

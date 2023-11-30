@@ -1,5 +1,6 @@
 from django.db import models
 from accounts.models import User, UserProfile
+from django.conf import settings
 
 
 def user_profile_picture_upload_path(instance, filename):
@@ -23,6 +24,11 @@ class Chat(models.Model):
         self.count += 1
         return self.count
     
+    def save(self, *args, **kwargs):
+        # Set modified_at to current time in the timezone specified in settings
+        self.modified_at = settings.NOW
+        super().save(*args, **kwargs)
+    
 
 # class Chatroom(models.Model):
 #     sender = models.CharField(max_length=55)
@@ -43,3 +49,10 @@ class Connected(models.Model):
 
     def __str__(self):
         return self.user.username
+    
+def stickers_upload_path(instance, filename):
+    # Generate the upload path based on the user's ID
+    return f'stickers/{filename}'
+    
+class Sticker(models.Model):
+    photo = models.ImageField(upload_to=stickers_upload_path, blank = True, null = True)
