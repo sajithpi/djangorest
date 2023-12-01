@@ -117,9 +117,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         receiver_profile_pic = text_data_json['receiver_profile_pic']
         file = text_data_json['file']
         timestamp = text_data_json['timestamp']
-        
+        print(f"MY MESSAGE:{message}")
         censored_message = profanity.censor(message)
-
+        censored_message = str(message)
         room = await database_sync_to_async(RoomChat.objects.get)(id=room_id)
 
         sender_user = await database_sync_to_async(User.objects.get)(username=sender_user)
