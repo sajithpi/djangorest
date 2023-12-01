@@ -259,6 +259,16 @@ class GetChatRooms(GenericAPIView):
                 room_user = room.senderProfile if room.senderProfile.user.id != user_profile.user.id else room.receiverProfile
                 room_dict['username'] = room_user.user.username
                 room_dict['profile_pic'] = str(room_user.profile_picture)
+                room_dict['active_status'] = room_user.user.login_status
+                if  room_user.user.last_login:
+                    room_dict['last_login'] = room_user.user.last_login
+                    print(f"last login:{room_user.user.last_login} current time:{settings.NOW}")
+                    time_difference = room_user.user.last_login - settings.NOW
+                    # Extract the components of the time difference
+                    days = time_difference.days
+                    hours, remainder = divmod(time_difference.seconds, 3600)
+                    minutes, seconds = divmod(remainder, 60)
+                    print(f"USER:{room_user.user.username} Time difference: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds.")
                 unread_messages = Chat.objects.filter(receiver = user_profile, is_read = False, room = room).count()
                 print(f"unread_messages:{unread_messages}")
                 room_dict['unread_messages'] = unread_messages if unread_messages else 0
