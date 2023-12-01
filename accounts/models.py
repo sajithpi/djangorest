@@ -72,7 +72,7 @@ class User(AbstractBaseUser):
     package = models.ForeignKey("Package", on_delete=models.SET_NULL, blank=True, null=True)
     package_validity =  models.DateTimeField(blank=True, null=True)
     date_joined = models.DateTimeField(auto_now_add=True)
-    last_login = models.DateTimeField(auto_now_add=True)
+    last_login = models.DateTimeField(blank = True, null = True)
     is_verified = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

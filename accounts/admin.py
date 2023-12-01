@@ -3,7 +3,7 @@ from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Worko
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id','username','gender','orientation','get_package_name','auth_provider','date_joined','has_2fa_enabled')
+    list_display = ('id','username','gender','orientation','get_package_name','auth_provider','last_login', 'login_status', 'date_joined','has_2fa_enabled')
     list_filter = ('id','username')
     search_fields = ('id','username')
     

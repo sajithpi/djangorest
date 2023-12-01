@@ -23,6 +23,7 @@ from django.db import transaction
 from django.conf import settings
 from django.utils import timezone
 import json
+from datetime import datetime
 # Create your views here.
 
 now = timezone.now()    # Get the current time 
@@ -180,6 +181,7 @@ class LogoutView(GenericAPIView):
         user.login_status = False
         user.login_otp = None
         user.login_otp_validity = None
+        user.last_login =timezone.now()
         user.save()
         return Response({'status':'True','  message':'User Logout Successful'}, status=status.HTTP_200_OK)
     

@@ -18,7 +18,10 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         if _2fa == True and not user.has_2fa_passed:
             send_otp_via_mail(user.email, 'login')
             return {'email':user.email, 'has_2fa_enabled': True}
-            
+        user = User.objects.get(username = user)    
+        user.login_status = True 
+        user.last_login = None
+        user.save()
         print(f"2fa status:{_2fa}")
         data['has_2fa_enabled'] = _2fa
         return data

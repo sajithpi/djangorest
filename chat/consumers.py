@@ -6,6 +6,8 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from channels.db import database_sync_to_async
 from . models import Connected, Chat, RoomChat, User, UserProfile
+from better_profanity import profanity
+
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -42,6 +44,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         
         
 class ChatConsumer(AsyncWebsocketConsumer):
+    
+    profanity.load_censor_words()
+
     @database_sync_to_async
     def connect_user(self, room_name, channel_name):
         self.user = self.scope['user']
@@ -112,6 +117,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         receiver_profile_pic = text_data_json['receiver_profile_pic']
         file = text_data_json['file']
         timestamp = text_data_json['timestamp']
+        
+        censored_message = profanity.censor(message)
 
         room = await database_sync_to_async(RoomChat.objects.get)(id=room_id)
 
@@ -122,7 +129,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         received_user_profile = await database_sync_to_async(UserProfile.objects.get)(user=received_user)
 
         chat = Chat(
-            content=message,
+            content=censored_message,
             sender=sender_user_profile,
             receiver=received_user_profile,
             room=room,
@@ -135,7 +142,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message,
+                'message': censored_message,
                 'sender_user': sender_user.username,
                 'room_id': room_id,
                 'received_user': received_user.username,
@@ -149,7 +156,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         response_message = "Your message was successfully received and processed."
         await self.send(text_data=json.dumps({
             'type': 'response_message',
-            'message': message,
+            'message': censored_message,
             'sender_profile_pic':sender_profile_pic,
             'receiver_profile_pic':receiver_profile_pic,
             'file':file,

@@ -642,6 +642,7 @@ class GetPreferences(GenericAPIView):
             relationship_goals_data = [{'id': goal.id, 'name': goal.name} for goal in relationship_goals]
             smoke_choices_data = [{'id': choice.id, 'name': choice.name} for choice in smoke_choices]
             education_types_data = [{'id': education.id, 'name': education.name} for education in education_types]
+            
             if device == 'mobile':
                 languages_data = [{'id': language.id, 'name': language.name} for language in languages]
             else:
@@ -657,7 +658,8 @@ class GetPreferences(GenericAPIView):
             relationship_goals_data = [{'label': goal.name, 'value': goal.name} for goal in relationship_goals]
             smoke_choices_data = [{'label': choice.name, 'value': choice.name} for choice in smoke_choices]
             education_types_data = [{'label': education.name, 'value': education.name} for education in education_types]
-            languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+            # languages_data = [{'label': language.name, 'value': language.name} for language in languages]
+            
             if device == 'mobile':
                 languages_data = [{'id': language.id, 'name': language.name} for language in languages]
             else:
@@ -930,8 +932,12 @@ class GetProfileMatches(GenericAPIView):
                 'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
             if cover_photos:
                 preferences_by_user_id['cover_photos'] = [{'id':i, 'image':str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
+                preferences_by_user_id['cover_photos'].insert(0, {'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None})
             else:
-                preferences_by_user_id['cover_photos'] = []
+         
+                preferences_by_user_id['cover_photos'] = [{'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None}]
+           
+           
             preferences_by_user_id['height'] = profile.height
             preferences_by_user_id['languages'] = [language.name for language in profile.languages.all()]
             favorite_status = True if Favorite.objects.filter(user=profile, favored_by=user_profile).first() else False
