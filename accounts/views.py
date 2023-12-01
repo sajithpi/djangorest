@@ -298,6 +298,7 @@ class Testimonial(GenericAPIView):
     )
     def post(self, request):
         try:
+            print(f"USER:{request.user}")
             user = User.objects.get(username = request.user)
             user_profile = UserProfile.objects.get(user = user)
             
@@ -344,7 +345,31 @@ class Testimonial(GenericAPIView):
                 
         except Exception as e:
             print(f"ERROR:{e}")
-   
+            
+ 
+    # @swagger_auto_schema(
+    #     manual_parameters=[
+    #         openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0:pending, 1:accepted, 2:rejected)'),
+    #     ],
+    #     responses={
+    #         200: openapi.Response('Testimonials retrieved successfully'),
+    #         400: openapi.Response('Bad Request, an error occurred'),
+    #         403: openapi.Response('Forbidden, user is not an admin'),
+    #     },
+    #     tags=['testimonial']
+    # )  
+    
+    
+
+
+
+                
+class GetTestimonialsView(GenericAPIView):
+    
+    
+    authentication_classes = []  # Explicitly set no authentication
+    permission_classes = [AllowAny]
+    
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0:pending, 1:accepted, 2:rejected)'),
@@ -355,26 +380,28 @@ class Testimonial(GenericAPIView):
             403: openapi.Response('Forbidden, user is not an admin'),
         },
         tags=['testimonial']
-    )         
+    )  
+    
+    
     def get(self, request):
         try:
-            user = User.objects.get(username = request.user)
-            type = request.headers.get('type',0)
+            # user = User.objects.get(username = request.user)
+            # type = request.headers.get('type',)
             
-            if user.is_admin:
+            # if user.is_admin:
                
-                testimonials = UserTestimonial.objects.filter(status = type)
-                
-                serializer = TestimonialSerializer(data =testimonials, many = True)
-                
-                serializer.is_valid()
-                
-                return Response(serializer.data, status=status.HTTP_200_OK)
+            testimonials = UserTestimonial.objects.filter(status = 1)
+            
+            serializer = TestimonialSerializer(data =testimonials, many = True)
+            
+            serializer.is_valid()
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         except Exception as e:
             print(f"ERROR:{e}")
             return Response(f"error:{e}",status=status.HTTP_400_BAD_REQUEST)
-                
+        
 class PasswordReset(GenericAPIView):
     
     
