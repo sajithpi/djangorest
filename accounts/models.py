@@ -114,6 +114,9 @@ def user_cover_photo_upload_path(instance, filename):
     # Generate the upload path based on the user's ID
     return f'users/{instance.user_profile.user.username}/cover_photos/{filename}'
 
+def package_upload_path(instance, filename):
+    return f'packages/{instance.name}/{filename}'
+
 class Package(models.Model):
     
     PACKAGE_CHOICES = (
@@ -122,6 +125,7 @@ class Package(models.Model):
     )
     
     name = models.CharField(max_length = 50, blank=True, null=True)
+    package_img = models.ImageField(upload_to=package_upload_path, blank=True, null=True)
     price = models.FloatField(default = 0)
     type = models.CharField(max_length = 10, choices = PACKAGE_CHOICES, blank = True, null = True)
     validity = models.FloatField(default = 1)

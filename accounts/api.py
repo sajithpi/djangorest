@@ -214,6 +214,49 @@ class GetUserData(GenericAPIView):
         except UserProfile.DoesNotExist:
             return Response({'error':'UserProfile does not exist for this user.'}, status=404)
   
+def get_country_and_city_from_coordinates(latitude, longitude):
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    print(f"aaa")
+    print(f"latitude:{latitude} longitude:{longitude}")
+    location = geolocator.reverse(f"{latitude}, {longitude}")
+    if location.raw.get("address"):
+        address = location.raw["address"]
+        country = address.get("country")
+        print(f"country: {country}")
+        # Check for different keys that might contain city information
+        city_keys = ["city", "town", "village"]
+        for key in city_keys:
+            city = address.get(key)
+            if city and country:
+                return {'city':city,
+                        'country':country}
+
+    return "City information not found"
+
+def getCityAndCountry(latitude, longitude):
+    count = 0
+    country = ''
+    city = ''
+    try:
+        country_and_city = get_country_and_city_from_coordinates(latitude, longitude)
+        country = country_and_city.get('country')
+        city = country_and_city.get('city')
+    except AttributeError as e:
+        if count == 0:
+            new__longitude = float(longitude) * -1
+            print(f"new__longitude:{new__longitude}")
+            country_and_city = get_country_and_city_from_coordinates(latitude, new__longitude)
+            country = country_and_city.get('country')
+            city = country_and_city.get('city')
+        else:
+            country_and_city = get_country_and_city_from_coordinates(latitude * -1, longitude)
+            country = country_and_city.get('country')
+            city = country_and_city.get('city')
+        count +=1
+    finally:
+        return {'city':city,
+                'country':country}
+
 class UpdateUserLocation(GenericAPIView):
     permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
 
@@ -222,9 +265,17 @@ class UpdateUserLocation(GenericAPIView):
             user = User.objects.get(username=self.request.user)
             user_profile = UserProfile.objects.get(user=user)
             if self.request.data.get('longitude') and self.request.data.get('latitude'):
+                longitude =  self.request.data.get('longitude')
+                latitude = self.request.data.get('latitude')
                 user_profile.longitude = self.request.data.get('longitude')
                 user_profile.latitude = self.request.data.get('latitude')
-                user_profile.city = self.request.data.get('city','city')
+                cityAndProfle = getCityAndCountry(latitude,longitude)
+                    
+                # print(f"user_profile.country:{country}")
+                print(f"user_profile.city:{cityAndProfle}")
+                
+                user_profile.city =  cityAndProfle.get('city')
+                user_profile.country = cityAndProfle.get('country')
                 user_profile.save()
                 return Response('Location Updated Successfully', status=status.HTTP_200_OK)
             return Response('Location arguments missing',status = status.HTTP_400_BAD_REQUEST)
@@ -1005,6 +1056,9 @@ class PackageListView(GenericAPIView):
 
     serializer_class = PackageSerializer
     
+    def get_queryset(self):
+        return Package.objects.all()
+    
     @swagger_auto_schema(
         responses={
             200: openapi.Response('Successful package list retrieval', PackageSerializer(many=True)),
@@ -1018,6 +1072,8 @@ class PackageListView(GenericAPIView):
         packages = self.get_queryset()
         serializer = self.serializer_class(packages, many=True)
         return Response(serializer.data)
+    
+    
 
     def post(self, request):
         

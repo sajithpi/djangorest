@@ -392,11 +392,22 @@ class GetTestimonialsView(GenericAPIView):
                
             testimonials = UserTestimonial.objects.filter(status = 1)
             
-            serializer = TestimonialSerializer(data =testimonials, many = True)
+            # serializer = TestimonialSerializer(data =testimonials, many = True)
             
-            serializer.is_valid()
+            # serializer.is_valid()
             
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            testimonial_list = []
+            for testimonial in testimonials:
+                testimonial_dict = {}
+                testimonial_dict['user'] = testimonial.user.user.username
+                testimonial_dict['profile_picture'] = str(testimonial.user.profile_picture)
+                # testimonial_dict['location'] = 
+                testimonial_dict['description'] = testimonial.description
+                testimonial_dict['status'] = testimonial.status
+                testimonial_dict['location'] = testimonial.user.city
+                testimonial_list.append(testimonial_dict)                
+            
+            return Response(testimonial_list, status=status.HTTP_200_OK)
         
         except Exception as e:
             print(f"ERROR:{e}")
