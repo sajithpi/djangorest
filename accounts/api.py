@@ -3,7 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
@@ -21,6 +21,7 @@ from followers.models import Favorite, Like, BlockedUser, Rating
 from html import escape
 import math
 from geopy.geocoders import Nominatim
+from rest_framework.exceptions import NotFound, ParseError
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -1122,4 +1123,153 @@ class PackageListView(GenericAPIView):
         
         package_instance.delete()
         return Response(f"Package Deleted Successfully", status=status.HTTP_200_OK)
+        
+class UploadKYC(GenericAPIView):
+    """
+    API endpoint to upload KYC documents for a user.
+
+    ---
+    parameters:
+      - name: document
+        description: The KYC document file to be uploaded.
+        required: true
+        type: file
+      - name: type
+        description: The ID of the KYC category.
+        required: true
+        type: integer
+    responses:
+      200:
+        description: KYC document uploaded successfully.
+      400:
+        description: Bad Request. Invalid input or missing required parameters.
+      404:
+        description: Not Found. User or KYC category not found.
+    """
+
+    def post(self, request):
+        # Get the authenticated user
+        user = User.objects.get(username=request.user)
+
+        # Get the user's profile
+        user_profile = UserProfile.objects.get(user=user)
+
+        # Extract required data from the request
+        document = request.data.get('document')
+        type_id = request.data.get('type')
+
+        # Get the KYC category based on the provided type ID
+        try:
+            category_type = KycCategory.objects.get(id=type_id)
+        except KycCategory.DoesNotExist:
+            return Response("Invalid KYC category ID", status=status.HTTP_404_NOT_FOUND)
+
+        # Create a new KYC document instance
+        KycDocument.objects.create(
+            user_profile=user_profile,
+            document=document,
+            type=category_type,
+        )
+
+        return Response("KYC uploaded successfully", status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        # Get the authenticated user
+        user = User.objects.get(username=request.user)
+
+        # Get the user's profile
+        user_profile = UserProfile.objects.get(user=user)
+
+        # Retrieve KYC documents for the user's profile
+        documents = KycDocument.objects.filter(user_profile=user_profile).all()
+
+        # Prepare a list of dictionaries containing KYC document details
+        kyc_list = []
+        for document in documents:
+            kyc_dict = {
+                'id': document.id,
+                'image': str(document.document)
+            }
+            kyc_list.append(kyc_dict)
+
+        return Response(kyc_list, status=status.HTTP_200_OK)
+    
+    def patch(self, request):
+        try:
+            # Get the authenticated user
+            user = User.objects.get(username=request.user)
+            
+            # Check if the user is an admin
+            if not user.is_admin:
+                return Response("You don't have the privilege to edit the KYC document", status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Extract data from the request
+            kyc_id = request.data.get('kyc_id')
+            status_value = request.data.get('status')
+            
+            # Check if both 'kyc_id' and 'status' are provided in the request data
+            if not kyc_id or not status_value:
+                raise ParseError("Both 'kyc_id' and 'status' are required in the request data.")
+            
+            # Retrieve the KYC document using the provided 'kyc_id'
+            kyc_doc = KycDocument.objects.get(id=kyc_id)
+            
+            # Update the status of the KYC document
+            kyc_doc.status = status_value
+            
+            # Save the changes
+            kyc_doc.save()
+            
+            return Response("KYC document status updated successfully", status=status.HTTP_200_OK)
+        
+        except User.DoesNotExist:
+            # If the user is not found, return a 404 response
+            raise NotFound("User not found")
+        
+        except KycDocument.DoesNotExist:
+            # If the KYC document is not found, return a 404 response
+            raise NotFound("KYC document not found")
+        
+        except Exception as e:
+            # Handle other exceptions and return a 500 response with the error message
+            return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        try:
+            # Get the authenticated user
+            user = User.objects.get(username=request.user)
+
+            # Get the user's profile
+            user_profile = UserProfile.objects.get(user=user)
+
+            # Extract 'kyc_id' from the request data
+            kyc_id = request.data.get('kyc_id')
+            
+            # Check if 'kyc_id' is provided in the request data
+            if not kyc_id:
+                raise ParseError("'kyc_id' is required in the request data.")
+
+            # Retrieve the KYC document using the provided 'kyc_id' and user profile
+            kyc_doc = KycDocument.objects.get(id=kyc_id)
+
+            # Check if the KYC document exists before attempting to delete
+            if not kyc_doc:
+                raise NotFound("KYC document not found")
+
+            # Delete the KYC document
+            kyc_doc.delete()
+
+            return Response("KYC document deleted successfully", status=status.HTTP_204_NO_CONTENT)
+
+        except User.DoesNotExist:
+            # If the user is not found, return a 404 response
+            raise NotFound("User not found")
+
+        except UserProfile.DoesNotExist:
+            # If the user's profile is not found, return a 404 response
+            raise NotFound("User profile not found")
+
+        except Exception as e:
+            # Handle other exceptions and return a 500 response with the error message
+            return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -33,6 +33,14 @@ class OrdersAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_id','order_id','package_id','status','price','created_at','modified_at')
     list_filter = ('id', 'user_id','order_id')
     search_fields = ('id', 'user_id','order_id')
+    
+class KycDocumentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'document','get_type_name','status','created_at','modified_at')
+    list_filter = ('id', 'status')
+    search_fields = ('id', 'status')
+    
+    def get_type_name(self, obj):
+        return obj.type.name if obj.type else None
 # Register your models here.
 class ChoiceAdmin(admin.ModelAdmin):
     list_display = ('id','name')
@@ -56,6 +64,8 @@ admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Package, PackageAdmin)
 admin.site.register(Order, OrdersAdmin)
+admin.site.register(KycCategory, InterestAdmin)
+admin.site.register(KycDocument, KycDocumentAdmin)
 admin.site.register(Notification, NotificationAdmin)
 admin.site.register(CoverPhoto, CoverPhotoAdmin)
 admin.site.register(Interest, InterestAdmin)

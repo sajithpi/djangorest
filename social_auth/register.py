@@ -58,7 +58,8 @@ def register_social_user(provider, user_id, email, name):
             return {
                 
                 'refresh_token':str(registered_user_token.get('refresh_token')),
-                'access_token':str(registered_user_token.get('access_token'))
+                'access_token':str(registered_user_token.get('access_token')),
+                'is_admin':filtered_user_by_email[0].is_admin,
             }
         else:
             raise AuthenticationFailed(detail='Please continue your login using' + filtered_user_by_email[0].auth_provider)
@@ -86,7 +87,8 @@ def register_social_user(provider, user_id, email, name):
             'email':email,
             # 'username':new_user.user_id,
             'refresh_token':str(new_user_token.get('refresh_token')),
-            'access_token':str(new_user_token.get('access_token'))
+            'access_token':str(new_user_token.get('access_token')),
+            'is_admin':False,
             
         }
         

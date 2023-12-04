@@ -117,6 +117,10 @@ def user_cover_photo_upload_path(instance, filename):
 def package_upload_path(instance, filename):
     return f'packages/{instance.name}/{filename}'
 
+def kyc_upload_path(instance, filename):
+    print(f"KYC:{instance}")
+    return f'kyc/{instance.user_profile.user.username}/{filename}'
+
 class Package(models.Model):
     
     PACKAGE_CHOICES = (
@@ -181,6 +185,27 @@ class UserProfile(models.Model):
         self.modified_at = settings.NOW
         super().save(*args, **kwargs)
 
+
+class KycCategory(models.Model):
+    name = models.CharField(max_length = 100, blank = True)
+    
+
+class KycDocument(models.Model):
+    STATUS_CHOICES = (
+        (0, 'Pending'),  # KYC Pending
+        (1, 'Approved'),  # KYC Approved
+        (2, 'Rejected'),  # KYC Rejected
+    )
+
+    user_profile = models.ForeignKey(UserProfile, related_name='kyc_documents', on_delete=models.CASCADE)
+    document = models.ImageField(upload_to=kyc_upload_path, blank=True, null=True)
+    type = models.ForeignKey(KycCategory, related_name='kyc_category', on_delete=models.CASCADE)
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    
+    
 class Notification(models.Model):
     
     from_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True, related_name='from_user')
