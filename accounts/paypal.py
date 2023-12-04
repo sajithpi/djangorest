@@ -9,6 +9,9 @@ import json
 from django.http import JsonResponse
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
+from django.utils import timezone
 
 PAYPAL_CLIENT_ID = settings.PAYPAL_CLIENT_ID
 PAYPAL_CLIENT_SECRET = settings.PAYPAL_CLIENT_SECRET
@@ -156,29 +159,44 @@ class CaptureOrderView(APIView):
 
                 # Check if the PayPal order status is COMPLETED
                 if response.json().get('status') == 'COMPLETED':
-                    print(f"PAYMENT IS COMPLETED")
-                    order.status = 1  # Assuming 1 represents a completed order status
+                    print(f"Payment for order ID {order_id} is COMPLETED")
+                    order.status = OrderStatus.COMPLETED  # Assuming 1 represents a completed order status
                     order.save()
+
+                    # Update user package validity
+                    package_id = order.package_id.id
+                    package_data = Package.objects.get(id=package_id)
+                    user_package_validity = timezone.now() + relativedelta(months=package_data.validity)
+                    print(f"user_package_validity for order ID {order_id}: {user_package_validity}")
+                    user = User.objects.get(username =request.user)
+                    user.package = package_data
+                    user.package_validity = user_package_validity
+                    user.save()
 
                 return Response(response.json(), status=status.HTTP_200_OK)
             else:
                 # Handle the case where obtaining the access token fails
-                order.status = 2  # Assuming 2 represents a failed order status
+                order.status = OrderStatus.FAILED  # Assuming 2 represents a failed order status
                 order.save()
+                print("Failed to obtain access token")
                 return Response({"error": "Failed to obtain access token"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except requests.exceptions.RequestException as e:
-            # Handle request exception (e.g., network issues, connection error)
-            order.status = 2  # Assuming 2 represents a failed order status
-            order.save()
             print(f"Error while capturing PayPal order: {e}")
-            return Response({"error": "Failed to capture PayPal order"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Handle request exception (e.g., network issues, connection error)
+            order.status = OrderStatus.FAILED  # Assuming 2 represents a failed order status
+            order.save()
+            return Response({"error": f"Failed to capture PayPal order: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Order.DoesNotExist:
-            # Handle the case where the specified order_id does not exist in the database
             print(f"Order with ID {order_id} does not exist")
             return Response({"error": f"Order with ID {order_id} does not exist"}, status=status.HTTP_404_NOT_FOUND)
         except ValueError as e:
-            # Handle JSON decoding error
-            order.status = 2  # Assuming 2 represents a failed order status
-            order.save()
+            # Handle JSON decoding e
             print(f"Error decoding JSON response: {e}")
+            order.status = OrderStatus.FAILED  # Assuming 2 represents a failed order status
+            order.save()
             return Response({"error": "Error decoding JSON response"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+# Constants representing order status
+class OrderStatus:
+    COMPLETED = 1
+    FAILED = 2

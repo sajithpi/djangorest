@@ -27,7 +27,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
     serializer_class = GoogleSocialAuthSerializer
 
     def post(self, request):
-        
+        device = request.headers.get('device','web')
         """
 
         POST with "auth_token"
@@ -36,7 +36,7 @@ class GoogleSocialAuthView(generics.GenericAPIView):
 
         """
         try:
-            serializer = self.serializer_class(data=request.data)
+            serializer = self.serializer_class(data=request.data, context={'device': device})
             serializer.is_valid(raise_exception=True)
             data = ((serializer.validated_data)['auth_token'])
             return Response(data, status=status.HTTP_200_OK)

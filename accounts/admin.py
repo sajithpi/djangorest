@@ -3,7 +3,7 @@ from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Worko
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id','username','gender','orientation','get_package_name','auth_provider','last_login', 'login_status', 'date_joined','has_2fa_enabled')
+    list_display = ('id','username','gender','orientation','email','get_package_name','auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
     list_filter = ('id','username')
     search_fields = ('id','username')
     
@@ -30,7 +30,7 @@ class PackageAdmin(admin.ModelAdmin):
     search_fields = ('name', 'id')
     
 class OrdersAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user_id','order_id','package_id','price','created_at','modified_at')
+    list_display = ('id', 'user_id','order_id','package_id','status','price','created_at','modified_at')
     list_filter = ('id', 'user_id','order_id')
     search_fields = ('id', 'user_id','order_id')
 # Register your models here.

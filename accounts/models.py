@@ -133,9 +133,9 @@ class Package(models.Model):
 class Order(models.Model):
     
     STATUS_CHOICES = (
-        (0,0), #initiated
-        (1,1), #success
-        (2,2), #failed
+        (0, 'Initiated'),  # Order initiated
+        (1, 'Success'),    # Order successfully completed
+        (2, 'Failed'),     # Order failed
     )
     user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
     order_id = models.CharField(max_length = 100, blank = True, null = True)

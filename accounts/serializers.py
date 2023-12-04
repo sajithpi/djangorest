@@ -6,6 +6,7 @@ from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnico
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
 from . models import User, UserProfile, Package
+from django.utils import timezone
 from . otp import send_otp_via_mail
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -28,9 +29,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     
 class UserSerializers(serializers.ModelSerializer):
     
+    package_name = serializers.SerializerMethodField()
+
+    def get_package_name(self, user):
+        if user.package:
+            return user.package.name
+        return None    
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","has_2fa_enabled","showDistance","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","has_2fa_enabled","package_name","package_validity","showDistance","phone_number",]
   
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
@@ -160,6 +167,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
     height = serializers.SerializerMethodField()
+    
+    package_expired = serializers.SerializerMethodField()
     # def get_drink_name(self, obj):
         # return obj.drink.drinkchoice.name
 
@@ -188,11 +197,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'pin_code',
             'created_at',
             'modified_at',
+            'package_expired',
         ]
         
     # Add a SerializerMethodField to include the user's interests
     interests = serializers.SerializerMethodField()
     languages = serializers.SerializerMethodField()
+    
+    def get_package_expired(self, obj):
+        package_validity = obj.user.package_validity
+        if not package_validity:
+            return True
+        current_date = timezone.now()
+        return current_date > package_validity
     
     def get_interests(self, obj):
          # Access the user's interests through the UserProfile's user field
@@ -219,6 +236,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
             inches = int(total_inches % 12) 
         
         return {'cm':obj.height , 'feet':feet, 'inches':inches}
+    
+    
+    
+    
 
 class UploadCoverPhotoSerializer(serializers.ModelSerializer):
     
