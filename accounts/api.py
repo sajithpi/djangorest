@@ -1250,7 +1250,7 @@ class UploadKYC(GenericAPIView):
                 raise ParseError("'kyc_id' is required in the request data.")
 
             # Retrieve the KYC document using the provided 'kyc_id' and user profile
-            kyc_doc = KycDocument.objects.get(id=kyc_id)
+            kyc_doc = KycDocument.objects.filter(user_profile=user_profile)
 
             # Check if the KYC document exists before attempting to delete
             if not kyc_doc:

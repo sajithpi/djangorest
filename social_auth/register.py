@@ -2,17 +2,18 @@ from rest_framework.exceptions import AuthenticationFailed
 import random
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from accounts.models import User
+from accounts.models import User, UserProfile
 from django.contrib.auth import authenticate as django_authenticate
 
 def generate_username(name):
 
     username = "".join(name.split(' ')).lower()
-    if not User.objects.filter(username=username).exists():
-        return username
-    else:
-        random_username = username + str(random.randint(0, 1000))
-        return generate_username(random_username)
+    return username
+    # if not User.objects.filter(username=username).exists():
+    #     return username
+    # else:
+    #     random_username = username + str(random.randint(0, 1000))
+    #     return generate_username(random_username)
 def authenticate(email,password):
     try:
         user = User.objects.get(email=email)
@@ -48,6 +49,34 @@ def authenticate_for_android(name,password):
         return None  # 
 
 
+def check_profile_complete_status(email, type = 'web'):
+    count = 0
+    print(f"email:{email}")
+    if type == 'web':
+        user = User.objects.get(email = email)
+    else:
+        user = User.objects.get(username = email)
+    user_profile = UserProfile.objects.get(user = user)
+    if not user.gender or not user.email or not user.orientation or not user.date_of_birth or not user.interests.count():
+        return 0
+    return 1
+
+    # if not user_profile.workout:
+    #     count +=1
+    # if not user_profile.family_plan:
+    #     count +=1
+    # if not user_profile.drink:
+    #     count +=1
+    # if not user_profile.religion:
+    #     count +=1
+    # if not user_profile.education:
+    #     count +=1
+    # if not user_profile.smoke:
+    #     count +=1
+    # if not user_profile.languages:
+    #     count +=1
+    return count
+
 SOCIAL_SECRET = 'asdasd'
 def register_social_user(provider, user_id, email, name):
     filtered_user_by_email = User.objects.filter(email=email)
@@ -55,20 +84,22 @@ def register_social_user(provider, user_id, email, name):
         if provider == filtered_user_by_email[0].auth_provider:
             registered_user_token = authenticate(email=email, password=SOCIAL_SECRET)
             print(f"registered_user_token:{registered_user_token}")
+            profile_status = check_profile_complete_status(email=email)
             return {
                 
                 'refresh_token':str(registered_user_token.get('refresh_token')),
                 'access_token':str(registered_user_token.get('access_token')),
-                'is_admin':filtered_user_by_email[0].is_admin,
+                # 'is_admin':filtered_user_by_email[0].is_admin,
+                'preference_status':profile_status
             }
         else:
             raise AuthenticationFailed(detail='Please continue your login using' + filtered_user_by_email[0].auth_provider)
     else:
-        user = {
-             'username':generate_username(name),
-              'email':email,
-             'password':SOCIAL_SECRET
-        }    
+        # user = {
+        #      'username':generate_username(name),
+        #       'email':email,
+        #      'password':SOCIAL_SECRET
+        # }    
         user = User.objects.create(
             username=generate_username(name),
             email=email,
@@ -89,29 +120,32 @@ def register_social_user(provider, user_id, email, name):
             'refresh_token':str(new_user_token.get('refresh_token')),
             'access_token':str(new_user_token.get('access_token')),
             'is_admin':False,
+            'preference_status':0,
             
         }
         
 def register_social_user_for_android(provider, user_id, name):
-    filtered_user_by_username = User.objects.filter(username=name)
+    username=generate_username(name)
+    filtered_user_by_username = User.objects.filter(username=username)
     if filtered_user_by_username.exists():
         if provider == filtered_user_by_username[0].auth_provider:
-            registered_user_token = authenticate(name=name, password=SOCIAL_SECRET)
+            registered_user_token = authenticate_for_android(name=username, password=SOCIAL_SECRET)
             print(f"registered_user_token:{registered_user_token}")
+            profile_status = check_profile_complete_status(email=username, type = 'android')
             return {
-                
+                'profile_status' : profile_status,
                 'refresh_token':str(registered_user_token.get('refresh_token')),
                 'access_token':str(registered_user_token.get('access_token'))
             }
         else:
             raise AuthenticationFailed(detail='Please continue your login using' + filtered_user_by_username[0].auth_provider)
     else:
-        user = {
-             'username':generate_username(name),
-             'password':SOCIAL_SECRET
-        }    
+        # user = {
+        #      'username':generate_username(name),
+        #      'password':SOCIAL_SECRET
+        # }    
         user = User.objects.create(
-            username=generate_username(name),
+             username=username,
         )
     
         # Set the user's password using set_password
@@ -121,10 +155,10 @@ def register_social_user_for_android(provider, user_id, name):
         user.auth_provider = provider
         user.save()
 
-        new_user_token = authenticate(email=email, password = SOCIAL_SECRET)
+        new_user_token = authenticate_for_android(username=username, password = SOCIAL_SECRET)
         print(f"new user token:{new_user_token}")
         return {
-            'email':email,
+            'username':username,
             # 'username':new_user.user_id,
             'refresh_token':str(new_user_token.get('refresh_token')),
             'access_token':str(new_user_token.get('access_token'))

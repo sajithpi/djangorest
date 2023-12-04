@@ -56,7 +56,7 @@ class FacebookSocialAuthView(generics.GenericAPIView):
             print(f"auth_token:{auth_token}")
             
             if platform == 'android':
-                      message = register_social_user_for_android(
+                    message = register_social_user_for_android(
                     provider='facebook',
                     user_id=auth_token['userID'], 
                     name=auth_token['name'],
