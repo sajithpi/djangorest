@@ -72,7 +72,7 @@ class AddRemoveFavorite(GenericAPIView):
             favorite.save()
             description = f"{favored_by.user.username} is Favorited {user.user.username}'"
             
-            add_notification(from_user=favored_by, to_user=user, type='follow', description=description)
+            # add_notification(from_user=favored_by, to_user=user, type='follow', description=description)
             print(f"user:{user} favored_user:{request.user}")
             return Response({'message':'Success', 
                             'description':f"{description} Successfully"},
