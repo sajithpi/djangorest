@@ -232,6 +232,8 @@ MEDIA_ROOT = BASE_DIR/'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 USER_URL = config('USER_URL')
+MLM_ADMIN_URL = config('MLM_ADMIN_URL')
+MLM_API_KEY = config('MLM_API_KEY')
 
 #Email Configuration
 EMAIL_HOST = config('EMAIL_HOST')

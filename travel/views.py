@@ -85,6 +85,9 @@ class TravelPlan(GenericAPIView):
         try:
             user = User.objects.get(username=request.user)
             user_profile = UserProfile.objects.get(user=user)
+            
+            
+            print(f"TRIP:{user.username}")
             mutable_data = request.data.copy()
             mutable_data['user'] = user.id
             
@@ -92,6 +95,7 @@ class TravelPlan(GenericAPIView):
             if country:
                 mutable_data['country'] = country
                 
+            print(f"MUTABLE DATA:{mutable_data}")
             serializer = MyTripSerializer(data=mutable_data, partial=True)
 
             if serializer.is_valid():
@@ -99,6 +103,7 @@ class TravelPlan(GenericAPIView):
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
+                
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:

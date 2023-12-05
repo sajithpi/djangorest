@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -55,6 +55,8 @@ urlpatterns = [
     
     path('api/packages', PackageListView.as_view(), name='package-list-create'),
     
-    path('api/upload-kyc',UploadKYC.as_view(), name='upload-kyc')
+    path('api/upload-kyc',UploadKYC.as_view(), name='upload-kyc'),
+    
+    path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
 
 ]

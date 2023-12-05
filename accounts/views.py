@@ -454,4 +454,28 @@ class PasswordReset(GenericAPIView):
             return Response("Password updated successfully", status=status.HTTP_200_OK)
         
         return Response("Entered Password is not correct, please enter correct password", status=status.HTTP_400_BAD_REQUEST)
-        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

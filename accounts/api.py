@@ -22,6 +22,7 @@ from html import escape
 import math
 from geopy.geocoders import Nominatim
 from rest_framework.exceptions import NotFound, ParseError
+import requests
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -1275,3 +1276,35 @@ class UploadKYC(GenericAPIView):
             # Handle other exceptions and return a 500 response with the error message
             return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+    
+class MlmRegister(GenericAPIView):
+    
+    def post(self, request):
+        
+        user = User.objects.get(username = request.user)
+        url = f'{settings.MLM_ADMIN_URL}/api/register'
+        data = {'_token':settings.MLM_API_KEY, 
+                'username':user.username,
+                'sponsorName': 'Sagalovskiy',
+                'first_name': user.username,
+                'date_of_birth':user.date_of_birth,
+                'gender':user.gender,
+                'email':user.email,
+                'mobile':user.phone_number,
+                'password':user.password,
+                'totalAmount':'100'
+                
+                }
+
+        # Make a POST request
+        response = requests.post(url, data=data)
+
+        # Check the response
+        if response.status_code == 200:
+            print('POST request successful!')
+            print('Response:', response.text)
+            return Response(response.text, status=status.HTTP_200_OK)
+        else:
+            print(f'Error: {response.status_code}')
+            print('Response:', response.text)
+            return Response(response.text, status=status.HTTP_400_BAD_REQUEST)
