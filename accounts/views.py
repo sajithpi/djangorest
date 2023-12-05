@@ -164,7 +164,7 @@ class sendOTP(GenericAPIView):
             message = send_otp_whatsapp()
             return Response(message)
         elif method == 'email':
-            send_otp_via_mail(email=email, type=type)
+            send_otp_via_mail(email=email, username = user.username, type=type)
             return Response(f"{type} Otp sent into your email")
         
 class LogoutView(GenericAPIView):

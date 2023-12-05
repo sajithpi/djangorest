@@ -541,7 +541,7 @@ class CheckUserExists(GenericAPIView):
             return Response({'message':'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
         
         if User.objects.filter(email=email).exists():
-            return Response({'message':'User with this email already exists'}, status=status.HTTP_200_OK)
+            return Response({'message':'User with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
         

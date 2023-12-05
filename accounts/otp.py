@@ -14,10 +14,14 @@ import pytz
 
 current_timezone = settings.TIME_ZONE
 
-def send_otp_via_mail(email, type):
+def send_otp_via_mail(email, username, type):
     subject = 'Your account verification email'
     otp = random.randint(1000,9999)
-    message = f'Your otp is for dating app verification {otp}'
+    message = f"""Hello {username} \n Enter this code {otp} in the login section of the [Your Dating App Name] app to securely access your account.
+
+If you didn't initiate this login attempt, please contact our support team immediately at dating@gmail.com.
+
+Happy dating!"""
     email_from = settings.EMAIL_HOST
     send_mail(subject, message, email_from, [email])
 
