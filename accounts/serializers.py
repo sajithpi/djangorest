@@ -8,19 +8,21 @@ from rest_framework.exceptions import AuthenticationFailed
 from . models import User, UserProfile, Package
 from django.utils import timezone
 from . otp import send_otp_via_mail
+import threading
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
         user = self.user
+        user = User.objects.get(username = user)    
         # Add custom data to the response
         _2fa = user.has_2fa_enabled
         if _2fa == True and not user.has_2fa_passed:
-            send_otp_via_mail(user.email, user, 'login')
+            threading.Thread(target=send_otp_via_mail, args=(user.email, user.username, 'login')).start()
+            # send_otp_via_mail(user.email, user, 'login')
             return {'email':user.email, 'has_2fa_enabled': True}
         
-        user = User.objects.get(username = user)    
         user.login_status = True 
         user.last_login = None
         user.save()
