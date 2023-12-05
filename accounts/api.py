@@ -958,8 +958,9 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id['match_percentage'] = (matches_count / choice_count) * 100        
             match_percentage = (matches_count / choice_count) * 100
             print(f"match percentage:{match_percentage}")
+            if matches_count == 100:
             
-            preferences_list.append(preferences_by_user_id)
+                preferences_list.append(preferences_by_user_id)
         
         # Return the list of preferences
         return Response({'preferences_by_user_id': preferences_list}, status=status.HTTP_200_OK)

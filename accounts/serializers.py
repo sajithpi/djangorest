@@ -18,6 +18,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user = User.objects.get(username = user)    
         # Add custom data to the response
         _2fa = user.has_2fa_enabled
+        print(f"2fa user:{_2fa}")
         if _2fa == True and not user.has_2fa_passed:
             threading.Thread(target=send_otp_via_mail, args=(user.email, user.username, 'login')).start()
             # send_otp_via_mail(user.email, user, 'login')

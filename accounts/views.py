@@ -14,7 +14,7 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .otp import send_otp_via_mail, send_otp_whatsapp
+from .otp import send_otp_via_mail, send_otp_whatsapp, welcome_email
 from .utils import Util
 from .models import User, UserProfile, CoverPhoto, Interest, UserTestimonial
 from drf_yasg import openapi
@@ -24,6 +24,7 @@ from django.conf import settings
 from django.utils import timezone
 import json
 from datetime import datetime
+import threading
 # Create your views here.
 
 now = timezone.now()    # Get the current time 
@@ -52,7 +53,6 @@ class RegisterView(GenericAPIView):
             with transaction.atomic():
                 # Save the user
                 user = serializer.save()
-                # send_otp_via_mail(email=serializer.data['email'], type='register')
                 # Associate cover photos with the user's profile if provided
                 if cover_photos_data:
                     user_profile = UserProfile.objects.get(user=user)
@@ -71,6 +71,8 @@ class RegisterView(GenericAPIView):
                         interest = Interest.objects.get(name=interest_name)
                         if interest:
                             user.interests.add(interest)
+                            
+                threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
 
                 return Response({'status': True, 'message': 'Registration Successful'}, status=status.HTTP_201_CREATED)
 

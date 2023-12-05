@@ -306,3 +306,15 @@ class Orientation(models.Model):
     
     def __str__(self):
         return self.name
+    
+class EmailTemplate(models.Model):
+    TEMPLATE_CHOICE = (
+        ('register', 'register'),
+        ('otp', 'otp'),   
+    )
+    subject = models.CharField(max_length=255)
+    content = models.TextField()
+    type =  models.CharField(max_length=10, choices=TEMPLATE_CHOICE, null=True, blank=True)
+
+    def __str__(self):
+        return self.subject

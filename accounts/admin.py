@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate
 
 
 class UserAdmin(admin.ModelAdmin):
@@ -14,6 +14,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('id','user','created_at','modified_at')
     list_filter = ('id','user',)
     search_fields = ('id','user')
+
     
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
@@ -64,6 +65,7 @@ admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Package, PackageAdmin)
 admin.site.register(Order, OrdersAdmin)
+admin.site.register(EmailTemplate)
 admin.site.register(KycCategory, InterestAdmin)
 admin.site.register(KycDocument, KycDocumentAdmin)
 admin.site.register(Notification, NotificationAdmin)
