@@ -898,7 +898,7 @@ class GetProfileMatches(GenericAPIView):
         # Combine the Q objects using the OR operator (|)
         combined_filter = Q()
         for q_obj in preferences_filters:
-            combined_filter |= q_obj
+            combined_filter &= q_obj
         # Create a Q object to represent the exclusion condition
         exclude_blocked_users = Q(user__id__in=blocked_users)
 
@@ -958,9 +958,9 @@ class GetProfileMatches(GenericAPIView):
             preferences_by_user_id['match_percentage'] = (matches_count / choice_count) * 100        
             match_percentage = (matches_count / choice_count) * 100
             print(f"match percentage:{match_percentage}")
-            if matches_count == 100 or 0:
+            # if match_percentage == 100 or match_percentage == 0:
             
-                preferences_list.append(preferences_by_user_id)
+            preferences_list.append(preferences_by_user_id)
         
         # Return the list of preferences
         return Response({'preferences_by_user_id': preferences_list}, status=status.HTTP_200_OK)
