@@ -24,6 +24,7 @@ from django.conf import settings
 from django.utils import timezone
 import json
 from datetime import datetime
+from django.conf import settings
 import threading
 # Create your views here.
 
@@ -130,7 +131,7 @@ class VerifyAccount(GenericAPIView):
                 user.save()
                 refresh = RefreshToken.for_user(user)
                 return Response({'status':'success','message':'Login otp verification successful', 'refresh_token':str(refresh),
-                    'access_token':str(refresh.access_token)}, status=status.HTTP_200_OK)
+                    'access_token':str(refresh.access_token), 'has_2fa_enabled':user.has_2fa_enabled, 'is_admin':user.is_admin}, status=status.HTTP_200_OK)
         except User.DoesNotExist as e:
             return Response(f"User does't exist with this email", status=status.HTTP_204_NO_CONTENT)
         except Exception as e:
@@ -224,7 +225,7 @@ class RequestPasswordResetEmail(GenericAPIView):
                 uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
                 token = PasswordResetTokenGenerator().make_token(user)
                 current_site = get_current_site(request=request).domain
-                current_site = f'localhost:3000/reset-password/{uidb64}/{token}'
+                current_site = f'{settings.USER_URL}/reset-password/{uidb64}/{token}'
                 # relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
                 absurl = 'http://'+current_site
                 email_body = 'Hello, \n Use link below to reset your password \n' + absurl

@@ -28,7 +28,7 @@ def send_otp_via_mail(email, username, type):
     otp = str(random.randint(1000, 9999))
 
     # Replace placeholders in the HTML template
-    html_content = email_otp_template.content.replace("{{username}}", username).replace("{{otp}}", otp)
+    html_content = email_otp_template.content.replace("{{username}}", username.capitalize()).replace("{{otp}}", otp).replace("{{support_email}}","support@dating.com")
     # html_content = html_content.replace("{{company_name}}", "Dating App")
     # html_content = content.replace("{{otp}}", otp)
 
@@ -36,7 +36,7 @@ def send_otp_via_mail(email, username, type):
     email_from = settings.EMAIL_HOST
     send_mail(
         subject,
-        f"Hello {username},\nEnter this code {otp} in the login section of the Dating app to securely access your account.",
+        f"Hello {username.capitalize()},\nEnter this code {otp} in the login section of the Dating app to securely access your account.",
         email_from,
         [email],
         html_message=html_content
