@@ -835,6 +835,7 @@ class GetProfileMatches(GenericAPIView):
 
             ('TF', 'Hetero'): 'TM',
             ('TF', 'Homo'): 'TF',
+            
         }
         
         user_partner_gender_preference = user_orientation_filter.get((user_gender, user_orientation))
@@ -904,11 +905,22 @@ class GetProfileMatches(GenericAPIView):
         exclude_blocked_users = Q(user__id__in=blocked_users)
 
         # Query to find matching user profiles
-        matching_profiles = UserProfile.objects.filter(
+
+        
+        if user_orientation == 'Bi':
+            
+            matching_profiles = UserProfile.objects.filter(
+            combined_filter & ~exclude_blocked_users,
+            ~Q(user__id=user.id),
+            user__orientation=user_orientation
+            )
+        else:
+            matching_profiles = UserProfile.objects.filter(
             combined_filter & ~exclude_blocked_users,
             user__gender=user_partner_gender_preference,
             user__orientation=user_orientation
                 )
+            
         # Get unique user IDs from matching profiles
         unique_user_ids = matching_profiles.distinct()
         # Create a list to store user preferences
