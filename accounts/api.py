@@ -1308,7 +1308,7 @@ class MlmRegister(GenericAPIView):
                 'gender': user.gender,
                 'email': user.email,
                 'mobile': user.phone_number,
-                'password': user.password,  # Note: Sending the password in plaintext is not recommended
+                'password': 12345678,  # Note: Sending the password in plaintext is not recommended
                 'totalAmount': '100'
             }
 

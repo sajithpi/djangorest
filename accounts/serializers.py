@@ -15,7 +15,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         user = self.user
-        user = User.objects.get(username = user)    
+        user = User.objects.get(username = user)
+            
         # Add custom data to the response
         _2fa = user.has_2fa_enabled
         print(f"2fa user:{_2fa}")

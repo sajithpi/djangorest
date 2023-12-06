@@ -41,6 +41,7 @@ class GoogleSocialAuthSerializer(serializers.Serializer):
         #     raise AuthenticationFailed('Oops, who are you?')
         
         print(f"USER ID:{user_data['name']}")
+        print(f"USER DATA:{user_data}")
         
         user_id = user_data['sub'] if device == 'web' else user_data['id']
         email = user_data['email']

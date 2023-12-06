@@ -83,13 +83,14 @@ def register_social_user(provider, user_id, email, name):
     filtered_user_by_email = User.objects.filter(email=email)
     if filtered_user_by_email.exists():
         if provider == filtered_user_by_email[0].auth_provider:
-            registered_user_token = authenticate(email=email, password=SOCIAL_SECRET)
-            print(f"registered_user_token:{registered_user_token}")
+            # registered_user_token = authenticate(email=email, password=SOCIAL_SECRET)
+            refresh_token = RefreshToken.for_user(user)
+            access_token = str(refresh_token.access_token)
             profile_status = check_profile_complete_status(email=email)
             return {
                 
-                'refresh_token':str(registered_user_token.get('refresh_token')),
-                'access_token':str(registered_user_token.get('access_token')),
+                'refresh_token':str(refresh_token),
+                'access_token':str(access_token),
                 # 'is_admin':filtered_user_by_email[0].is_admin,
                 'preference_status':profile_status
             }
@@ -113,13 +114,14 @@ def register_social_user(provider, user_id, email, name):
         user.auth_provider = provider
         user.save()
 
-        new_user_token = authenticate(email=email, password = SOCIAL_SECRET)
-        print(f"new user token:{new_user_token}")
+        # new_user_token = authenticate(email=email, password = SOCIAL_SECRET)
+        refresh_token = RefreshToken.for_user(user)
+        access_token = str(refresh_token.access_token)
         return {
             'email':email,
             # 'username':new_user.user_id,
-            'refresh_token':str(new_user_token.get('refresh_token')),
-            'access_token':str(new_user_token.get('access_token')),
+            'refresh_token':str(refresh_token),
+            'access_token':str(access_token),
             'is_admin':False,
             'preference_status':0,
             
@@ -130,13 +132,17 @@ def register_social_user_for_android(provider, user_id, name):
     filtered_user_by_username = User.objects.filter(username=username)
     if filtered_user_by_username.exists():
         if provider == filtered_user_by_username[0].auth_provider:
-            registered_user_token = authenticate_for_android(name=username, password=SOCIAL_SECRET)
-            print(f"registered_user_token:{registered_user_token}")
+            # registered_user_token = authenticate_for_android(name=username, password=SOCIAL_SECRET)
+            
+            refresh_token = RefreshToken.for_user(user)
+            access_token = str(refresh_token.access_token)
+            
+            
             profile_status = check_profile_complete_status(email=username, type = 'android')
             return {
                 'profile_status' : profile_status,
-                'refresh_token':str(registered_user_token.get('refresh_token')),
-                'access_token':str(registered_user_token.get('access_token'))
+                'refresh_token':str(refresh_token),
+                'access_token':str(access_token)
             }
         else:
             raise AuthenticationFailed(detail='Please continue your login using' + filtered_user_by_username[0].auth_provider)
