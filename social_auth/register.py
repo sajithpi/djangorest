@@ -4,6 +4,7 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from accounts.models import User, UserProfile
 from django.contrib.auth import authenticate as django_authenticate
+from django.conf import settings
 
 def generate_username(name):
 
@@ -77,7 +78,7 @@ def check_profile_complete_status(email, type = 'web'):
     #     count +=1
     return count
 
-SOCIAL_SECRET = 'asdasd'
+SOCIAL_SECRET = settings.SOCIAL_AUTH_PASSWORD
 def register_social_user(provider, user_id, email, name):
     filtered_user_by_email = User.objects.filter(email=email)
     if filtered_user_by_email.exists():
