@@ -942,7 +942,7 @@ class GetProfileMatches(GenericAPIView):
             if profile.user.date_of_birth:
                 preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
                 age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
-                preferences_by_user_id['age'] = age
+                preferences_by_user_id['age'] = age if profile.user.showAge else False
             preferences_by_user_id['profile_picture'] = {
                 'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
             if cover_photos:
@@ -959,7 +959,7 @@ class GetProfileMatches(GenericAPIView):
             like_status = True if Like.objects.filter(user=profile, liked_by=user_profile).first() else False
             preferences_by_user_id['favorite_status'] = favorite_status
             preferences_by_user_id['like_status'] = like_status
-            preferences_by_user_id['distance'] = haversine_distance(user_profile.latitude, user_profile.longitude, profile.latitude, profile.longitude)
+            preferences_by_user_id['distance'] = haversine_distance(user_profile.latitude, user_profile.longitude, profile.latitude, profile.longitude) if profile.user.showDistance else False
             for field_name, choice_queryset in field_mapping.items():
                 if choice_queryset.all():
                     for choice in choice_queryset.all():
