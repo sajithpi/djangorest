@@ -1279,32 +1279,58 @@ class UploadKYC(GenericAPIView):
     
 class MlmRegister(GenericAPIView):
     
+    @swagger_auto_schema(
+        operation_summary="MLM User Registration",
+        operation_description="Register a new user in the MLM system.",
+        responses={200: "Registration successful", 400: "Error message if any"},
+        tags=["MLM"],
+    )
     def post(self, request):
-        
-        user = User.objects.get(username = request.user)
-        url = f'{settings.MLM_ADMIN_URL}/api/register'
-        data = {'_token':settings.MLM_API_KEY, 
-                'username':user.username,
+        try:
+            # Get the authenticated user
+            # sponsor_name = self.kwargs.get('sponsor_name')
+            
+            # 'Sagalovskiy'
+            user = User.objects.get(username=request.user)
+            sponsor_name = str(user.sponsor) if  user.sponsor else 'Sagalovskiy'
+
+            print(f"sponsor_name:{sponsor_name}")
+            # MLM API endpoint URL
+            url = f'{settings.MLM_ADMIN_URL}/api/register'
+
+            # Prepare data for the POST request
+            data = {
+                '_token': settings.MLM_API_KEY,
+                'username': user.username,
                 'sponsorName': 'Sagalovskiy',
                 'first_name': user.username,
-                'date_of_birth':user.date_of_birth,
-                'gender':user.gender,
-                'email':user.email,
-                'mobile':user.phone_number,
-                'password':user.password,
-                'totalAmount':'100'
-                
-                }
+                'date_of_birth': user.date_of_birth,
+                'gender': user.gender,
+                'email': user.email,
+                'mobile': user.phone_number,
+                'password': user.password,  # Note: Sending the password in plaintext is not recommended
+                'totalAmount': '100'
+            }
 
-        # Make a POST request
-        response = requests.post(url, data=data)
+            # Make a POST request
+            response = requests.post(url, data=data)
 
-        # Check the response
-        if response.status_code == 200:
-            print('POST request successful!')
-            print('Response:', response.text)
-            return Response(response.text, status=status.HTTP_200_OK)
-        else:
-            print(f'Error: {response.status_code}')
-            print('Response:', response.text)
-            return Response(response.text, status=status.HTTP_400_BAD_REQUEST)
+            # Check the response status
+            if response.status_code == 200:
+                print('POST request successful!')
+                print('Response:', response.text)
+                return Response(response.text, status=status.HTTP_200_OK)
+            else:
+                print(f'Error: {response.status_code}')
+                print('Response:', response.text)
+                return Response(response.text, status=status.HTTP_400_BAD_REQUEST)
+
+        except User.DoesNotExist:
+            # Handle the case where the user is not found
+            print('Error: User not found')
+            return Response('User not found', status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            # Handle other unexpected exceptions
+            print(f'Error: {str(e)}')
+            return Response('Internal Server Error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)

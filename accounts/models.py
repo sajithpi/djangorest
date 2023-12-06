@@ -50,8 +50,12 @@ class User(AbstractBaseUser):
     showDistance  = models.BooleanField(default=False)
     auth_provider = models.CharField(max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
     register_otp = models.CharField(max_length=6, null=True, blank=True)
+  
     # Add a many-to-many field for interests
     interests = models.ManyToManyField('Interest', related_name='users', blank=True)
+    
+    # Add sponsor field as a foreign key to the same User model
+    sponsor = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sponsored_users')
     
     GENDER_CHOICES = (
         ('M', 'Male'),
@@ -65,9 +69,13 @@ class User(AbstractBaseUser):
         ('Pan', 'Pansexual'),
         ('Bi','Bisexual'),
     )
-
+    MLM_CHOICES = (
+        ('inactive', 'inactive'),
+        ('active', 'active'),
+    )
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)
     orientation = models.CharField(max_length=7, choices=ORIENTATION_CHOICES, null=True, blank=True)
+    mlm_status = models.CharField(max_length=8, choices=MLM_CHOICES, default = 'inactive', null=True, blank=True)
     #required
     package = models.ForeignKey("Package", on_delete=models.SET_NULL, blank=True, null=True)
     package_validity =  models.DateTimeField(blank=True, null=True)
