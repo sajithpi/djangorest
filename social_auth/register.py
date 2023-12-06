@@ -5,6 +5,8 @@ from rest_framework_simplejwt.exceptions import TokenError
 from accounts.models import User, UserProfile
 from django.contrib.auth import authenticate as django_authenticate
 from django.conf import settings
+from accounts.otp import send_otp_via_mail, send_otp_whatsapp, welcome_email
+import threading
 
 def generate_username(name):
 
@@ -103,9 +105,10 @@ def register_social_user(provider, user_id, email, name):
         #      'username':generate_username(name),
         #       'email':email,
         #      'password':SOCIAL_SECRET
-        # }    
+        # }   
+        username = generate_username(name) 
         user = User.objects.create(
-            username=generate_username(name),
+            username=username,
             email=email,
         )
     
@@ -119,6 +122,7 @@ def register_social_user(provider, user_id, email, name):
         # new_user_token = authenticate(email=email, password = SOCIAL_SECRET)
         refresh_token = RefreshToken.for_user(user)
         access_token = str(refresh_token.access_token)
+        threading.Thread(target=welcome_email, args=(email, username,'register')).start()
         return {
             'email':email,
             # 'username':new_user.user_id,
@@ -166,6 +170,7 @@ def register_social_user_for_android(provider, user_id, name):
 
         new_user_token = authenticate_for_android(username=username, password = SOCIAL_SECRET)
         print(f"new user token:{new_user_token}")
+        # threading.Thread(target=welcome_email, args=(email, username,'register')).start()
         return {
             'username':username,
             # 'username':new_user.user_id,
