@@ -83,6 +83,7 @@ def check_profile_complete_status(email, type = 'web'):
 SOCIAL_SECRET = settings.SOCIAL_AUTH_PASSWORD
 def register_social_user(provider, user_id, email, name):
     filtered_user_by_email = User.objects.filter(email=email)
+    print(f"emailllllllll:{email}")
     if filtered_user_by_email.exists():
         if provider == filtered_user_by_email[0].auth_provider:
             # registered_user_token = authenticate(email=email, password=SOCIAL_SECRET)
@@ -99,7 +100,7 @@ def register_social_user(provider, user_id, email, name):
                 'preference_status':profile_status
             }
         else:
-            raise AuthenticationFailed(detail='Please continue your login using' + filtered_user_by_email[0].auth_provider)
+            raise AuthenticationFailed(detail=f'Account already exists,Please continue your login using email')
     else:
         # user = {
         #      'username':generate_username(name),

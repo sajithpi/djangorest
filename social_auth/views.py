@@ -13,6 +13,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
 from accounts.models import User
+from rest_framework.exceptions import APIException, AuthenticationFailed
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from .register import register_social_user, register_social_user_for_android
@@ -46,16 +47,19 @@ class GoogleSocialAuthView(generics.GenericAPIView):
 class FacebookSocialAuthView(generics.GenericAPIView):
 
     # serializer_class = FacebookSocialAuthSerializer
+    permission_classes = [AllowAny]
+    
     def post(self, request):
         try:
             # Parse the JSON string
             # data = json.loads(request.data)
             auth_token = request.data.get('auth_token')
             platform = request.headers.get('platform','web')
-            auth_token = json.loads(auth_token)
-            print(f"auth_token:{auth_token}")
+            # auth_token = json.loads(auth_token)
+           
             
             if platform == 'android':
+                    auth_token = json.loads(auth_token)
                     message = register_social_user_for_android(
                     provider='facebook',
                     user_id=auth_token['userID'], 
@@ -68,10 +72,13 @@ class FacebookSocialAuthView(generics.GenericAPIView):
                         email= auth_token['email'], 
                         name=auth_token['name'],
                         )
-            
+            print(f"auth_token:{auth_token}")
             
             return Response({'status':True,'message':'Registration Using Facebook Successfully', 'data':message}, status=status.HTTP_200_OK)
+        except AuthenticationFailed as e:
+            return Response(str(e), status= status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError as e:
             return Response({'status':False,'error': f'Invalid auth_token format, {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status':False,'error': f'An error occurred during user registration, {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
