@@ -26,6 +26,7 @@ import json
 from datetime import datetime
 from django.conf import settings
 import threading
+import pytz
 # Create your views here.
 
 now = timezone.now()    # Get the current time 
@@ -184,7 +185,17 @@ class LogoutView(GenericAPIView):
         user.login_status = False
         user.login_otp = None
         user.login_otp_validity = None
-        user.last_login =timezone.now()
+        print(f"TIME:{settings.NOW}")
+        
+        # Get the current time using settings.NOW
+        current_time = settings.NOW
+        
+        # Extract and format the date and time components
+        formatted_datetime = current_time.strftime('%Y-%m-%d %H:%M:%S')
+
+        print(f"formatted_datetime:{formatted_datetime}")
+        user.last_login = formatted_datetime
+        # timezone.now().strftime('%Y-%m-%d %H:%M:%S')
         user.save()
         return Response({'status':'True','  message':'User Logout Successful'}, status=status.HTTP_200_OK)
     

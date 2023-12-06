@@ -12,7 +12,7 @@ from django.db.models import Q
 from rest_framework import status, generics
 from datetime import datetime
 import json
-
+import pytz
 
 
 # Create your views here.
@@ -260,8 +260,11 @@ class GetChatRooms(GenericAPIView):
                 room_dict['username'] = room_user.user.username
                 room_dict['profile_pic'] = str(room_user.profile_picture)
                 room_dict['active_status'] = room_user.user.login_status
-                if  room_user.user.last_login:
-                    room_dict['last_login'] = room_user.user.last_login
+                if room_user.user.last_login:
+                    last_login_utc = room_user.user.last_login.replace(tzinfo=timezone.utc)
+                    last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
+                    room_dict['last_login'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
+
                     print(f"last login:{room_user.user.last_login} current time:{settings.NOW}")
                     time_difference = room_user.user.last_login - settings.NOW
                     # Extract the components of the time difference
