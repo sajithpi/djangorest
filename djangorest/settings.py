@@ -230,6 +230,7 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR/'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+SOCIAL_AUTH_PASSWORD = config('SOCIAL_AUTH_PASSWORD')
 
 USER_URL = config('USER_URL')
 MLM_ADMIN_URL = config('MLM_ADMIN_URL')
