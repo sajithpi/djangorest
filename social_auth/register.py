@@ -84,7 +84,8 @@ def register_social_user(provider, user_id, email, name):
     if filtered_user_by_email.exists():
         if provider == filtered_user_by_email[0].auth_provider:
             # registered_user_token = authenticate(email=email, password=SOCIAL_SECRET)
-            refresh_token = RefreshToken.for_user(filtered_user_by_email)
+            user = User.objects.get(email=email)
+            refresh_token = RefreshToken.for_user(user)
             access_token = str(refresh_token.access_token)
             profile_status = check_profile_complete_status(email=email)
             return {
@@ -133,7 +134,7 @@ def register_social_user_for_android(provider, user_id, name):
     if filtered_user_by_username.exists():
         if provider == filtered_user_by_username[0].auth_provider:
             # registered_user_token = authenticate_for_android(name=username, password=SOCIAL_SECRET)
-            
+            user = User.objects.get(username=username)
             refresh_token = RefreshToken.for_user(user)
             access_token = str(refresh_token.access_token)
             
