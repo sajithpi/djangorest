@@ -141,7 +141,7 @@ class VerifyAccount(GenericAPIView):
             
 class sendOTP(GenericAPIView):
     
-
+    permission_classes = [AllowAny]  
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -156,11 +156,14 @@ class sendOTP(GenericAPIView):
         },
         tags=["authentication"]
     )
+    
+    
     def put(self, request):
         type = request.data.get('type')
         method = request.data.get('method')
-        print(f"user:{self.request.user.id}")
-        user = User.objects.get(id = request.user.id)
+        email = request.data.get('email')
+        # print(f"user:{self.request.user.id}")
+        user = User.objects.get(email = email)
         email = user.email
         print(f"email:{email}")
         print(f"method:{method}")
