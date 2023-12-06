@@ -109,7 +109,7 @@ class VerifyAccount(GenericAPIView):
             otp = request.data.get('otp')
             email = request.data.get('email')
             type = request.data.get('type') #login, account_active
-            
+            print(f"otp:{otp} email:{email} type:{type}")
             user = User.objects.filter(email = email).first()
             print(f"user:{user}")
             if type == 'account_active':
