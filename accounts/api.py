@@ -92,6 +92,7 @@ class GetUserData(GenericAPIView):
         data['interests'] = InterestSerializer(interests, many=True).data
     
     
+    
         return Response(data, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
@@ -536,7 +537,7 @@ class CheckUserExists(GenericAPIView):
         tags=["UserProfile"]
     )
     def post(self, request):
-        email = request.data.get('email', None)
+        email = request.data['email']
         
         if not email:
             return Response({'message':'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
