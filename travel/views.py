@@ -454,8 +454,20 @@ class MyTravelRequests(GenericAPIView):
             500: 'Internal Server Error',
         },
         tags=["Travel"],
+        operation_description="Retrieve the list of requested users for the specified trip.",
     )
     def post(self, request):
+        """
+        Retrieve the list of requested users for the specified trip.
+
+        This endpoint returns a list of users associated with the provided tripId.
+
+        :param request: The HTTP request object.
+        :type request: rest_framework.request.Request
+        :return: A JSON response containing the list of requested users or an error message.
+        :rtype: rest_framework.response.Response
+        
+        """
         try:
             # Assuming trip_id is sent as a query parameter or in the request body
             trip_id = request.data['tripId']
@@ -469,10 +481,12 @@ class MyTravelRequests(GenericAPIView):
             # Iterate over each travel request and extract relevant information
             for trip_request in trip_requests:
                 user_dict = {}
+                user_dict['id'] = trip_request.id
                 user_dict['user_id'] = trip_request.requested_user.user.id
                 user_dict['username'] = trip_request.requested_user.user.username
                 user_dict['profile_pic'] = str(trip_request.requested_user.profile_picture)
                 user_dict['description'] = trip_request.description
+                user_dict['status'] = trip_request.status
                 
                 user_list.append(user_dict)
             
@@ -488,6 +502,74 @@ class MyTravelRequests(GenericAPIView):
             # Handle the case where no TravelRequest is found for the provided trip_id
             return Response({'error': 'TravelRequest not found for the given trip_id'}, status=status.HTTP_404_NOT_FOUND)
         
+        except Exception as e:
+            # Handle any other unexpected exceptions
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'trip_request_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the travel request"),
+                'trip_status': openapi.Schema(type=openapi.TYPE_STRING, description="New status for the travel request"),
+                'trip_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the trip"),
+            },
+            required=['trip_request_id', 'trip_status', 'trip_id'],
+        ),
+        responses={
+            200: 'Travel request status updated successfully',
+            400: 'Bad Request - Missing or invalid parameters',
+            404: 'Travel request not found for the given ID',
+            500: 'Internal Server Error',
+        },
+        tags=["Travel"],
+        operation_description="Update the status of a requested trip.",
+    )
+    def patch(self, request):
+        """
+        Update the status of a requested trip.
+
+        This endpoint allows updating the status of a travel request identified by 'trip_request_id'
+        for the specified trip identified by 'trip_id'.
+
+        :param request: The HTTP request object containing 'trip_request_id', 'trip_status', and 'trip_id'.
+        :type request: rest_framework.request.Request
+        :return: A JSON response indicating the success or failure of the update.
+        :rtype: rest_framework.response.Response
+        """
+        try:
+            logged_user = request.user
+            # Extract data from the request
+            trip_request_id = request.data['trip_request_id']
+            trip_status = request.data['trip_status']
+            trip_id = request.data['trip_id']
+            print(f"TRIP REQUEST ID:{trip_request_id}")
+
+            trip_id = MyTrip.objects.get(id=trip_id)
+            user = trip_id.user.user.username
+            print(f"TRIP AUTHOR:{user}")
+            print(f"LOGGER USER:{logged_user}")
+            trip_request = TravelRequest.objects.get(id=trip_request_id)
+            print(f"TRAVEL REQUEST AUTHOR:{trip_request.trip.user.user.username}")
+            # Retrieve the travel request
+            if trip_request.trip.user.user.username == user and str(logged_user) == user:
+                # Update the status and save the changes
+                trip_request.status = trip_status
+                trip_request.save()
+            else:
+                return Response({'message': "This user doesn't have the privilege to update the status"})
+
+            # Return a success response
+            return Response({'message': 'Travel request status updated successfully'}, status=status.HTTP_200_OK)
+
+        except KeyError as e:
+            # Handle the case where required parameters are missing in the request
+            return Response({'error': f'Missing parameter: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except TravelRequest.DoesNotExist:
+            # Handle the case where no travel request is found for the provided ID
+            return Response({'error': 'Travel request not found for the given ID'}, status=status.HTTP_404_NOT_FOUND)
+
         except Exception as e:
             # Handle any other unexpected exceptions
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
