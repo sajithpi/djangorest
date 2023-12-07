@@ -441,3 +441,53 @@ class ListTrips(GenericAPIView):
             print(f"error:{e}")
             return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
         
+class MyTravelRequests(GenericAPIView):
+    
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('tripId', openapi.IN_HEADER, description="ID of the trip", type=openapi.TYPE_STRING),
+        ],
+        responses={
+            200: openapi.Response('List of users for the given tripId', schema=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT))),
+            400: 'Invalid input or Missing tripId in the request',
+            404: 'Trip or TravelRequest not found for the given tripId',
+            500: 'Internal Server Error',
+        },
+        tags=["Travel"],
+    )
+    def post(self, request):
+        try:
+            # Assuming trip_id is sent as a query parameter or in the request body
+            trip_id = request.data['tripId']
+            print(f"TRIP ID:{trip_id}")
+            trip = MyTrip.objects.get(id = trip_id)
+            # Fetch the travel request based on the provided trip_id
+            trip_requests = TravelRequest.objects.filter(trip=trip)
+            
+            user_list = []
+            
+            # Iterate over each travel request and extract relevant information
+            for trip_request in trip_requests:
+                user_dict = {}
+                user_dict['user_id'] = trip_request.requested_user.user.id
+                user_dict['username'] = trip_request.requested_user.user.username
+                user_dict['profile_pic'] = str(trip_request.requested_user.profile_picture)
+                user_dict['description'] = trip_request.description
+                
+                user_list.append(user_dict)
+            
+            print(f"USER LIST:{user_list}")
+            # Return the list of users in the response
+            return Response(user_list, status=status.HTTP_200_OK)
+        
+        except KeyError:
+            # Handle the case where 'trip_id' is not provided in the request
+            return Response({'error': 'Missing trip_id in the request'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except TravelRequest.DoesNotExist:
+            # Handle the case where no TravelRequest is found for the provided trip_id
+            return Response({'error': 'TravelRequest not found for the given trip_id'}, status=status.HTTP_404_NOT_FOUND)
+        
+        except Exception as e:
+            # Handle any other unexpected exceptions
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

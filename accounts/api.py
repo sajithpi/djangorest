@@ -1347,3 +1347,8 @@ class MlmRegister(GenericAPIView):
             # Handle other unexpected exceptions
             print(f'Error: {str(e)}')
             return Response('Internal Server Error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+# class ContactUs(GenericAPIView):
+    
+#     def post(self, request):
+        

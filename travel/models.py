@@ -46,14 +46,14 @@ class TravelAim(models.Model):
 class TravelRequest(models.Model):
 
     TRIP_REQUEST_CHOICES = (
-        (0,'PENDING'),
-        (1,'ACCEPTED'),
-        (2,'REJECTED')
+        ('PENDING','PENDING'),
+        ('ACCEPTED','ACCEPTED'),
+        ('REJECTED','REJECTED')
     )    
  
     trip = models.ForeignKey(MyTrip, on_delete=models.CASCADE, blank=False, null=False)
     requested_user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=False, null=False)
     description = models.CharField(max_length=500, blank=True, null=True)
-    status = models.CharField(max_length=1, default=0, choices=TRIP_REQUEST_CHOICES)
+    status = models.CharField(max_length=9, default='PENDING', choices=TRIP_REQUEST_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)

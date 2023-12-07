@@ -59,5 +59,7 @@ urlpatterns = [
     path('api/upload-kyc',UploadKYC.as_view(), name='upload-kyc'),
     
     path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
+    
+    # path('api/contact-us',)
 
 ]
