@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -60,6 +60,6 @@ urlpatterns = [
     
     path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
     
-    # path('api/contact-us',)
+    path('api/contact-us',ContactUsMail.as_view(),name='contact-us')
 
 ]

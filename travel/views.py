@@ -444,17 +444,27 @@ class ListTrips(GenericAPIView):
 class MyTravelRequests(GenericAPIView):
     
     @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter('tripId', openapi.IN_HEADER, description="ID of the trip", type=openapi.TYPE_STRING),
-        ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'trip_request_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the travel request"),
+                'trip_status': openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="New status for the travel request",
+                    enum=["accepted", "rejected", "pending"],  # Possible values for trip_status
+                ),
+                'trip_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the trip"),
+            },
+            required=['trip_request_id', 'trip_status', 'trip_id'],
+        ),
         responses={
-            200: openapi.Response('List of users for the given tripId', schema=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT))),
-            400: 'Invalid input or Missing tripId in the request',
-            404: 'Trip or TravelRequest not found for the given tripId',
+            200: 'Travel request status updated successfully',
+            400: 'Bad Request - Missing or invalid parameters',
+            404: 'Travel request not found for the given ID',
             500: 'Internal Server Error',
         },
         tags=["Travel"],
-        operation_description="Retrieve the list of requested users for the specified trip.",
+        operation_description="Update the status of a requested trip.",
     )
     def post(self, request):
         """
@@ -483,6 +493,7 @@ class MyTravelRequests(GenericAPIView):
                 user_dict = {}
                 user_dict['id'] = trip_request.id
                 user_dict['user_id'] = trip_request.requested_user.user.id
+                user_dict['trip_id'] = trip_request.trip.id
                 user_dict['username'] = trip_request.requested_user.user.username
                 user_dict['profile_pic'] = str(trip_request.requested_user.profile_picture)
                 user_dict['description'] = trip_request.description
@@ -511,7 +522,11 @@ class MyTravelRequests(GenericAPIView):
             type=openapi.TYPE_OBJECT,
             properties={
                 'trip_request_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the travel request"),
-                'trip_status': openapi.Schema(type=openapi.TYPE_STRING, description="New status for the travel request"),
+                'trip_status': openapi.Schema(type=openapi.TYPE_STRING, 
+                                              description="New status for the travel request",
+                                            enum=["ACCEPTED", "REJECTED", "PENDING"],  # Possible values for trip_status
+                                            ),
+           
                 'trip_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the trip"),
             },
             required=['trip_request_id', 'trip_status', 'trip_id'],

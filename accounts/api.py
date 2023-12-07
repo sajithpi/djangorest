@@ -3,7 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, ContactUs
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
@@ -15,6 +15,7 @@ from datetime import datetime
 from user_agents import parse
 from django.core import serializers
 from django.conf import settings
+from django.core.mail import send_mail
 import json
 from django.http import QueryDict
 from followers.models import Favorite, Like, BlockedUser, Rating
@@ -1348,7 +1349,69 @@ class MlmRegister(GenericAPIView):
             print(f'Error: {str(e)}')
             return Response('Internal Server Error', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-# class ContactUs(GenericAPIView):
-    
-#     def post(self, request):
+class ContactUsMail(GenericAPIView):
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the person submitting the form"),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description="Email of the person submitting the form"),
+                'location': openapi.Schema(type=openapi.TYPE_STRING, description="Location of the person submitting the form"),
+                'message': openapi.Schema(type=openapi.TYPE_STRING, description="Message submitted in the form"),
+            },
+            required=['name', 'email', 'location', 'message'],
+        ),
+        responses={
+            201: 'Form submitted successfully',
+            400: 'Bad Request - Missing or invalid parameters',
+            500: 'Internal Server Error',
+        },
+        tags=["Contact Us"],
+    )
+    def post(self, request):
+        """
+        Handle the submission of the contact us form.
+
+        :param request: The HTTP request object containing form data.
+        :type request: rest_framework.request.Request
+        :return: A JSON response indicating the success or failure of the form submission.
+        :rtype: rest_framework.response.Response
+        """
+        try:
+            # Extract data from the request
+            name = request.data['name']
+            email = request.data['email']
+            location = request.data['location']
+            message = request.data['message']
+
+            # Create a new ContactUs instance
+            ContactUs.objects.create(name=name, email=email, location=location, message=message)
+
+            # Return a success response
+            return Response({'message': 'Form submitted successfully'}, status=status.HTTP_201_CREATED)
+
+        except KeyError as e:
+            # Handle the case where required parameters are missing in the request
+            return Response({'error': f'Missing parameter: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # Handle any other unexpected exceptions
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+        
+    def get(self, request):
+        user = User.objects.get(username = request.user)
+        if not user.is_admin:
+            return Response(f"You don't have privillage to see contact mails", status= status.HTTP_401_UNAUTHORIZED)
+        
+        contact_us_mails = ContactUs.objects.all()
+        contact_us_list = []
+        for emails in contact_us_mails:
+            contact_us_dict = {}
+            contact_us_dict['name'] = emails.name
+            contact_us_dict['email'] = emails.email
+            contact_us_dict['location'] = emails.location
+            contact_us_dict['message'] = emails.message
+            contact_us_list.append(contact_us_dict)
+            
+        return Response(contact_us_list, status=status.HTTP_200_OK)
