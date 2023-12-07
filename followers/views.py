@@ -204,7 +204,7 @@ class LikeDislike(GenericAPIView):
                 remove_notification(from_user=liked_by, to_user=user, type='like')
                 
                 return Response({'status': 'True', 
-                                'action': f"{liked_by.user.username} is disliked {user.user.username}"
+                                'action': f"{liked_by.user.username} disliked {user.user.username}"
                                 }, 
                                 status=status.HTTP_200_OK)
             else:
@@ -222,7 +222,7 @@ class LikeDislike(GenericAPIView):
                 print(f"user:{user} favored_user:{request.user}")
                 
                 return Response({'message': 'Success', 
-                                'description': f"{liked_by.user.username} is liked {user.user.username} Successfully"
+                                'description': f"{liked_by.user.username} liked {user.user.username} Successfully"
                                 },
                                 status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
@@ -338,7 +338,7 @@ class BLockUser(GenericAPIView):
                 remove_likes.delete()
                 
                 return Response({'message': 'Success', 
-                                'description': f"{blocked_by.user.username} is blocked {user.user.username} Successfully"
+                                'description': f"{blocked_by.user.username} blocked {user.user.username} Successfully"
                                 },
                                 status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:
@@ -412,7 +412,7 @@ class PokeUser(GenericAPIView):
             print(f"user:{user} poked:{request.user}")
             
             return Response({'message': 'Success', 
-                            'description': f"{poked_by.user.username} is poked {user.user.username} Successfully"
+                            'description': f"{poked_by.user.username} poked {user.user.username} Successfully"
                             },
                             status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist as e:

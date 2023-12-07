@@ -226,6 +226,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
          # Access the user's interests through the UserProfile's user field
         return [interest.name for interest in obj.user.interests.all()]
     
+    
     def get_languages(self, obj):
         device = self.context.get('device')
         print(f"device:{device}")
@@ -384,7 +385,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['from_user', 'from_user_id', 'to_user', 'type', 'description', 'user_has_seen', 'profile_picture', 'date_added']
-        
+    
     def get_from_user_id(self, obj):
         try:
             user = User.objects.filter(username = obj.from_user).values('id').first()
@@ -401,7 +402,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             user = User.objects.get(username = user)
             user_profile = UserProfile.objects.filter(user = user).first()
             if user_profile.profile_picture:
-                return str(user_profile.profile_picture.url)
+                return str(user_profile.profile_picture.url.replace('/media', '/'))
             else:
                 return None
             #    print(f"user:{user_profile}")
