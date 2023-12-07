@@ -90,8 +90,9 @@ class TravelPlan(GenericAPIView):
             print(f"TRIP:{user.username}")
             mutable_data = request.data.copy()
             mutable_data['user'] = user.id
-            
+            print(f"latitude:{mutable_data['latitude']}, longitude:{mutable_data['longitude']}")
             country = get_country_from_coordinates(mutable_data['latitude'], mutable_data['longitude'])
+            print(f"COUNTRY:{country}")
             if country:
                 mutable_data['country'] = country
                 
