@@ -331,7 +331,7 @@ class ContactUs(models.Model):
     name = models.CharField(max_length=50, blank=True)
     email = models.EmailField(max_length=100, blank=False)
     location = models.CharField(max_length=50, blank=True)
-    message = models.TextField()
+    message = models.CharField(max_length = 250)
 
     def __str__(self):
         return f"{self.name} - {self.email}"
