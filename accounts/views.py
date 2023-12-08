@@ -421,7 +421,8 @@ class GetTestimonialsView(GenericAPIView):
             # if user.is_admin:
                
             testimonials = UserTestimonial.objects.filter(status = 1)
-            
+            count = testimonials.count()
+            print(f"COUNT:{count}")
             # serializer = TestimonialSerializer(data =testimonials, many = True)
             
             # serializer.is_valid()
@@ -437,7 +438,7 @@ class GetTestimonialsView(GenericAPIView):
                 testimonial_dict['location'] = testimonial.user.city
                 testimonial_list.append(testimonial_dict)                
             
-            return Response(testimonial_list, status=status.HTTP_200_OK)
+            return Response({'count':count,'data':testimonial_list}, status=status.HTTP_200_OK)
         
         except Exception as e:
             print(f"ERROR:{e}")
