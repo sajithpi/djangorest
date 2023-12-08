@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from channels.db import database_sync_to_async
 from . models import Connected, Chat, RoomChat, User, UserProfile
 from better_profanity import profanity
+from django.utils import timezone
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
@@ -165,7 +166,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group
     async def chat_message(self, event):
-        message = event['message']
+        full_text = event['message']
+        message = full_text[:575]
         sender_user = event['sender_user']
         room_id = event['room_id']
         received_user = event['received_user']

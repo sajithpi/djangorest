@@ -55,30 +55,20 @@ def send_otp_via_mail(email, username, type):
         user_obj.otp = otp
     user_obj.save()
     
-# def send_otp_via_mail(email, username, type):
-#     subject = 'Your account verification email'
-#     otp = random.randint(1000,9999)
-#     message = f"""Hello {username.capitalize()}\nEnter this code {otp} in the login section of the Dating app to securely access your account.
+def send_forgot_password_mail(subject, message, email_from, email, html_content):
+    email_from = settings.EMAIL_HOST
+    send_mail(
+        subject,
+        '',
+        email_from,
+        [email],
+        html_message=html_content
+    )
 
-# If you didn't initiate this login attempt, please contact our support team immediately at dating@gmail.com.
-
-# Happy dating!"""
-#     email_from = settings.EMAIL_HOST
-#     send_mail(subject, message, email_from, [email])
-
-#     user_obj = User.objects.filter(email = email).first()
-#     if type == 'login':
-#         if user_obj.has_2fa_enabled:
-#             user_obj.login_otp = otp
-#             print(f"current timezone:{current_timezone}")
-
-#             now = settings.NOW
-#             print(f"current time:{now}")
-#             user_obj.login_otp_validity = now + timedelta(minutes=1) # Set the validity for 5 minute
-#     else:
-#         user_obj.otp = otp
-#     user_obj.save()
-
+    
+    
+    
+    
 def send_otp_whatsapp():
     account_sid = settings.TWILIO_ACCOUNT_SID
     auth_token = settings.TWILIO_AUTH_TOKEN

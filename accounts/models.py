@@ -318,11 +318,12 @@ class Orientation(models.Model):
 class EmailTemplate(models.Model):
     TEMPLATE_CHOICE = (
         ('register', 'register'),
-        ('otp', 'otp'),   
+        ('otp', 'otp'), 
+        ('reset_password','reset_password')
     )
     subject = models.CharField(max_length=255)
     content = models.TextField()
-    type =  models.CharField(max_length=10, choices=TEMPLATE_CHOICE, null=True, blank=True)
+    type =  models.CharField(max_length=25, choices=TEMPLATE_CHOICE, null=True, blank=True)
 
     def __str__(self):
         return self.subject

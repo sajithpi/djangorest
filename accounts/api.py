@@ -3,7 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
@@ -24,6 +24,7 @@ import math
 from geopy.geocoders import Nominatim
 from rest_framework.exceptions import NotFound, ParseError
 import requests
+import threading
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -1079,47 +1080,111 @@ class GetClientId(GenericAPIView):
 class PackageListView(GenericAPIView):
 
     serializer_class = PackageSerializer
-    
+
     def get_queryset(self):
+        """
+        Get the queryset for retrieving packages.
+        """
         return Package.objects.all()
-    
+
     @swagger_auto_schema(
         responses={
-            200: openapi.Response('Successful package list retrieval', PackageSerializer(many=True)),
-            500: openapi.Response('Internal Server Error'),
+            200: openapi.Response(description='Successful package list retrieval', schema=PackageSerializer(many=True)),
+            500: openapi.Response(description='Internal Server Error'),
         },
+        operation_summary="Retrieve Packages",
+        operation_description="Retrieve a list of packages.",
+        tags=["Package"],
     )
     def get(self, request):
         """
         Retrieve a list of packages.
         """
-        packages = self.get_queryset()
-        serializer = self.serializer_class(packages, many=True)
-        return Response(serializer.data)
+        try:
+            # Retrieve the list of packages
+            packages = self.get_queryset()
+
+            # Serialize the packages
+            serializer = self.serializer_class(packages, many=True)
+
+            # Return the serialized data as a response
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            # Log the exception or handle it as needed
+            # You might want to customize this based on your application's needs
+            return Response({'detail': f'An error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
 
+    @swagger_auto_schema(
+        request_body=PackageSerializer,
+        responses={
+            200: openapi.Response(description='Successfully created instance', schema=PackageSerializer(many=True)),
+            400: openapi.Response(description='Bad Request - Invalid data provided'),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_summary="Create new package",
+        operation_description="Create new package.",
+        tags=["Package"],
+    )
     def post(self, request):
-        
-        serializer = self.serializer_class(data = request.data, partial = False)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status= status.HTTP_400_BAD_REQUEST)
-        
-    def put(self, request):
-        
-        package_id = request.data.get('id', None)
-        
-        if not package_id:
-            return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
-        
+        """
+        Create a new instance of YourModel.
+        """
         try:
+            # Validate and save the serializer data
+            serializer = self.serializer_class(data=request.data, partial=False)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            # Log the exception or handle it as needed
+            # You might want to customize this based on your application's needs
+            return Response({'detail': f'An error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+  
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Package ID'),
+                # Include other properties from PackageSerializer if needed
+            },
+            required=['id'],
+        ),
+        responses={
+            200: openapi.Response(description='Successfully updated package instance', schema=PackageSerializer),
+            400: openapi.Response(description='Bad Request - Invalid data provided'),
+            404: openapi.Response(description='Not Found - Package not found'),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_summary="Update Package",
+        operation_description="Update an existing Package instance.",
+        tags=["Package"],
+    )
+    def put(self, request):
+        """
+        Update an existing Package instance.
+        """
+        try:
+            # Extract package_id from request data
+            package_id = request.data.get('id', None)
+            
+            # Check if package_id is provided
+            if not package_id:
+                return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Retrieve the package instance
             package_instance = Package.objects.get(id=package_id)
         except Package.DoesNotExist:
             return Response({"detail": "Package not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        # Validate and save the serializer data
         serializer = self.serializer_class(instance=package_instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -1127,19 +1192,45 @@ class PackageListView(GenericAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Package ID'),
+            },
+            required=['id'],
+        ),
+        responses={
+            200: openapi.Response(description='Successfully deleted package instance'),
+            400: openapi.Response(description='Bad Request - Invalid data provided'),
+            404: openapi.Response(description='Not Found - Package not found'),
+            500: openapi.Response(description='Internal Server Error'),
+        },
+        operation_summary="Delete Package",
+        operation_description="Delete an existing Package instance.",
+        tags=["Package"],
+    )
     def delete(self, request):
-        package_id = request.data.get('id', None)
-        
-        if not package_id:
-            return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
-        
+        """
+        Delete an existing Package instance.
+        """
         try:
-            package_instance = Package.objects.get(id = package_id)
+            
+            # Extract package_id from request data
+            package_id = request.data.get('id', None)
+            
+            # Check if package_id is provided
+            if not package_id:
+                return Response({"id": ["This field is required."]}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Retrieve the package instance
+            package_instance = Package.objects.get(id=package_id)
         except Package.DoesNotExist:
             return Response({"detail": "Package not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
+        # Delete the package instance
         package_instance.delete()
-        return Response(f"Package Deleted Successfully", status=status.HTTP_200_OK)
+        return Response({"detail": "Package Deleted Successfully"}, status=status.HTTP_200_OK)
         
 class UploadKYC(GenericAPIView):
     """
@@ -1389,9 +1480,9 @@ class ContactUsMail(GenericAPIView):
 
             # Set the sender's email address
             email_from = settings.DEFAULT_FROM_EMAIL
-
             # Send the email
-            send_mail('Support', message, email_from, [email])
+            threading.Thread(target=send_mail, args=('Support', message, email_from, [email])).start()
+            # send_mail('Support', message, email_from, [email])
 
             # Optionally, you can return a success response
             return Response({'detail': 'Email sent successfully'}, status=status.HTTP_200_OK)
@@ -1406,4 +1497,64 @@ class ContactUsMail(GenericAPIView):
         
   
         
+class MailContent(GenericAPIView):
+    permission_classes = [IsAuthenticated]  # Require authentication for this view
+
+    def get(self, request):
+        try:
+            user = User.objects.get(id=request.user.id)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            mail_type = request.headers['type']
+        except KeyError as e:
+            return Response(f"{str(e)} Required", status= status.HTTP_400_BAD_REQUEST)
+
+        if not user.is_admin:
+            return Response("User doesn't have privileges for this API", status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            mail_content = EmailTemplate.objects.get(type=mail_type)
+        except EmailTemplate.DoesNotExist:
+            return Response({"detail": "Mail content not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Return a simple JSON response without serialization
+        return Response({
+            "type": mail_content.type,
+            "subject": mail_content.subject,
+            "content": mail_content.content,
+            # Include other fields as needed
+        }, status=status.HTTP_200_OK) 
         
+        
+    def put(self, request):
+        try:
+            mail_type = request.headers['type']
+            user = User.objects.get(id=request.user.id)
+            if not user.is_admin:
+                return Response("User doesn't have privileges for this API", status=status.HTTP_401_UNAUTHORIZED)
+
+            mail_content = EmailTemplate.objects.get(type=mail_type)
+            mail_content.subject =  request.data.get('subject', mail_content.subject)
+            mail_content.content = request.data.get('content',mail_content.content)
+
+            mail_content.save()
+            
+            
+            
+            # Return a simple JSON response without serialization
+            return Response({
+                "type": mail_content.type,
+                "subject": mail_content.subject,
+                "content": mail_content.content,
+                # Include other fields as needed
+            }, status=status.HTTP_200_OK) 
+            
+            
+        except EmailTemplate.DoesNotExist:
+            return Response({"detail": "Mail content not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            
+        except KeyError as e:
+            return Response(f"{str(e)} Required", status= status.HTTP_400_BAD_REQUEST)

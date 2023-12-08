@@ -14,9 +14,9 @@ from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from rest_framework.parsers import MultiPartParser
-from .otp import send_otp_via_mail, send_otp_whatsapp, welcome_email
+from .otp import send_otp_via_mail, send_otp_whatsapp, welcome_email, send_forgot_password_mail
 from .utils import Util
-from .models import User, UserProfile, CoverPhoto, Interest, UserTestimonial
+from .models import User, UserProfile, CoverPhoto, Interest, UserTestimonial, EmailTemplate
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from django.db import transaction
@@ -74,7 +74,7 @@ class RegisterView(GenericAPIView):
                         if interest:
                             user.interests.add(interest)
                             
-                threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
+                # threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
 
                 return Response({'status': True, 'message': 'Registration Successful'}, status=status.HTTP_201_CREATED)
 
@@ -242,10 +242,17 @@ class RequestPasswordResetEmail(GenericAPIView):
                 current_site = f'{settings.USER_URL}/reset-password/{uidb64}/{token}'
                 # relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
                 absurl = current_site
-                email_body = 'Hello, \n Use link below to reset your password \n' + absurl
-                data = {'email_body':email_body, 'to_email':user.email,
-                        'email_subject':'Reset your password'}
-                Util.send_mail(data)
+                
+                resetPasswordTemplate = EmailTemplate.objects.get(type = 'reset_password')
+                resetPasswordTemplate_Content = resetPasswordTemplate.content.replace('{{company_name}}', 'Dating App').replace('{{username}}', user.username).replace('{{reset_link}}',absurl )
+                email_from = settings.DEFAULT_FROM_EMAIL
+                message = f'Password Reset'
+                # email_body = 'Hello, \n Use link below to reset your password \n' + absurl
+                send_forgot_password_mail(resetPasswordTemplate.subject,message, email_from, user.email, resetPasswordTemplate_Content)
+                # threading.Thread(target=send_forgot_password_mail, args=(resetPasswordTemplate.subject, email_from, user.email,  resetPasswordTemplate_Content)).start()
+                # data = {'email_body':email_body, 'to_email':user.email,
+                #         'email_subject':'Reset your password'}
+                # Util.send_mail(data)
         else:
             return Response({'Error':'Email does not Exists in this system'}, status=status.HTTP_404_NOT_FOUND)
 

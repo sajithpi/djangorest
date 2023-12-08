@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -26,6 +26,8 @@ urlpatterns = [
     path('api/check-email-exists', CheckUserExists.as_view(), name='check-email-exists'),
     path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
     path('api/remove_interest', RemoveUserInterestView.as_view(), name='remove-user-interest'),
+    
+    
     # path('api/login', jwt_views.TokenObtainPairView.as_view(), name ='token_obtain_pair'),
     path('api/login', jwt_views.TokenObtainPairView.as_view(serializer_class = CustomTokenObtainPairSerializer), name ='token_obtain_pair'),
     path('api/login/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
@@ -60,7 +62,9 @@ urlpatterns = [
     
     path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
     
-    path('api/contact-us',ContactUsMail.as_view(),name='contact-us')
+    path('api/contact-us',ContactUsMail.as_view(),name='contact-us'),
+    
+    path('api/mail-content',MailContent.as_view(), name='mail-content'),
     
 
 ]

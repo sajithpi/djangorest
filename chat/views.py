@@ -87,12 +87,21 @@ class chatRoom(GenericAPIView):
             # Create a list to store formatted chat data
             chat_list = []
 
+            
+            # last_login_utc = room_user.user.last_login.replace(tzinfo=timezone.utc)
+            # last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
+            # room_dict['last_login'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
+            
+            
             # Iterate through each chat and format the data
             for chat in chats:
                 user_chat = {}
                 user_chat['message'] =chat.content if chat.content else ''  # Use an empty string if content is None
                 user_chat['file'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
-                user_chat['timestamp'] = chat.timestamp
+                last_login_utc = chat.timestamp.replace(tzinfo=timezone.utc)
+                print(f"TIME:{last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))}")
+                last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
+                user_chat['timestamp'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
                 user_chat['sender_user'] = chat.sender.user.username
                 user_chat['sender_profile_pic'] = str(chat.sender.profile_picture)
                 user_chat['received_user'] = chat.receiver.user.username
@@ -100,7 +109,6 @@ class chatRoom(GenericAPIView):
                 user_chat['is_read'] = chat.is_read
                 # formated_timestamp = datetime.strftime()
                 
-                user_chat['timestamp'] = chat.timestamp
                 if chat.receiver.user.id != user_profile.user.id:
                     chat.is_read = True
                     chat.save()
