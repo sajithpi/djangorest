@@ -61,5 +61,6 @@ urlpatterns = [
     path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
     
     path('api/contact-us',ContactUsMail.as_view(),name='contact-us')
+    
 
 ]

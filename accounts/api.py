@@ -3,7 +3,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, ContactUs
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
@@ -1351,67 +1351,59 @@ class MlmRegister(GenericAPIView):
         
 class ContactUsMail(GenericAPIView):
     @swagger_auto_schema(
+        operation_summary="Send Support Email",
+        operation_description="Send a support email based on the provided data.",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                'name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the person submitting the form"),
-                'email': openapi.Schema(type=openapi.TYPE_STRING, description="Email of the person submitting the form"),
-                'location': openapi.Schema(type=openapi.TYPE_STRING, description="Location of the person submitting the form"),
-                'message': openapi.Schema(type=openapi.TYPE_STRING, description="Message submitted in the form"),
+                'email': openapi.Schema(type=openapi.TYPE_STRING, description='Sender\'s email address'),
+                'message': openapi.Schema(type=openapi.TYPE_STRING, description='Message content'),
             },
-            required=['name', 'email', 'location', 'message'],
+            required=['email', 'message'],
         ),
         responses={
-            201: 'Form submitted successfully',
-            400: 'Bad Request - Missing or invalid parameters',
-            500: 'Internal Server Error',
+            200: "Email sent successfully",
+            400: "Bad Request - Missing required fields or invalid data",
+            500: "Internal Server Error - An error occurred during email sending",
         },
-        tags=["Contact Us"],
+        tags=["ContactUs"],
     )
     def post(self, request):
         """
-        Handle the submission of the contact us form.
+        Send a support email based on the provided data.
 
-        :param request: The HTTP request object containing form data.
-        :type request: rest_framework.request.Request
-        :return: A JSON response indicating the success or failure of the form submission.
-        :rtype: rest_framework.response.Response
+        Expected input in the request data:
+        - email: The sender's email address
+        - message: The message content
+
+        Returns a response indicating the success or failure of the email sending process.
         """
         try:
             # Extract data from the request
-            name = request.data['name']
-            email = request.data['email']
-            location = request.data['location']
-            message = request.data['message']
+            email = request.data.get('email')
+            message = request.data.get('message')
 
-            # Create a new ContactUs instance
-            ContactUs.objects.create(name=name, email=email, location=location, message=message)
+            # Validate that email and message are provided
+            if not email or not message:
+                raise ValueError("Both 'email' and 'message' are required fields.")
 
-            # Return a success response
-            return Response({'message': 'Form submitted successfully'}, status=status.HTTP_201_CREATED)
+            # Set the sender's email address
+            email_from = settings.DEFAULT_FROM_EMAIL
 
-        except KeyError as e:
-            # Handle the case where required parameters are missing in the request
-            return Response({'error': f'Missing parameter: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+            # Send the email
+            send_mail('Support', message, email_from, [email])
+
+            # Optionally, you can return a success response
+            return Response({'detail': 'Email sent successfully'}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            # Handle any other unexpected exceptions
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        
-    def get(self, request):
-        user = User.objects.get(username = request.user)
-        if not user.is_admin:
-            return Response(f"You don't have privillage to see contact mails", status= status.HTTP_401_UNAUTHORIZED)
-        
-        contact_us_mails = ContactUs.objects.all()
-        contact_us_list = []
-        for emails in contact_us_mails:
-            contact_us_dict = {}
-            contact_us_dict['name'] = emails.name
-            contact_us_dict['email'] = emails.email
-            contact_us_dict['location'] = emails.location
-            contact_us_dict['message'] = emails.message
-            contact_us_list.append(contact_us_dict)
+            # Log the exception or handle it as needed
+            # You might want to customize this based on your application's needs
+            return Response({'detail': f'An error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-        return Response(contact_us_list, status=status.HTTP_200_OK)
+        
+        
+        
+  
+        
+        
