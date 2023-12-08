@@ -26,7 +26,7 @@ class InterestAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     search_fields = ('name', 'id')
 class PackageAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name','price','type','validity')
+    list_display = ('id', 'name','price','type','features','validity')
     list_filter = ('name',)
     search_fields = ('name', 'id')
     

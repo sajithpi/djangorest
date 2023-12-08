@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
+import json
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -136,11 +137,20 @@ class Package(models.Model):
         ('Paid', 'Paid'),
     )
     
-    name = models.CharField(max_length = 50, blank=True, null=True)
+    name = models.CharField(max_length=50, blank=True, null=True)
     package_img = models.ImageField(upload_to=package_upload_path, blank=True, null=True)
-    price = models.FloatField(default = 0)
-    type = models.CharField(max_length = 10, choices = PACKAGE_CHOICES, blank = True, null = True)
-    validity = models.FloatField(default = 1)
+    features = models.TextField(blank=True, null=True)
+    price = models.FloatField(default=0)
+    type = models.CharField(max_length=10, choices=PACKAGE_CHOICES, blank=True, null=True)
+    validity = models.FloatField(default=1)
+
+    # def set_features(self, features):
+    #     self.features = json.dumps(features)
+
+    # def get_features(self):
+    #     return json.loads(self.features) if self.features else []
+
+    # features_list = property(get_features, set_features)
     
 class Order(models.Model):
     

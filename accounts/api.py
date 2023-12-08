@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
 from chat.models import RoomChat, Chat
@@ -1558,3 +1558,12 @@ class MailContent(GenericAPIView):
             
         except KeyError as e:
             return Response(f"{str(e)} Required", status= status.HTTP_400_BAD_REQUEST)
+        
+class CompanyDetails(GenericAPIView):
+    
+    permission_classes = [AllowAny]
+    def get(self, request):
+        return Response({'Company Name':'Dating',
+                         'Location':'USA',
+                         'Email':'dating@hotmail.com'},
+                        status=status.HTTP_200_OK)
