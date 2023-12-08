@@ -1102,13 +1102,20 @@ class PackageListView(GenericAPIView):
         """
         try:
             # Retrieve the list of packages
-            packages = self.get_queryset()
+            packages = Package.objects.all()
+            package_list = []
+            for package in packages:
+                package_dict = {
+                    'name':package.name,
+                    'package_img':str(package.package_img),
+                    'features':json.loads(package.features.replace("'", '"')) if package.features else None,
+                    'price':package.price,
+                    'type':package.type,
+                    'validity':package.validity,
+                }
+                package_list.append(package_dict)
+            return Response(package_list, status=status.HTTP_200_OK)
 
-            # Serialize the packages
-            serializer = self.serializer_class(packages, many=True)
-
-            # Return the serialized data as a response
-            return Response(serializer.data, status=status.HTTP_200_OK)
 
         except Exception as e:
             # Log the exception or handle it as needed
