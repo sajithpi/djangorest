@@ -11,7 +11,7 @@ class UserAdmin(admin.ModelAdmin):
         return obj.package.name if obj.package else None
 
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('id','user','created_at','modified_at')
+    list_display = ('id','user','about_me','created_at','modified_at')
     list_filter = ('id','user',)
     search_fields = ('id','user')
 

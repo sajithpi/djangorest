@@ -25,6 +25,7 @@ from geopy.geocoders import Nominatim
 from rest_framework.exceptions import NotFound, ParseError
 import requests
 import threading
+from bs4 import BeautifulSoup
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -55,46 +56,55 @@ class Test(GenericAPIView):
         return Response(f"User Agent:{user_agent} device:{user_agent.device} browser:{user_agent.browser.family}")
 
 class GetUserData(GenericAPIView):
-    permission_classes = (IsAuthenticated,TwoFactorAuthRequired)
-    
+    permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
+
     @swagger_auto_schema(
-    operation_description="Get user data",  # Describe the operation
-    responses={200: UserProfileSerializer},  # Define the response schema
-    tags=["User"],  # Categorize the endpoint using tags
+        operation_description="Get user data",  # Describe the operation
+        responses={200: UserProfileSerializer},  # Define the response schema
+        tags=["User"],  # Categorize the endpoint using tags
     )
     def get(self, request):
-
+        # Get user agent details
         user_agent_string = request.META.get('HTTP_USER_AGENT')
         user_agent = parse(user_agent_string)
-
-        user = self.request.user
         print(f"user agent details:{user_agent}")
+
+        # Get device details
         device = user_agent.device
         print(f"device:{device}")
+
+        # Get client IP address
         client_ip = request.META.get('REMOTE_ADDR')
         print(f"my ip:{client_ip}")
 
+        # Get browser details
         print(f"browser:{user_agent.browser.family}")
-        device = request.headers.get('device','web')
-        # device = request.headers['device'] if request.headers['device'] else 'web'
-        print(f"device:{device}")
-         #get the user's profile 
+
+        # Get device from headers
+        device_from_headers = request.headers.get('device', 'web')
+        print(f"device:{device_from_headers}")
+
+        # Get the user's profile
+        user = self.request.user
         profile = UserProfile.objects.get(user=user)
-        
-                # Fetch user interests
+
+        # Fetch user interests
         interests = profile.user.interests.all()
-        
+
         # Serialize profile data with interests
-        profile_serializer = UserProfileSerializer(profile, context = {'device':device})
-        
-        
+        profile_serializer = UserProfileSerializer(profile, context={'device': device_from_headers})
         data = profile_serializer.data
         print(f"data:{data}")
-          # Add interests to the serialized data
+
+        # Parse HTML tags to plain text using BeautifulSoup
+        soup = BeautifulSoup(data['about_me'], 'html.parser')
+        plain_text = soup.get_text(separator=' ')
+        print(f"DATA ABOUT ME SOUP:{plain_text}")
+
+        # Add interests to the serialized data
+        data['about_me'] = data['about_me'] if device_from_headers == 'web' else plain_text
         data['interests'] = InterestSerializer(interests, many=True).data
-    
-    
-    
+
         return Response(data, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
@@ -118,11 +128,13 @@ class GetUserData(GenericAPIView):
         device = request.headers.get('device','web')
         # Create a mutable copy of request.data
         print(f"request data:{request.data}")
+        
         if 'about_me' in request.data:
             html_content = request.data['about_me']
-            # escaped_html = escape(html_content)
-            json_data = json.dumps(html_content)
-            request.data['about_me'] = json_data
+            if device == 'web':
+                # escaped_html = escape(html_content)
+                json_data = json.dumps(html_content)
+                request.data['about_me'] = json_data
         # mutable_data = QueryDict(request.data.urlencode(), mutable=True)
         #Update fields in the User model if provided
         user_serializer = UpdateUserSerializer(user, data = request.data, partial = True)
@@ -196,12 +208,6 @@ class GetUserData(GenericAPIView):
                 return Response(profile_serializer.errors, status=400) # Return validation errors
 
 
-            # interest_name = request.data.get('interests',None)
-            # if interest_name:
-            #     interest_name = interest_name.strip('"')
-            #     print(f"interest name:{interest_name}")
-            #     interest= Interest.objects.get(name=interest_name)
-            #     user.interests.add(interest)
             # Update user interests
             if 'interests' in request.data:
                 print(f"interest data json:{request.data.get('interests')}")

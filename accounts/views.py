@@ -320,7 +320,8 @@ class Testimonial(GenericAPIView):
             400: openapi.Response('Bad Request, description is required'),
             404: openapi.Response('User does not exist'),
         },
-        tags=['testimonial']
+        operation_description=" Create a new testimonial",
+        tags=['Testimonial']
     )
     def post(self, request):
         try:
@@ -343,7 +344,8 @@ class Testimonial(GenericAPIView):
             required=['testimonial_id', 'status'],
             properties={
                 'testimonial_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Testimonial ID'),
-                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Testimonial status'),
+                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Testimonial status', enum=["0:Pending", "1:Accepted","2:Rejected"]),
+                # openapi.Parameter('device', openapi.IN_HEADER, description="Device type", type=openapi.TYPE_STRING, enum=["web", "mobile"]),
             },
         ),
         responses={
@@ -351,7 +353,8 @@ class Testimonial(GenericAPIView):
             400: openapi.Response('Bad Request, testimonial_id and status are required'),
             404: openapi.Response('User does not exist or testimonial not found'),
         },
-          tags=['testimonial']
+        operation_description="Update Testimonial Status",
+        tags=['Testimonial']
     )     
     def put(self, request):
         try:
@@ -405,7 +408,8 @@ class GetTestimonialsView(GenericAPIView):
             400: openapi.Response('Bad Request, an error occurred'),
             403: openapi.Response('Forbidden, user is not an admin'),
         },
-        tags=['testimonial']
+        operation_description="  Retrieve testimonials based on the provided status type.",
+        tags=['Testimonial'],
     )  
     
     

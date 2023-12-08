@@ -108,8 +108,9 @@ class chatRoom(GenericAPIView):
                 user_chat['received_user_profile_photo'] = str(chat.receiver.profile_picture)
                 user_chat['is_read'] = chat.is_read
                 # formated_timestamp = datetime.strftime()
+                # if chat.receiver.user != user_profile.user:
                 
-                if chat.receiver.user.id != user_profile.user.id:
+                if chat.sender.user != user_profile.user:
                     chat.is_read = True
                     chat.save()
                 chat_list.append(user_chat)
