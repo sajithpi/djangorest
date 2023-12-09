@@ -1246,36 +1246,80 @@ class PackageListView(GenericAPIView):
         # Delete the package instance
         package_instance.delete()
         return Response({"detail": "Package Deleted Successfully"}, status=status.HTTP_200_OK)
-        
+    
+    
+class GetKycCategory(GenericAPIView): 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                description="KYC categories retrieved successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='KYC category ID'),
+                            'name': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the KYC category'),
+                        }
+                    )
+                )
+            ),
+            500: "Internal Server Error: An error occurred"
+        },
+        operation_summary="Get KYC categories",
+        operation_description="This endpoint retrieves all KYC categories.",
+        tags=["KYC Categories"],
+    )
+    def get(self, request):
+        categories = KycCategory.objects.all()
+        category_list = []
+        for category in categories:
+            category_dict = {
+                'id':category.id,
+                'name':category.name
+            }
+            category_list.append(category_dict)
+        return Response(category_list, status=status.HTTP_200_OK)
+    
 class UploadKYC(GenericAPIView):
-    """
-    API endpoint to upload KYC documents for a user.
-
-    ---
-    parameters:
-      - name: document
-        description: The KYC document file to be uploaded.
-        required: true
-        type: file
-      - name: type
-        description: The ID of the KYC category.
-        required: true
-        type: integer
-    responses:
-      200:
-        description: KYC document uploaded successfully.
-      400:
-        description: Bad Request. Invalid input or missing required parameters.
-      404:
-        description: Not Found. User or KYC category not found.
-    """
+    
+    @swagger_auto_schema(
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'document': openapi.Schema(type=openapi.TYPE_STRING, description='Base64 encoded document image'),
+            'type': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the KYC category'),
+        },
+        required=['document', 'type'],
+    ),
+        responses={
+            201: openapi.Response(
+                description="KYC document created successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='KYC document ID'),
+                        'document': openapi.Schema(type=openapi.TYPE_STRING, description='URL of the KYC document image'),
+                        'type': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the KYC category'),
+                    }
+                )
+            ),
+            400: "Bad Request: Missing required fields or invalid data",
+            401: "Unauthorized: User authentication failed",
+            404: "Not Found: KYC category not found",
+            500: "Internal Server Error: An error occurred"
+        },
+        operation_summary="Create a new KYC document",
+        operation_description="This endpoint allows the authenticated user to create a new KYC document.",
+        tags=["KYC Documents"],
+    )
 
     def post(self, request):
         # Get the authenticated user
-        user = User.objects.get(username=request.user)
+        # user = User.objects.get(username=request.user)
 
         # Get the user's profile
-        user_profile = UserProfile.objects.get(user=user)
+        user_profile = UserProfile.objects.get(user__username=request.user)
 
         # Extract required data from the request
         document = request.data.get('document')
@@ -1295,13 +1339,33 @@ class UploadKYC(GenericAPIView):
         )
 
         return Response("KYC uploaded successfully", status=status.HTTP_200_OK)
-    
+    @swagger_auto_schema(
+    responses={
+        200: openapi.Response(
+            description="KYC documents retrieved successfully",
+            schema=openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='KYC document ID'),
+                        'image': openapi.Schema(type=openapi.TYPE_STRING, description='URL of the KYC document image'),
+                    }
+                )
+            )
+        ),
+        401: "Unauthorized: User authentication failed",
+        404: "Not Found: User profile or KYC documents not found",
+        500: "Internal Server Error: An error occurred"
+    },
+    operation_summary="Get KYC documents for the authenticated user",
+    operation_description="This endpoint retrieves KYC documents associated with the authenticated user's profile.",
+    tags=["KYC Documents"],
+)
     def get(self, request):
-        # Get the authenticated user
-        user = User.objects.get(username=request.user)
 
         # Get the user's profile
-        user_profile = UserProfile.objects.get(user=user)
+        user_profile = UserProfile.objects.get(user__username=request.user)
 
         # Retrieve KYC documents for the user's profile
         documents = KycDocument.objects.filter(user_profile=user_profile).all()
@@ -1311,12 +1375,31 @@ class UploadKYC(GenericAPIView):
         for document in documents:
             kyc_dict = {
                 'id': document.id,
-                'image': str(document.document)
+                'image': str(document.document.url)
             }
             kyc_list.append(kyc_dict)
 
         return Response(kyc_list, status=status.HTTP_200_OK)
     
+
+    
+    @swagger_auto_schema(
+    operation_summary="Update KYC document status",
+    operation_description="This endpoint allows an admin user to update the status of KYC documents.",
+    manual_parameters=[
+        openapi.Parameter('kyc_ids', in_=openapi.IN_HEADER, description="List of KYC IDs", type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER), required=True),
+        openapi.Parameter('status', in_=openapi.IN_HEADER, description="New status for KYC documents", type=openapi.TYPE_STRING, required=True, enum=["0:Pending", "1:Approved", "2:Rejected"]),
+    ],
+    responses={
+        200: "KYC document status updated successfully",
+        401: "Unauthorized: You don't have the privilege to edit the KYC document",
+        400: "Bad Request: Both 'kyc_id' and 'status' are required in the request data.",
+        404: "Not Found: User not found or KYC document not found",
+        500: "Internal Server Error: An error occurred"
+    },
+ 
+    tags=["KYC Documents"],
+    )
     def patch(self, request):
         try:
             # Get the authenticated user
@@ -1327,18 +1410,18 @@ class UploadKYC(GenericAPIView):
                 return Response("You don't have the privilege to edit the KYC document", status=status.HTTP_401_UNAUTHORIZED)
             
             # Extract data from the request
-            kyc_id = request.data.get('kyc_id')
+            kyc_ids = request.data.get('kyc_ids', [])
             status_value = request.data.get('status')
             
             # Check if both 'kyc_id' and 'status' are provided in the request data
-            if not kyc_id or not status_value:
+            if not kyc_ids or not status_value:
                 raise ParseError("Both 'kyc_id' and 'status' are required in the request data.")
             
             # Retrieve the KYC document using the provided 'kyc_id'
-            kyc_doc = KycDocument.objects.get(id=kyc_id)
+            kyc_doc = KycDocument.objects.filter(id__in=kyc_ids)
             
             # Update the status of the KYC document
-            kyc_doc.status = status_value
+            kyc_doc.update(status =  status_value) 
             
             # Save the changes
             kyc_doc.save()
@@ -1356,7 +1439,25 @@ class UploadKYC(GenericAPIView):
         except Exception as e:
             # Handle other exceptions and return a 500 response with the error message
             return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    @swagger_auto_schema(
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'kyc_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the KYC document to be deleted'),
+        },
+        required=['kyc_id'],
+    ),
+    responses={
+        204: "KYC document deleted successfully",
+        400: "Bad Request: Missing required fields or invalid data",
+        401: "Unauthorized: User authentication failed",
+        404: "Not Found: User, user profile, or KYC document not found",
+        500: "Internal Server Error: An error occurred"
+    },
+    operation_summary="Delete a KYC document",
+    operation_description="This endpoint allows the authenticated user to delete a KYC document.",
+    tags=["KYC Documents"],
+)
     def delete(self, request):
         try:
             # Get the authenticated user
@@ -1373,11 +1474,11 @@ class UploadKYC(GenericAPIView):
                 raise ParseError("'kyc_id' is required in the request data.")
 
             # Retrieve the KYC document using the provided 'kyc_id' and user profile
-            kyc_doc = KycDocument.objects.filter(user_profile=user_profile)
+            kyc_doc = KycDocument.objects.filter(id=kyc_id, user_profile=user_profile).first()
 
-            # Check if the KYC document exists before attempting to delete
+            # Check if the KYC document exists
             if not kyc_doc:
-                raise NotFound("KYC document not found")
+                return Response("Not Found: KYC document not found", status=status.HTTP_404_NOT_FOUND)
 
             # Delete the KYC document
             kyc_doc.delete()
@@ -1385,16 +1486,13 @@ class UploadKYC(GenericAPIView):
             return Response("KYC document deleted successfully", status=status.HTTP_204_NO_CONTENT)
 
         except User.DoesNotExist:
-            # If the user is not found, return a 404 response
-            raise NotFound("User not found")
+            return Response("Not Found: User not found", status=status.HTTP_404_NOT_FOUND)
 
         except UserProfile.DoesNotExist:
-            # If the user's profile is not found, return a 404 response
-            raise NotFound("User profile not found")
+            return Response("Not Found: User profile not found", status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            # Handle other exceptions and return a 500 response with the error message
-            return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(f"Internal Server Error: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     
 class MlmRegister(GenericAPIView):

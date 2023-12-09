@@ -323,6 +323,8 @@ class Testimonial(GenericAPIView):
         operation_description=" Create a new testimonial",
         tags=['Testimonial']
     )
+    
+    
     def post(self, request):
         try:
             print(f"USER:{request.user}")
@@ -338,6 +340,9 @@ class Testimonial(GenericAPIView):
         except User.DoesNotExist:
               return Response({"error": "User does not exist."}, status=status.HTTP_404_NOT_FOUND)
     
+   
+   
+   
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
@@ -355,41 +360,32 @@ class Testimonial(GenericAPIView):
         },
         operation_description="Update Testimonial Status",
         tags=['Testimonial']
-    )     
+    )  
+    
+    
+      
     def put(self, request):
         try:
             user = User.objects.get(username = request.user)
             if user.is_admin:
                 
-                testimonial_id = request.data.get('testimonial_id')
+                testimonial_id = request.data.get('testimonial_id', [])
+                print(f"TESTIMONIAL IDS:{testimonial_id}")
                 request_status = request.data.get('status') 
+        
                 if testimonial_id and request_status:
-                    testimonial = UserTestimonial.objects.get(id = testimonial_id)
+                    testimonial = UserTestimonial.objects.filter(id__in = testimonial_id)
                     
-                    testimonial.status = request_status
-                    testimonial.save()
+                    testimonial.update(status = request_status) 
                     return Response(f'Testimonial updated successfully',status=status.HTTP_200_OK)
                 else:
-                    return Response({f'warning':'you have to pass '})
+                    return Response({f'warning':'you have to pass request_status, testimonial_id'})
                 
         except Exception as e:
             print(f"ERROR:{e}")
+            return Response(str(e), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
  
-    # @swagger_auto_schema(
-    #     manual_parameters=[
-    #         openapi.Parameter('type', openapi.IN_HEADER, type=openapi.TYPE_STRING, required=False, description='Testimonial status type (0:pending, 1:accepted, 2:rejected)'),
-    #     ],
-    #     responses={
-    #         200: openapi.Response('Testimonials retrieved successfully'),
-    #         400: openapi.Response('Bad Request, an error occurred'),
-    #         403: openapi.Response('Forbidden, user is not an admin'),
-    #     },
-    #     tags=['testimonial']
-    # )  
-    
-    
-
 
 
                 
@@ -416,11 +412,14 @@ class GetTestimonialsView(GenericAPIView):
     def get(self, request):
         try:
             # user = User.objects.get(username = request.user)
-            type = request.headers.get('type')
+            try:
+                type = request.headers['type']
+                testimonials = UserTestimonial.objects.filter(status = type)
+            except KeyError as e:
+                 testimonials = UserTestimonial.objects.all()
             
-            # if user.is_admin:
-               
-            testimonials = UserTestimonial.objects.filter(status = type)
+         
+                
             count = testimonials.count()
             print(f"COUNT:{count}")
             # serializer = TestimonialSerializer(data =testimonials, many = True)
