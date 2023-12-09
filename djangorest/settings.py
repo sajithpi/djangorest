@@ -239,6 +239,8 @@ if LIVE_MODE == True:
 
 
     FORCE_SCRIPT_NAME = '/djangoapi'
+    MEDIA_URL = '/djangoapi/media/'
+    STATIC_URL = '/djangoapi/static/'
 
 # ALLOWED_HOSTS = ['aleksandr.mlmadmin.iossmlm.com']
 ALLOWED_HOSTS = ['*']
