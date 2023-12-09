@@ -1423,8 +1423,7 @@ class UploadKYC(GenericAPIView):
             # Update the status of the KYC document
             kyc_doc.update(status =  status_value) 
             
-            # Save the changes
-            kyc_doc.save()
+
             
             return Response("KYC document status updated successfully", status=status.HTTP_200_OK)
         
