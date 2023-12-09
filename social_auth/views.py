@@ -79,6 +79,8 @@ class FacebookSocialAuthView(generics.GenericAPIView):
             return Response(str(e), status= status.HTTP_400_BAD_REQUEST)
         except json.JSONDecodeError as e:
             return Response({'status':False,'error': f'Invalid auth_token format, {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        except KeyError as e:
+            return Response(f"ERROR:{str(e)}",status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'status':False,'error': f'An error occurred during user registration, {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             

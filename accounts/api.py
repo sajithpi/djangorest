@@ -97,12 +97,14 @@ class GetUserData(GenericAPIView):
         print(f"data:{data}")
 
         # Parse HTML tags to plain text using BeautifulSoup
-        soup = BeautifulSoup(data['about_me'], 'html.parser')
-        plain_text = soup.get_text(separator=' ')
-        print(f"DATA ABOUT ME SOUP:{plain_text}")
+        plain_text = ''
+        if data['about_me']:
+            soup = BeautifulSoup(data['about_me'], 'html.parser')
+            plain_text = soup.get_text(separator=' ')
+            print(f"DATA ABOUT ME SOUP:{plain_text}")
 
         # Add interests to the serialized data
-        data['about_me'] = data['about_me'] if device_from_headers == 'web' else plain_text
+        data['about_me'] = data['about_me'] if device_from_headers == 'web' and  data['about_me'] else plain_text
         data['interests'] = InterestSerializer(interests, many=True).data
 
         return Response(data, status=status.HTTP_200_OK)

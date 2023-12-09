@@ -58,8 +58,8 @@ def check_profile_complete_status(email, type = 'web'):
     if type == 'web':
         user = User.objects.get(email = email)
     else:
-        user = User.objects.get(username = email)
-    user_profile = UserProfile.objects.get(user = user)
+        user = User.objects.get(email = email)
+    # user_profile = UserProfile.objects.get(user = user)
     if not user.gender or not user.email or not user.orientation or not user.date_of_birth or not user.interests.count():
         return 0
     return 1
