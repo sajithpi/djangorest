@@ -417,6 +417,7 @@ class PackageSerializer(serializers.ModelSerializer):
     # Set required=True only for the 'price' field
     price = serializers.FloatField(required=True)
     name = serializers.CharField(required=True)
+    package_img = serializers.ImageField(required = False)
     validity = serializers.FloatField(required=True)
     type = serializers.CharField(required=True)
     

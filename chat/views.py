@@ -265,6 +265,7 @@ class GetChatRooms(GenericAPIView):
             for room in rooms:
                 room_dict = {}
                 room_dict['room_id'] = room.id
+                
                 room_user = room.senderProfile if room.senderProfile.user.id != user_profile.user.id else room.receiverProfile
                 room_dict['username'] = room_user.user.username
                 room_dict['profile_pic'] = str(room_user.profile_picture)
@@ -272,19 +273,23 @@ class GetChatRooms(GenericAPIView):
                 last_message = Chat.objects.filter(room_id = room.id).order_by("-timestamp").first()
                 
                 room_dict['read_status'] = last_message.is_read if last_message else ''
-                room_dict['last_message_user'] = "You" if last_message.sender.user.username  == user.username else last_message.sender.user.username
+                room_dict['last_message_user'] = "You" if last_message and last_message.sender.user.username  == user.username else last_message.sender.user.username
                 room_dict['last_message'] = last_message.content 
+                
                 if room_user.user.last_login:
                     last_login_utc = room_user.user.last_login.replace(tzinfo=timezone.utc)
                     last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
                     room_dict['last_login'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
                     print(f"last login:{room_user.user.last_login} current time:{settings.NOW}")
                     time_difference = room_user.user.last_login - settings.NOW
+                    
                     # Extract the components of the time difference
                     days = time_difference.days
                     hours, remainder = divmod(time_difference.seconds, 3600)
                     minutes, seconds = divmod(remainder, 60)
+                    
                     print(f"USER:{room_user.user.username} Time difference: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds.")
+                    
                 unread_messages = Chat.objects.filter(receiver = user_profile, is_read = False, room = room).count()
                 print(f"unread_messages:{unread_messages}")
                 room_dict['unread_messages'] = unread_messages if unread_messages else 0

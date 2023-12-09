@@ -150,7 +150,7 @@ class GetUserData(GenericAPIView):
         try:
             profile = UserProfile.objects.get(user=user)
             if request.data.get('height'):
-                height = request.data.get('height')
+                height = request.data.get('height')[0] if device == 'mobile' else request.data.get('height')
                 print(f"height type:{type(height)}")
                 print(f"height:{height}")
                 
@@ -172,8 +172,7 @@ class GetUserData(GenericAPIView):
                     else:
                         request.data['height'] = cm 
                     
-                if request.data['height'] < 0:
-                    return Response({f'status':'error','message':'Height cannot be less than 0'},status=status.HTTP_400_BAD_REQUEST)
+               
             request.data['is_edited'] = True
             print(f"data:{request.data}")
             profile_serializer = UpdateUserProfileSerializer(profile, data=request.data, partial = True)  # Use your UserProfile serializer
