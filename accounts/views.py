@@ -430,6 +430,7 @@ class GetTestimonialsView(GenericAPIView):
             testimonial_list = []
             for testimonial in testimonials:
                 testimonial_dict = {}
+                testimonial_dict['id'] = testimonial.id
                 testimonial_dict['user'] = testimonial.user.user.username
                 testimonial_dict['profile_picture'] = str(testimonial.user.profile_picture)
                 # testimonial_dict['location'] = 
