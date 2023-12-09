@@ -270,7 +270,8 @@ class GetChatRooms(GenericAPIView):
                 room_dict['profile_pic'] = str(room_user.profile_picture)
                 room_dict['active_status'] = room_user.user.login_status
                 last_message = Chat.objects.filter(room_id = room.id).order_by("-timestamp").first()
-                room_dict['read_status'] = last_message.is_read
+                
+                room_dict['read_status'] = last_message.is_read if last_message else ''
                 room_dict['last_message_user'] = "You" if last_message.sender.user.username  == user.username else last_message.sender.user.username
                 room_dict['last_message'] = last_message.content 
                 if room_user.user.last_login:
