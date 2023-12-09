@@ -1114,6 +1114,7 @@ class PackageListView(GenericAPIView):
             package_list = []
             for package in packages:
                 package_dict = {
+                    'id':package.id,
                     'name':package.name,
                     'package_img':str(package.package_img),
                     'features':json.loads(package.features.replace("'", '"')) if package.features else None,

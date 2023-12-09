@@ -140,6 +140,8 @@ TEMPLATES = [
     },
 ]
 
+
+
 # WSGI_APPLICATION = 'djangorest.wsgi.application'
 ASGI_APPLICATION = "djangorest.asgi.application"
 
@@ -264,3 +266,4 @@ TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
 PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
 PAYPAL_BASE_URL = config('PAYPAL_BASE_URL')
+
