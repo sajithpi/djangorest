@@ -416,11 +416,11 @@ class GetTestimonialsView(GenericAPIView):
     def get(self, request):
         try:
             # user = User.objects.get(username = request.user)
-            # type = request.headers.get('type',)
+            type = request.headers.get('type')
             
             # if user.is_admin:
                
-            testimonials = UserTestimonial.objects.filter(status = 1)
+            testimonials = UserTestimonial.objects.filter(status = type)
             count = testimonials.count()
             print(f"COUNT:{count}")
             # serializer = TestimonialSerializer(data =testimonials, many = True)

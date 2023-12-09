@@ -231,15 +231,17 @@ MEDIA_ROOT = BASE_DIR/'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SOCIAL_AUTH_PASSWORD = config('SOCIAL_AUTH_PASSWORD')
-LIVE_MODE = config('LIVE_MODE')
+LIVE_MODE = config('LIVE_MODE', cast = bool)
 if LIVE_MODE == True:
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-    ALLOWED_HOSTS = ['aleksandr.mlmadmin.iossmlm.com']
 
     FORCE_SCRIPT_NAME = '/djangoapi'
+
+# ALLOWED_HOSTS = ['aleksandr.mlmadmin.iossmlm.com']
+ALLOWED_HOSTS = ['*']
 
 USER_URL = config('USER_URL')
 MLM_ADMIN_URL = config('MLM_ADMIN_URL')
