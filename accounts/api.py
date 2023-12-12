@@ -1328,7 +1328,7 @@ class UploadKYC(GenericAPIView):
         
         document = request.data.get('document')
         type_id = request.data.get('type')
-
+        
         # Get the KYC category based on the provided type ID
         try:
             category_type = KycCategory.objects.get(id=type_id)
@@ -1372,6 +1372,7 @@ class UploadKYC(GenericAPIView):
         
         loginUser = User.objects.get(username = request.user)
         username = request.headers.get('username', 0)
+        device = request.headers.get('device','web')
         # request.headers.get('username')
         type = int(request.headers.get('status'))
         print(f"TYPE:{type}, USERNAME:{username}")
@@ -1403,7 +1404,8 @@ class UploadKYC(GenericAPIView):
         kyc_count = documents.count()
       
         
-        if isAdmin:
+        if isAdmin and device == 'web':
+            
             rowsPerPage = request.headers.get('rowsperpage',5)
             currentPage = request.headers.get('page',1)
               # Paginate the queryset
@@ -1475,7 +1477,7 @@ class UploadKYC(GenericAPIView):
             # Extract data from the request
             kyc_ids = request.data.get('kyc_ids', [])
             status_value = request.data.get('status')
-            
+            print(f"kyc_ids:{kyc_ids}")
             # Check if both 'kyc_id' and 'status' are provided in the request data
             if not kyc_ids or not status_value:
                 raise ParseError("Both 'kyc_id' and 'status' are required in the request data.")
@@ -1483,9 +1485,13 @@ class UploadKYC(GenericAPIView):
             # Retrieve the KYC document using the provided 'kyc_id'
             kyc_doc = KycDocument.objects.filter(id__in=kyc_ids)
             
+            user_ids = [kycDoc.user_profile.user.id for kycDoc in kyc_doc]
             # Update the status of the KYC document
             kyc_doc.update(status =  status_value) 
             
+            if status_value == 1:
+                users = User.objects.filter(id__in = user_ids)
+                users.update(is_verified = True)
 
             
             return Response("KYC document status updated successfully", status=status.HTTP_200_OK)

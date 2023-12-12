@@ -419,7 +419,10 @@ class GetTestimonialsView(GenericAPIView):
                 
                 rowsPerPage = request.headers.get('rowsperpage',0)
                 currentPage = request.headers.get('page',0)
-                testimonials = UserTestimonial.objects.filter(status = type)
+                if int(type) != 4:
+                    testimonials = UserTestimonial.objects.filter(status = type)
+                else:
+                    testimonials = UserTestimonial.objects.all()
                 count = testimonials.count()
                 if rowsPerPage and currentPage: 
                     paginator = Paginator(testimonials, rowsPerPage)

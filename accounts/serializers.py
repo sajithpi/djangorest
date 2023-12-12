@@ -43,7 +43,7 @@ class UserSerializers(serializers.ModelSerializer):
         return None    
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor","mlm_status","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","showDistance","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor","mlm_status","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
   
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
