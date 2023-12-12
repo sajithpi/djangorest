@@ -26,6 +26,8 @@ from rest_framework.exceptions import NotFound, ParseError
 import requests
 import threading
 from bs4 import BeautifulSoup
+from django.core.paginator import Paginator
+from django.core.paginator import EmptyPage, PageNotAnInteger
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -1318,10 +1320,12 @@ class UploadKYC(GenericAPIView):
         # Get the authenticated user
         # user = User.objects.get(username=request.user)
 
+        
         # Get the user's profile
         user_profile = UserProfile.objects.get(user__username=request.user)
 
         # Extract required data from the request
+        
         document = request.data.get('document')
         type_id = request.data.get('type')
 
@@ -1363,23 +1367,82 @@ class UploadKYC(GenericAPIView):
     tags=["KYC Documents"],
 )
     def get(self, request):
-
-        # Get the user's profile
-        user_profile = UserProfile.objects.get(user__username=request.user)
-
-        # Retrieve KYC documents for the user's profile
-        documents = KycDocument.objects.filter(user_profile=user_profile).all()
-
+        
+        isAdmin = False
+        
+        loginUser = User.objects.get(username = request.user)
+        username = request.headers.get('username', 0)
+        # request.headers.get('username')
+        type = int(request.headers.get('status'))
+        print(f"TYPE:{type}, USERNAME:{username}")
+        if username:
+                user_profile = UserProfile.objects.get(user__username=username)
+        if loginUser.is_admin:
+            isAdmin = True
+              # Retrieve KYC documents for the user's profile
+            if username:
+                if type != 4:
+                    documents = KycDocument.objects.filter(user_profile=user_profile, status = type).all()
+                else:
+                    documents = KycDocument .objects.filter(user_profile=user_profile).all()
+            else: 
+                if type !=4:
+                    documents = KycDocument.objects.filter(status = type).all()
+                    print(f"HEREEEE")
+                else:
+                    documents = KycDocument.objects.all()
+                
+         
+            
+        
+        else:
+            
+            # Get the user's profile
+            
+            documents = KycDocument .objects.filter(user_profile=user_profile).all()
+        kyc_count = documents.count()
+      
+        
+        if isAdmin:
+            rowsPerPage = request.headers.get('rowsperpage',5)
+            currentPage = request.headers.get('page',1)
+              # Paginate the queryset
+            paginator = Paginator(documents, rowsPerPage)
+            
+            try:
+                documents = paginator.page(currentPage)
+            except EmptyPage:
+                return Response("Page not found", status=status.HTTP_404_NOT_FOUND)
+            except PageNotAnInteger:
+                return Response("Invalid page number", status=status.HTTP_400_BAD_REQUEST)
+            
+            
+        kyc_list = []  
+        print(f"DOCUMENTS:{documents}")
+        print(f"isAdmin:{isAdmin}")
+        if not documents:
+             return Response(kyc_list, status=status.HTTP_200_OK)
         # Prepare a list of dictionaries containing KYC document details
-        kyc_list = []
+        status_codes ={'0':'Pending',
+                        '1':'Approved',
+                        '2':'Rejected'}
         for document in documents:
             kyc_dict = {
                 'id': document.id,
-                'image': str(document.document.url)
+                'username':document.user_profile.user.username,
+                'image': str(document.document.url).replace("/media",'') if document.document else None,
+                'type':document.type.name,
+                'status': status_codes.get(str(document.status), None),
+                'isAdmin':isAdmin,
             }
             kyc_list.append(kyc_dict)
-
-        return Response(kyc_list, status=status.HTTP_200_OK)
+        if isAdmin:
+            return Response({'kyc_list':kyc_list,
+                            'kyc_count':kyc_count
+                            }, status=status.HTTP_200_OK)
+        else:
+            return Response(kyc_list, status=status.HTTP_200_OK)
+            
     
 
     
@@ -1482,7 +1545,7 @@ class UploadKYC(GenericAPIView):
             # Delete the KYC document
             kyc_doc.delete()
 
-            return Response("KYC document deleted successfully", status=status.HTTP_204_NO_CONTENT)
+            return Response("KYC document deleted successfully", status=status.HTTP_200_OK)
 
         except User.DoesNotExist:
             return Response("Not Found: User not found", status=status.HTTP_404_NOT_FOUND)

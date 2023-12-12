@@ -27,6 +27,8 @@ from datetime import datetime
 from django.conf import settings
 import threading
 import pytz
+from django.core.paginator import Paginator
+from django.core.paginator import EmptyPage, PageNotAnInteger
 # Create your views here.
 
 now = timezone.now()    # Get the current time 
@@ -414,13 +416,27 @@ class GetTestimonialsView(GenericAPIView):
             # user = User.objects.get(username = request.user)
             try:
                 type = request.headers['type']
+                
+                rowsPerPage = request.headers.get('rowsperpage',0)
+                currentPage = request.headers.get('page',0)
                 testimonials = UserTestimonial.objects.filter(status = type)
+                count = testimonials.count()
+                if rowsPerPage and currentPage: 
+                    paginator = Paginator(testimonials, rowsPerPage)
+                    
+                    try:
+                        testimonials = paginator.page(currentPage)
+                    except EmptyPage:
+                        return Response("Page not found", status=status.HTTP_404_NOT_FOUND)
+                    except PageNotAnInteger:
+                        return Response("Invalid page number", status=status.HTTP_400_BAD_REQUEST)
+                    
             except KeyError as e:
                  testimonials = UserTestimonial.objects.all()
             
          
                 
-            count = testimonials.count()
+            
             print(f"COUNT:{count}")
             # serializer = TestimonialSerializer(data =testimonials, many = True)
             
