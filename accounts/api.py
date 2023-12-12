@@ -1398,7 +1398,7 @@ class UploadKYC(GenericAPIView):
         else:
             
             # Get the user's profile
-            
+            user_profile = UserProfile.objects.get(user__username=loginUser)
             documents = KycDocument .objects.filter(user_profile=user_profile).all()
         kyc_count = documents.count()
       
