@@ -76,7 +76,7 @@ class RegisterView(GenericAPIView):
                         if interest:
                             user.interests.add(interest)
                             
-                # threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
+                threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
 
                 return Response({'status': True, 'message': 'Registration Successful'}, status=status.HTTP_201_CREATED)
 

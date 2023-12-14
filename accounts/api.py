@@ -3,8 +3,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate
-from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData
+from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer , CompanyDataSerializer, ConfigurationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
 from drf_yasg import openapi
@@ -28,6 +28,8 @@ import threading
 from bs4 import BeautifulSoup
 from django.core.paginator import Paginator
 from django.core.paginator import EmptyPage, PageNotAnInteger
+from rest_framework.mixins import CreateModelMixin
+from django.utils import timezone
 
 class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -825,6 +827,8 @@ class GetProfileMatches(GenericAPIView):
         user_profile = UserProfile.objects.get(user=user)
         user_gender = user_profile.user.gender
         user_orientation = user_profile.user.orientation
+        
+        report_type = request.headers.get('type','normal')
     
 
         device = request.headers.get('device','web')
@@ -933,6 +937,10 @@ class GetProfileMatches(GenericAPIView):
             user__orientation=user_orientation
                 )
             
+        if report_type == 'adminReport':
+              matching_profiles = UserProfile.objects.all()
+              
+              
         # Get unique user IDs from matching profiles
         unique_user_ids = matching_profiles.distinct()
         # Create a list to store user preferences
@@ -990,6 +998,143 @@ class GetProfileMatches(GenericAPIView):
         # Return the list of preferences
         return Response({'preferences_by_user_id': preferences_list}, status=status.HTTP_200_OK)
 
+def get_package_expired(obj):
+    package_validity = obj.user.package_validity
+    if not package_validity:
+        return True
+    current_date = timezone.now()
+    return current_date > package_validity
+
+GENDER_CHOICES = {
+'M':'Male',
+'F':'Female',
+'TM':'Transgender Male',
+'TF':'Transgender Female',
+}
+ORIENTATION_CHOICES = {
+    'Hetero':'Heterosexual',
+    'Homo':'Homo',
+    'Pan':'Pansexual',
+    'Bi':'Bisexual',
+}
+class getUserProfilesForAdmin(GenericAPIView):
+    
+    @swagger_auto_schema(
+        operation_summary="Get User Profiles for Admin",
+        operation_description="Retrieve user profiles for admin based on specified criteria.",
+        manual_parameters=[
+            openapi.Parameter('type', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING, description='Type of device (web/mobile)', default='web'),
+        ],
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns a list of user profiles for admin',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER),
+                            'username': openapi.Schema(type=openapi.TYPE_STRING),
+                            'interests': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                            'date_of_birth': openapi.Schema(type=openapi.TYPE_STRING, format='date', description='User\'s date of birth'),
+                            'age': openapi.Schema(type=openapi.TYPE_INTEGER, description='User\'s age'),
+                            'profile_picture': openapi.Schema(type=openapi.TYPE_OBJECT, properties={'id': openapi.Schema(type=openapi.TYPE_INTEGER), 'image': openapi.Schema(type=openapi.TYPE_STRING)}),
+                            'cover_photos': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_OBJECT, properties={'id': openapi.Schema(type=openapi.TYPE_INTEGER), 'image': openapi.Schema(type=openapi.TYPE_STRING)})),
+                            'height': openapi.Schema(type=openapi.TYPE_STRING),
+                            'languages': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)),
+                            'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                            'membership_status': openapi.Schema(type=openapi.TYPE_STRING),
+                            'date_joined': openapi.Schema(type=openapi.TYPE_STRING, format='date-time', description='Date the user joined'),
+                            'distance': openapi.Schema(type=openapi.TYPE_NUMBER, description='Distance from the requesting user'),
+                            'city': openapi.Schema(type=openapi.TYPE_STRING),
+                            'country': openapi.Schema(type=openapi.TYPE_STRING),
+                        },
+                    ),
+                ),
+            ),
+            401: "Unauthorized - User doesn't have privileges for this API",
+        },
+        tags=["Admin"],
+    )
+    def get(self, request):
+        """
+        Retrieve user profiles for admin based on specified criteria.
+        """
+              
+        
+        
+        user = self.request.user
+        user_profile = UserProfile.objects.get(user=user)
+        
+        device = request.headers.get('type', 'web')
+        rowsPerPage = request.headers.get('rowsperpage',0)
+        currentPage = request.headers.get('page',0)
+        
+        matching_profiles = UserProfile.objects.all().order_by("-created_at")
+        total_count = matching_profiles.count()
+        if rowsPerPage and currentPage: 
+                    paginator = Paginator(matching_profiles, rowsPerPage)
+                    
+                    try:
+                        matching_profiles = paginator.page(currentPage)
+                    except EmptyPage:
+                        return Response("Page not found", status=status.HTTP_404_NOT_FOUND)
+                    except PageNotAnInteger:
+                        return Response("Invalid page number", status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response("Page Number and RowsPerPage should be pass in API", status=status.HTTP_500_INTERNAL_SERVER_ERROR)       
+
+        # Create a list to store user preferences
+        preferences_list = []
+        current_date = datetime.now()
+        for profile in matching_profiles:
+            user_id = profile.user.id
+            cover_photos = CoverPhoto.objects.filter(user_profile = profile)
+            
+            print(f"user_id:{user_id}")
+            matches_count = 0
+            preferences_by_user_id = {}
+            preferences_by_user_id['id'] = profile.user.id
+            preferences_by_user_id['username'] = profile.user.username
+            preferences_by_user_id['email'] = profile.user.email
+            if device == 'mobile':
+                preferences_by_user_id['interests'] = [{'id':interests.id, 'name':interests.name }for interests in profile.user.interests.all()]
+            else:    
+                preferences_by_user_id['interests'] = [interests.name for interests in profile.user.interests.all()]
+            if profile.user.date_of_birth:
+                preferences_by_user_id['date_of_birth'] = profile.user.date_of_birth
+                age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
+                preferences_by_user_id['age'] = age if profile.user.showAge else False
+            preferences_by_user_id['profile_picture'] = {
+                'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
+            if cover_photos:
+                preferences_by_user_id['cover_photos'] = [{'id':i, 'image':str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
+                preferences_by_user_id['cover_photos'].insert(0, {'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None})
+            else:
+         
+                preferences_by_user_id['cover_photos'] = [{'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None}]
+           
+            preferences_by_user_id['gender'] = GENDER_CHOICES.get(profile.user.gender, None)
+            preferences_by_user_id['orientation'] = ORIENTATION_CHOICES.get(profile.user.orientation,None)
+            preferences_by_user_id['height'] = profile.height
+            preferences_by_user_id['languages'] = [language.name for language in profile.languages.all()]
+            preferences_by_user_id['is_verified'] = profile.user.is_verified
+            preferences_by_user_id['membership_status'] = get_package_expired(profile)
+            preferences_by_user_id['date_joined'] = profile.user.date_joined
+            preferences_by_user_id['distance'] = haversine_distance(user_profile.latitude, user_profile.longitude, profile.latitude, profile.longitude) if profile.user.showDistance else False
+            preferences_by_user_id['city'] = profile.city
+            preferences_by_user_id['country'] = profile.country
+            
+            
+      
+            # if match_percentage == 100 or match_percentage == 0:
+            
+            preferences_list.append(preferences_by_user_id)
+        
+        # Return the list of preferences
+        return Response({'users':preferences_list,
+                         'users_count':total_count,
+                         }, status=status.HTTP_200_OK)
 
 class Enable2FA(GenericAPIView):
     
@@ -1680,8 +1825,26 @@ class ContactUsMail(GenericAPIView):
         
 class MailContent(GenericAPIView):
     permission_classes = [IsAuthenticated]  # Require authentication for this view
-
+    @swagger_auto_schema(
+        operation_summary="Retrieve Mail Content",
+        operation_description="Retrieve mail content based on the specified type.",
+        manual_parameters=[
+            openapi.Parameter('type', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING, description='Type of mail', example='reset_password, otp(Your account verification email), register'),
+        ],
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns mail content',
+            ),
+            400: "Bad Request - Missing or invalid 'type' header",
+            401: "Unauthorized - User doesn't have privileges for this API",
+            404: "Not Found - User or mail content not found",
+        },
+        tags=["MailContent"],
+    )
     def get(self, request):
+        """
+        Retrieve mail content based on the specified type.
+        """
         try:
             user = User.objects.get(id=request.user.id)
         except User.DoesNotExist:
@@ -1709,9 +1872,37 @@ class MailContent(GenericAPIView):
         }, status=status.HTTP_200_OK) 
         
         
+    @swagger_auto_schema(
+        operation_summary="Update Mail Content",
+        operation_description="Update mail content based on the specified type.",
+        # manual_parameters=[
+        #     openapi.Parameter('type', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING, description='Type of mail', example='register, otp, reset_password'),
+        # ],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'subject': openapi.Schema(type=openapi.TYPE_STRING, description='New subject for the mail'),
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='New content for the mail'),
+                'type': openapi.Schema(type=openapi.TYPE_STRING, description='register, otp, reset_password'),
+            },
+            required=['subject', 'content'],
+        ),
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns updated mail content',
+            ),
+            400: "Bad Request - Missing required fields or invalid data",
+            401: "Unauthorized - User doesn't have privileges for this API",
+            404: "Not Found - User or mail content not found",
+        },
+        tags=["MailContent"],
+    )
     def put(self, request):
+        """
+        Update mail content based on the specified type.
+        """
         try:
-            mail_type = request.headers['type']
+            mail_type = request.data['type']
             user = User.objects.get(id=request.user.id)
             if not user.is_admin:
                 return Response("User doesn't have privileges for this API", status=status.HTTP_401_UNAUTHORIZED)
@@ -1748,3 +1939,137 @@ class CompanyDetails(GenericAPIView):
                          'Location':'USA',
                          'Email':'dating@hotmail.com'},
                         status=status.HTTP_200_OK)
+        
+class AdminConfigurations(APIView):
+    
+    
+    @swagger_auto_schema(
+        operation_summary="Update Mail Content",
+        operation_description="Update mail content based on the specified type.",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'company_name': openapi.Schema(type=openapi.TYPE_STRING, description='New company name'),
+                'company_mail': openapi.Schema(type=openapi.TYPE_STRING, description='New company mail'),
+                'company_address':openapi.Schema(type=openapi.TYPE_STRING, description='New company address'),
+                'email_host': openapi.Schema(type=openapi.TYPE_STRING, description='New email host'),
+                'email_port': openapi.Schema(type=openapi.TYPE_INTEGER, description='New email port'),
+                'email_host_user': openapi.Schema(type=openapi.TYPE_STRING, description='New email host user'),
+                'email_host_password': openapi.Schema(type=openapi.TYPE_STRING, description='New email host password'),
+                'email_tls': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='New email TLS'),
+                'paypal_client_id': openapi.Schema(type=openapi.TYPE_STRING, description='New PayPal client ID'),
+                'paypal_client_secret': openapi.Schema(type=openapi.TYPE_STRING, description='New PayPal client secret'),
+                'paypal_base_url': openapi.Schema(type=openapi.TYPE_STRING, description='New PayPal base URL'),
+            },
+            required=['company_name', 'company_mail', 'email_host', 'email_port', 'email_host_user', 'email_host_password', 'email_tls', 'paypal_client_id', 'paypal_client_secret', 'paypal_base_url'],
+        ),
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns updated configuration',
+                schema=ConfigurationSerializer,
+            ),
+            400: "Bad Request - Missing required fields or invalid data",
+        },
+        tags=["Admin"],
+    )
+    def post(self, request, *args, **kwargs):
+        
+        
+        user = User.objects.get(username = request.user)
+        if not user.is_admin:
+            return Response(f"{request.user} Don't have privillages to this API")
+        
+        serializer = ConfigurationSerializer(data=request.data, partial=True)
+        
+        configurations = Configurations.objects.first()
+        if configurations:
+            serializer =ConfigurationSerializer(configurations, data=request.data)
+        else:
+            serializer = ConfigurationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @swagger_auto_schema(
+        operation_summary="Retrieve Mail Content",
+        operation_description="Retrieve mail content if available.",
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns configuration data',
+                schema=ConfigurationSerializer,
+            ),
+            404: "Not Found - Configuration not found",
+        },
+        tags=["Admin"],
+    )
+    def get(self, request, *args, **kwargs):
+        configurations = Configurations.objects.first()
+        user = User.objects.get(username = request.user)
+        if not user.is_admin:
+            return Response(f"{request.user} Don't have privillages to this API")
+        
+        if configurations:
+            serializer = ConfigurationSerializer(configurations)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(f"Detail:Configuration not found", status=status.HTTP_404_NOT_FOUND)
+        
+class CompanyDetails(APIView):
+    
+    
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'privacy_policy': openapi.Schema(type=openapi.TYPE_STRING, description='Privacy policy text'),
+                'terms_and_conditions': openapi.Schema(type=openapi.TYPE_STRING, description='Terms and conditions text'),
+            },
+            required=['privacy_policy', 'terms_and_conditions'],
+        ),
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns serialized company data',
+                schema=CompanyDataSerializer,
+            ),
+            500: "Internal Server Error - Failed to process the request",
+        },
+        operation_summary="Create or update company data",
+        operation_description="This API allows creating or updating company data with privacy policy and terms and conditions.",
+        tags=["Admin"],
+    )
+    def post(self, request, *args, **kwargs):
+        
+        company_data = CompanyData.objects.first()
+        
+        if not company_data:
+            company_serializer = CompanyDataSerializer(data = request.data, partial = True)
+        else:
+            company_serializer = CompanyDataSerializer(company_data, data = request.data)
+            
+        if company_serializer.is_valid():
+            company_serializer.save()
+            return Response(company_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(company_serializer.errors, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns serialized company data',
+                schema=CompanyDataSerializer,
+            ),
+            404: "Not Found - Company details not found",
+        },
+        operation_summary="Retrieve company data",
+        operation_description="This API retrieves the company data, including privacy policy and terms and conditions.",
+        tags=["Admin"],
+    )    
+    def get(self, request):
+        
+        companyData = CompanyData.objects.first()
+        if companyData:
+            company_serializer = CompanyDataSerializer(companyData)
+            return Response(company_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(f"Company Details not found", status=status.HTTP_404_NOT_FOUND)

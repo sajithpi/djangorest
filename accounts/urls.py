@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory, getUserProfilesForAdmin , CompanyDetails, AdminConfigurations
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -11,7 +11,6 @@ urlpatterns = [
     path('api/get-login-user-data',getLoginUserData.as_view(), name='get-login-user-data'),
     path('api/upload-cover-photo', GetUserData.as_view(), name='upload-cover-photo'),
     path('api/delete-cover-photo', DeleteCoverPhoto.as_view(), name='delete-cover-photo'),
-
     path('api/user-notifications', UserNotifications.as_view(), name='get-notifications'),
    
 
@@ -22,6 +21,7 @@ urlpatterns = [
     path('api/update-profile-preference',UpdateProfilePreference.as_view(), name='update-profile-preference'),
     path('api/get-profile-matches',GetProfileMatches.as_view(), name='get-profile-matches'),
     path('api/update-my-location',UpdateUserLocation.as_view(), name='update-my-location'),
+    path('api/admin_user_report', getUserProfilesForAdmin.as_view(), name = 'admin_user_report'),
 
     path('api/check-email-exists', CheckUserExists.as_view(), name='check-email-exists'),
     path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
@@ -61,15 +61,16 @@ urlpatterns = [
     path('api/upload-kyc',UploadKYC.as_view(), name='upload-kyc'),
     path('api/get-kyc-category',GetKycCategory.as_view(), name='get-kyc-category'),
     
-    
-    
+
     path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
     
     path('api/contact-us',ContactUsMail.as_view(),name='contact-us'),
     
     path('api/mail-content',MailContent.as_view(), name='mail-content'),
     
-    path('api/get-company-details', CompanyDetails.as_view(), name='company-details')
+    path('api/company-details', CompanyDetails.as_view(), name='company-details'),
+    
+    path('api/configurations', AdminConfigurations.as_view(), name='configurations'),
     
 
 ]

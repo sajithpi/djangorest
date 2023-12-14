@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial, CompanyData, Configurations
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -124,6 +124,10 @@ class ResetPasswordEmailSerializer(serializers.Serializer):
         model = User
         fields = ['email']
 
+class ConfigurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Configurations
+        fields = '__all__'
         
 class SetNewPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, max_length=68, write_only=True)
@@ -421,3 +425,7 @@ class PackageSerializer(serializers.ModelSerializer):
     validity = serializers.FloatField(required=True)
     type = serializers.CharField(required=True)
     
+class CompanyDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyData
+        fields = '__all__'

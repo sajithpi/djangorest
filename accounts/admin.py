@@ -1,11 +1,11 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
 
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ('id','username','sponsor','gender','orientation','email','get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
     list_filter = ('id','username')
-    search_fields = ('id','username')
+    search_fields = ('id','username','email')
     
     def get_package_name(self, obj):
         return obj.package.name if obj.package else None
@@ -20,6 +20,13 @@ class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
     list_filter = ('user_profile',)
     search_fields = ('user_profile__user__username', 'id')
+    
+    
+class ConfigurationsAdmin(admin.ModelAdmin):
+    list_display = ('company_name', 'company_mail', 'email_host', 'email_port', 'email_host_user', 'email_host_password', 'email_tls', 'paypal_client_id','paypal_client_secret','paypal_base_url', 'welcome_mail')
+    
+class CompanyDataAdmin(admin.ModelAdmin):
+    list_display = ('privacy_policy','terms_and_conditions')
     
 class InterestAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')
@@ -63,6 +70,8 @@ class NotificationAdmin(admin.ModelAdmin):
     
 admin.site.register(User, UserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
+admin.site.register(Configurations, ConfigurationsAdmin)
+admin.site.register(CompanyData, CompanyDataAdmin)
 admin.site.register(Package, PackageAdmin)
 admin.site.register(Order, OrdersAdmin)
 admin.site.register(EmailTemplate)

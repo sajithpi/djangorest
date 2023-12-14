@@ -202,8 +202,30 @@ class UserProfile(models.Model):
         # Set modified_at to current time in the timezone specified in settings
         self.modified_at = settings.NOW
         super().save(*args, **kwargs)
+        
+class Configurations(models.Model):
+    company_name = models.CharField(max_length=100, blank=True)
+    company_mail = models.EmailField(max_length=100, blank=True)
+ 
+    
+    email_host = models.CharField(max_length=100, blank=True)
+    email_port = models.IntegerField(default=587)
+    email_host_user = models.EmailField(max_length=100, blank=True)
+    email_host_password = models.CharField(max_length=100, blank=True)
+    email_tls = models.BooleanField(default=True)
 
+    paypal_client_id = models.CharField(max_length=500, blank=True)
+    paypal_client_secret = models.CharField(max_length=500, blank=True)
+    paypal_base_url = models.CharField(max_length=100, blank=True)
 
+    welcome_mail = models.BooleanField(default = True)
+    company_address = models.CharField(max_length = 500, blank = True)
+    
+class CompanyData(models.Model):
+    privacy_policy = models.TextField()
+    terms_and_conditions = models.TextField()
+    
+    
 class KycCategory(models.Model):
     name = models.CharField(max_length = 100, blank = True)
     

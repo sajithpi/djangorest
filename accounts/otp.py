@@ -1,7 +1,7 @@
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, BadHeaderError
 import random
 from django.conf import settings
-from .models import User, EmailTemplate
+from .models import User, EmailTemplate, Configurations
 from twilio.rest import Client
 from datetime import datetime, timedelta
 from rest_framework.response import Response
@@ -15,6 +15,30 @@ from django.template.loader import render_to_string
 
 current_timezone = settings.TIME_ZONE
 
+company_details = Configurations.objects.first()
+company_name = company_details.company_name
+company_mail = company_details.company_mail
+welcome_mail = company_details.welcome_mail
+email_host = company_details.email_host,
+email_port = company_details.email_port,
+email_host_user = company_details.email_host_user,
+email_host_password = company_details.email_host_password,
+email_tls = company_details.email_tls
+
+
+# Specify port in the connection
+connection = get_connection(
+    # host=email_host,
+    # port=587,  # Your specific port
+    # username=email_host_user,
+    # password=email_host_password,
+    # use_tls=True,
+    host=email_host[0],
+    port=email_port[0],  # Your specific port
+    username=email_host_user[0],
+    password=email_host_password[0],
+    use_tls=True,
+)
 
 def send_otp_via_mail(email, username, type):
     email_otp_template = EmailTemplate.objects.filter(type='otp').first()
@@ -22,13 +46,13 @@ def send_otp_via_mail(email, username, type):
     subject = email_otp_template.subject
     print(f"EMAIL USERNAME:{username}")
     # Replace placeholders in the subject
-    subject = subject.replace("{{company_name}}", "Dating App")
+    subject = subject.replace("{{company_name}}", f"{company_name}")
 
     # Generate OTP
     otp = str(random.randint(1000, 9999))
 
     # Replace placeholders in the HTML template
-    html_content = email_otp_template.content.replace("{{username}}", username.capitalize()).replace("{{otp}}", otp).replace("{{support_email}}","support@dating.com")
+    html_content = email_otp_template.content.replace("{{username}}", username.capitalize()).replace("{{otp}}", otp).replace("{{support_email}}",f"{company_mail}")
     # html_content = html_content.replace("{{company_name}}", "Dating App")
     # html_content = content.replace("{{otp}}", otp)
 
@@ -39,7 +63,8 @@ def send_otp_via_mail(email, username, type):
         f"Hello {username.capitalize()},\nEnter this code {otp} in the login section of the Dating app to securely access your account.",
         email_from,
         [email],
-        html_message=html_content
+        html_message=html_content,
+        connection=connection,
     )
 
     user_obj = User.objects.filter(email = email).first()
@@ -62,7 +87,8 @@ def send_forgot_password_mail(subject, message, email_from, email, html_content)
         '',
         email_from,
         [email],
-        html_message=html_content
+        html_message=html_content,
+        connection=connection
     )
 
     
@@ -96,26 +122,42 @@ def verify_otp(user_id, otp, type):
     
     
 def welcome_email(email, username, type):
-    email_otp_template = EmailTemplate.objects.filter(type='register').first()
+    
+    print(f"WELCOME MAIL STATUS:{welcome_mail}")
+    if not welcome_email:
+        print(f"WELCOME MAIL IS TURNED OF, WILL NOT SENT MAIL TO THE NEW USER")
+    else:
+        email_otp_template = EmailTemplate.objects.filter(type='register').first()
 
-    subject = email_otp_template.subject.replace("{{company_name}}", "DatingApp")
-    print(f"EMAIL USERNAME:{username}")
-    # Replace placeholders in the subject
+        subject = email_otp_template.subject.replace("{{company_name}}", f"{company_name}")
+        print(f"EMAIL USERNAME:{username}")
+        # Replace placeholders in the subject
 
 
-    # Replace placeholders in the HTML template
-    html_content = email_otp_template.content.replace("{{username}}", username).replace("{{company_name}}", "DatingApp").replace("{{support_email}}", "support@dating.com")
-    # html_content = html_content.replace("{{company_name}}", "Dating App")
-    # html_content = content.replace("{{otp}}", otp)
+        # Replace placeholders in the HTML template
+        html_content = email_otp_template.content.replace("{{username}}", username).replace("{{company_name}}", f"{company_name}").replace("{{support_email}}", f"{company_mail}")
+        # html_content = html_content.replace("{{company_name}}", "Dating App")
+        # html_content = content.replace("{{otp}}", otp)
 
-    # Send email with both plain text and HTML content
-    email_from = settings.EMAIL_HOST
-    send_mail(
-        subject,
-       "Welcome",
-        email_from,
-        [email],
-        html_message=html_content
-    )
+        # Send email with both plain text and HTML content
+        email_from = settings.EMAIL_HOST
 
+        try:
+            print(f"EMAIL HOST:{email_host[0]}")
+            send_mail(
+                subject="Welcome",
+                message="Welcome message body",
+                from_email=email_from,
+                recipient_list=[email],
+                html_message=html_content,
+                connection=connection,
+            )
+            result = "Email sent successfully."
+        except BadHeaderError:
+            result = "Invalid header found in the email."
+            
+        except Exception as e:
+            result = f"An error occurred: {str(e)}"
+        finally:
+            print(f"EMAIL RESULT:{result}")
    
