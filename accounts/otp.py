@@ -61,7 +61,7 @@ def send_otp_via_mail(email, username, type):
     send_mail(
         subject,
         f"Hello {username.capitalize()},\nEnter this code {otp} in the login section of the Dating app to securely access your account.",
-        email_from,
+        email_host[0],
         [email],
         html_message=html_content,
         connection=connection,
@@ -85,7 +85,7 @@ def send_forgot_password_mail(subject, message, email_from, email, html_content)
     send_mail(
         subject,
         '',
-        email_from,
+        email_host[0],
         [email],
         html_message=html_content,
         connection=connection
@@ -147,7 +147,7 @@ def welcome_email(email, username, type):
             send_mail(
                 subject="Welcome",
                 message="Welcome message body",
-                from_email=email_from,
+                from_email=email_host[0],
                 recipient_list=[email],
                 html_message=html_content,
                 connection=connection,
