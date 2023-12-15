@@ -43,4 +43,9 @@ class Migration(migrations.Migration):
             name='package',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.package'),
         ),
+        migrations.AddField(
+            model_name='package',
+            name='features',
+            field=models.TextField(blank=True, null=True),
+        ),
     ]

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0072_alter_package_features'),
+        ('accounts', '0069_alter_emailtemplate_type'),
     ]
 
     operations = [
