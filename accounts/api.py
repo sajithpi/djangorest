@@ -1480,10 +1480,12 @@ class UploadKYC(GenericAPIView):
         except KycCategory.DoesNotExist:
             return Response("Invalid KYC category ID", status=status.HTTP_404_NOT_FOUND)
 
-        kycDoc = KycDocument.objects.get(user_profile = user_profile, type = category_type, status = 0)
-        if kycDoc:
-            return Response(f'{category_type} Kyc document already uploaded and its in pending state', status=status.HTTP_202_ACCEPTED)
-
+        try:
+            kycDoc = KycDocument.objects.get(user_profile = user_profile, type = category_type, status = 0)
+            if kycDoc:
+                return Response(f'{category_type} Kyc document already uploaded and its in pending state', status=status.HTTP_202_ACCEPTED)
+        except KycDocument.DoesNotExist:
+            pass
         # Create a new KYC document instance
         KycDocument.objects.create(
             user_profile=user_profile,
