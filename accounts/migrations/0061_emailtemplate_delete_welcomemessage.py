@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('subject', models.CharField(max_length=255)),
                 ('content', models.TextField()),
-                ('type', models.CharField(blank=True, choices=[('register', 'register'), ('otp', 'otp'),('reset_password', 'reset_password')], max_length=10, null=True)),
+                ('type', models.CharField(blank=True, choices=[('register', 'register'), ('otp', 'otp'),('reset_password', 'reset_password')], max_length=20, null=True)),
             ],
         ),
         migrations.DeleteModel(
