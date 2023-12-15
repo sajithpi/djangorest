@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(blank=True, max_length=50, null=True)),
-                ('package_img',models.ImageField(blank=True, null=True))
+                ('package_img',models.ImageField(blank=True, null=True)),
                 ('price', models.FloatField(default=0)),
                 ('type', models.CharField(blank=True, choices=[('Free', 'Free'), ('Paid', 'Paid')], max_length=10, null=True)),
                 ('validity', models.FloatField(default=1)),
