@@ -1580,10 +1580,12 @@ class UploadKYC(GenericAPIView):
                         '1':'Approved',
                         '2':'Rejected'}
         for document in documents:
+            live_mode = settings.LIVE_MODE
+            image_path = str(document.document.url).replace("/media",'') if document.document else None if not live_mode else  str(document.document.url).replace("/djangoapi/media",'') if document.document else None
             kyc_dict = {
                 'id': document.id,
                 'username':document.user_profile.user.username,
-                'image': str(document.document.url).replace("/media",'') if document.document else None,
+                'image': image_path,
                 'type':document.type.name,
                 'status': status_codes.get(str(document.status), None),
                 'isAdmin':isAdmin,
