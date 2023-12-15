@@ -10,7 +10,7 @@ def seed_packages(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-      ('accounts', '0050_package_user_package_validity_order_user_package'),  # Include the correct previous migration
+      ('accounts', '0072_alter_package_features'),  # Include the correct previous migration
     ]
 
     operations = [
