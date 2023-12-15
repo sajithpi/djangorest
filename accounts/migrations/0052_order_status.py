@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounts', '0051_Package_Data_Migrations'),
+        ('accounts', '0051_package_price_package_type_alter_package_validity'),
     ]
 
     operations = [
