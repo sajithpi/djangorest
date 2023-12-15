@@ -169,14 +169,20 @@ CHANNEL_LAYERS = {
 #     }
 # }
 
+DB_NAME = config('DB_NAME')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+DB_HOST = config('DB_HOST')
+DB_PORT = config('DB_PORT')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dating_db',
-        'USER':'user',
-        'PASSWORD':'usPasswrd',
-        'HOST':'db',
-        'PORT':3306,
+        'NAME': DB_NAME,
+        'USER':DB_USER,
+        'PASSWORD':DB_PASSWORD,
+        'HOST':DB_HOST,
+        'PORT':DB_PORT,
         'OPTIONS': {
             'charset': 'utf8mb4',
         },
