@@ -6,7 +6,6 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        # ('accounts', '0051_Package_Data_Migrations'),
         ('accounts', '0050_package_user_package_validity_order_user_package'),
     ]
 
