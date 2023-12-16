@@ -13,33 +13,50 @@ from django.utils import timezone
 import pytz
 from django.template.loader import render_to_string
 
+company_details = company_name = company_mail = email_host = email_port = email_host_user = email_host_password = email_tls = "sa" 
+
 current_timezone = settings.TIME_ZONE
+def mail_conf():
 
-company_details = Configurations.objects.first()
-company_name = company_details.company_name
-company_mail = company_details.company_mail
-welcome_mail = company_details.welcome_mail
-email_host = company_details.email_host,
-email_port = company_details.email_port,
-email_host_user = company_details.email_host_user,
-email_host_password = company_details.email_host_password,
-email_tls = company_details.email_tls
+    try:
+        company_details = Configurations.objects.first()
+        company_name = company_details.company_name
+        company_mail = company_details.company_mail
+        welcome_mail = company_details.welcome_mail
+        email_host = company_details.email_host,
+        email_port = company_details.email_port,
+        email_host_user = company_details.email_host_user,
+        email_host_password = company_details.email_host_password,
+        email_tls = company_details.email_tls
 
+        return {'company_name':company_name,
+                'company_mail':company_mail,
+                'welcome_mail':welcome_mail,
+                'email_host':email_host,
+                'email_port':email_port,
+                'email_host_user':email_host_user,
+                'email_host_password':email_host_password,
+                'email_tls':email_tls,
+                }
+    except Configurations.DoesNotExist:
+        
+        pass
 
-# Specify port in the connection
-connection = get_connection(
-    # host=email_host,
-    # port=587,  # Your specific port
-    # username=email_host_user,
-    # password=email_host_password,
-    # use_tls=True,
-    host=email_host[0],
-    port=email_port[0],  # Your specific port
-    username=email_host_user[0],
-    password=email_host_password[0],
-    use_tls=True,
-)
-
+def get_email_connection(email_host, email_port, email_host_user, email_host_password, email_tls):
+    # Specify port in the connection
+    connection = get_connection(
+        # host=email_host,
+        # port=587,  # Your specific port
+        # username=email_host_user,
+        # password=email_host_password,
+        # use_tls=True,
+        host=email_host,
+        port=email_port,  # Your specific port
+        username=email_host_user,
+        password=email_host_password,
+        use_tls=True,
+    )
+    return connection
 def send_otp_via_mail(email, username, type):
     email_otp_template = EmailTemplate.objects.filter(type='otp').first()
 
@@ -57,7 +74,13 @@ def send_otp_via_mail(email, username, type):
     # html_content = content.replace("{{otp}}", otp)
 
     # Send email with both plain text and HTML content
-    email_from = settings.EMAIL_HOST
+        
+    mail_details = mail_conf()
+    connection = get_email_connection(email_host = mail_details['email_host'][0], 
+                                email_port = mail_details['email_port'][0],
+                                email_host_user = mail_details['email_host_user'][0],
+                                email_host_password = mail_details['email_host_password'][0],
+                                email_tls= mail_details['email_tls'])
     send_mail(
         subject,
         f"Hello {username.capitalize()},\nEnter this code {otp} in the login section of the Dating app to securely access your account.",
@@ -81,7 +104,14 @@ def send_otp_via_mail(email, username, type):
     user_obj.save()
     
 def send_forgot_password_mail(subject, message, email_from, email, html_content):
-    email_from = settings.EMAIL_HOST
+    
+    mail_details = mail_conf()
+    connection = get_email_connection(email_host = mail_details['email_host'][0], 
+                                email_port = mail_details['email_port'][0],
+                                email_host_user = mail_details['email_host_user'][0],
+                                email_host_password = mail_details['email_host_password'][0],
+                                email_tls= mail_details['email_tls'])
+
     send_mail(
         subject,
         '',
@@ -123,13 +153,23 @@ def verify_otp(user_id, otp, type):
     
 def welcome_email(email, username, type):
     
-    print(f"WELCOME MAIL STATUS:{welcome_mail}")
+    mail_details = mail_conf()
+    company_name = mail_details['company_name']
+    company_mail = mail_details['company_mail']
+    email_host = mail_details['email_host'][0]
+    connection = get_email_connection(email_host = mail_details['email_host'][0], 
+                                email_port = mail_details['email_port'][0],
+                                email_host_user = mail_details['email_host_user'][0],
+                                email_host_password = mail_details['email_host_password'][0],
+                                email_tls= mail_details['email_tls'])
+    
+    print(f"WELCOME MAIL STATUS:{mail_details.get('welcome_mail')}")
     if not welcome_email:
         print(f"WELCOME MAIL IS TURNED OF, WILL NOT SENT MAIL TO THE NEW USER")
     else:
         email_otp_template = EmailTemplate.objects.filter(type='register').first()
 
-        subject = email_otp_template.subject.replace("{{company_name}}", f"{company_name}")
+        subject = email_otp_template.subject.replace("{{company_name}}", company_name)
         print(f"EMAIL USERNAME:{username}")
         # Replace placeholders in the subject
 
@@ -143,7 +183,7 @@ def welcome_email(email, username, type):
         email_from = settings.EMAIL_HOST
 
         try:
-            print(f"EMAIL HOST:{email_host[0]}")
+            print(f"EMAIL HOST:{email_host}")
             send_mail(
                 subject="Welcome",
                 message="Welcome message body",

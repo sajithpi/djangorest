@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-
+import accounts.models
 
 class Migration(migrations.Migration):
 
@@ -47,5 +47,10 @@ class Migration(migrations.Migration):
             model_name='package',
             name='features',
             field=models.TextField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='package',
+            name='package_img',
+            field=models.ImageField(blank=True, null=True, upload_to=accounts.models.package_upload_path),
         ),
     ]
