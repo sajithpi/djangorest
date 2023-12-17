@@ -23,7 +23,7 @@ urlpatterns = [
     path('api/update-my-location',UpdateUserLocation.as_view(), name='update-my-location'),
     path('api/admin_user_report', getUserProfilesForAdmin.as_view(), name = 'admin_user_report'),
 
-    path('api/check-email-exists', CheckUserExists.as_view(), name='check-email-exists'),
+    path('api/check-user-exists', CheckUserExists.as_view(), name='check-user-exists'),
     path('api/update-profile-photo', UpdateProfilePhoto.as_view(), name='update-profile-photo'),
     path('api/remove_interest', RemoveUserInterestView.as_view(), name='remove-user-interest'),
     

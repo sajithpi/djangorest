@@ -9,6 +9,7 @@ from . models import User, UserProfile, Package
 from django.utils import timezone
 from . otp import send_otp_via_mail
 import threading
+from django.core.files.storage import default_storage
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -424,7 +425,32 @@ class PackageSerializer(serializers.ModelSerializer):
     package_img = serializers.ImageField(required = False)
     validity = serializers.FloatField(required=True)
     type = serializers.CharField(required=True)
+
+
+    def update(self, instance, validated_data):
+        # Check if the 'package_img' field is present in the validated data
+        if 'package_img' in validated_data:
+            #delete the old package_img
+            old_package_img = instance.package_img
+            if old_package_img:
+                storage = default_storage
+                if storage.exists(old_package_img.name):
+                    storage.delete(old_package_img.name)
+
+                        # Update the 'package_img' field with the new image file
+            instance.package_img = validated_data['package_img']
+
+        # Call the parent class's update method to handle the other fields
+        instance = super().update(instance, validated_data)
+
+        # Return the updated instance
+        return instance
     
+    def to_representation(self, instance):
+        # Override to remove the "media" prefix from the 'package_img' field
+        ret = super().to_representation(instance)
+        ret['package_img'] = instance.package_img.url.replace('/media','') if instance.package_img else None
+        return ret
 class CompanyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyData

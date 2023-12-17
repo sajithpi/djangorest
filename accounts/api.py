@@ -531,7 +531,7 @@ class CheckUserExists(GenericAPIView):
     @swagger_auto_schema(
         operation_summary="Check if a user with a given email exists",
         manual_parameters=[
-            openapi.Parameter('email', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="Email address to check")
+            openapi.Parameter('user_info', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="User_info address to check")
         ],
         responses={
             status.HTTP_200_OK: openapi.Schema(
@@ -550,15 +550,15 @@ class CheckUserExists(GenericAPIView):
         tags=["UserProfile"]
     )
     def post(self, request):
-        email = request.data['email']
+        user_info = request.data.get('user_info')
         
-        if not email:
-            return Response({'message':'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not user_info:
+            return Response({'message':'user_info is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        if User.objects.filter(email=email).exists():
-            return Response({'message':'User with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(Q(email=user_info) | Q(username = user_info)).exists():
+            return Response({'message':'User with this info already exists'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'message':'User with this email not exists'}, status=status.HTTP_200_OK)
+            return Response({'message':'User with this info not exists'}, status=status.HTTP_200_OK)
         
 class RemoveUserInterestView(GenericAPIView):
     
