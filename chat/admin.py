@@ -8,7 +8,7 @@ class ChatAdmin(admin.ModelAdmin):
     search_fields = ['room_id']
 
 class RoomChatAdmin(admin.ModelAdmin):
-    list_display = ['id','sender_username','receiver_username']
+    list_display = ['id','sender_username','receiver_username','encryption_key']
     
     def sender_username(self, obj):
         return obj.senderProfile.user.username

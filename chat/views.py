@@ -351,3 +351,43 @@ class StickersListCreateView(generics.ListCreateAPIView):
             
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class SendMessageView(GenericAPIView):
+    def get(self, request, *args, **kwargs):
+        
+        room = RoomChat.objects.get(id = request.GET.get('room_id'))
+        
+        # Retrieve messages for the specified room
+        messages = Chat.objects.filter(room=room).order_by('timestamp')
+
+        # Convert messages to a list of dictionaries
+        messages_list = [
+            {
+                'content': room.decrypt_content(message.content, room.encryption_key),
+                'timestamp': message.timestamp,
+                'sender': message.sender.user.username,
+                'receiver': message.receiver.user.username,
+            }
+            for message in messages
+        ]
+
+        return Response(messages_list, status=status.HTTP_200_OK)
+    
+    
+    def post(self, request, *args, **kwargs):
+    
+        sender_profile = UserProfile.objects.get(user__username = request.user)  # Assuming you have user profiles
+        receiver_profile = UserProfile.objects.get(user__username = request.data.get('receiver'))
+        room = RoomChat.objects.get(id = request.data.get('room_id'))
+    
+
+        
+        # Create the chat message
+        content = request.data.get('content')
+        encrypted_message  = room.encrypt_content(content, room.encryption_key)
+        print(f"encrypted_message:{encrypted_message}")
+        decrypted_message = room.decrypt_content(encrypted_message, room.encryption_key)
+        print(f"decrypted_message:{decrypted_message}")
+        chat = Chat.objects.create(content=encrypted_message, sender=sender_profile, receiver=receiver_profile, room=room)
+
+        return Response({'message': 'Message sent successfully'}, status=status.HTTP_201_CREATED)
