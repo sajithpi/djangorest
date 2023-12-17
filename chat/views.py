@@ -96,7 +96,7 @@ class chatRoom(GenericAPIView):
             # Iterate through each chat and format the data
             for chat in chats:
                 user_chat = {}
-                user_chat['message'] =chat.content if chat.content else ''  # Use an empty string if content is None
+                user_chat['message'] = room.decrypt_content(chat.content, room.encryption_key) if chat.content else ''  # Use an empty string if content is None
                 user_chat['file'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
                 last_login_utc = chat.timestamp.replace(tzinfo=timezone.utc)
                 print(f"TIME:{last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))}")
