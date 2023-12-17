@@ -72,14 +72,18 @@ class chatRoom(GenericAPIView):
     def get(self, request):
         try:
             
-            user = User.objects.get(username = request.user)
-            user_profile = UserProfile.objects.get(user = user)
+            # user = User.objects.get(username = request.user)
+            user_profile = UserProfile.objects.get(user__username = request.user)
             # Get the room_id from the request data
             # request.GET.get('username')
             room_id =   request.GET.get('room_id')
             
             # Retrieve the RoomChat object based on the room_id
-            room = RoomChat.objects.get(id=room_id)
+            room = RoomChat.objects.filter(
+                    Q(id=room_id) & (Q(sender=request.user) | Q(receiver=request.user))
+                ).first()
+            
+
             
             # Retrieve all chat messages for the specified room
             chats = Chat.objects.filter(room=room)
@@ -205,7 +209,10 @@ class chatRoom(GenericAPIView):
                     room_id = room.id
                 else:
                     if sender_profile.user.id != receiver_profile.user.id:
-                        room = RoomChat.objects.create(senderProfile=sender_profile, receiverProfile=receiver_profile)
+                        room = RoomChat.objects.create(sender = sender_profile.user.username,
+                                                       receiver = receiver_profile.user.username,
+                                                       senderProfile=sender_profile, 
+                                                       receiverProfile=receiver_profile)
                         room_id = room.id
                     else:
                         return Response({f'Sender and receiver is same person'}, status= status.HTTP_400_BAD_REQUEST)
