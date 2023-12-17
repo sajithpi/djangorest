@@ -16,8 +16,31 @@ class Like(models.Model):
     liked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='liked_by')
 
 class BlockedUser(models.Model):
+    STATUS_CHOICES = (
+        (0, 'Pending'),  # Report Pending
+        (1, 'Approved'),    # Report Approved
+        (2, 'Rejected'),     # Report Rejected
+        (3,'Blocked')
+    )
+
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_user')
     blocked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_by')
+    report_status = models.SmallIntegerField(choices=STATUS_CHOICES, default = 3)
+    description = models.CharField(max_length = 500, null = True, blank = True)
+    class BlockedUser(models.Model):
+        STATUS_CHOICES = (
+            (0, 'Pending'),  # Report Pending
+            (1, 'Approved'),    # Report Approved
+            (2, 'Rejected'),     # Report Rejected
+            (3,'Blocked')
+        )
+
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_user')
+    blocked_by = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='blocked_by')
+    report_status = models.SmallIntegerField(choices=STATUS_CHOICES, default = 3)
+    description = models.CharField(max_length = 500, null = True, blank = True)
+    ip_address = models.GenericIPAddressField(null = True, blank = True)
+
 
 class Poke(models.Model):
     user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='poke')

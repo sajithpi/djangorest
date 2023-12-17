@@ -12,8 +12,8 @@ class LikeAdmin(admin.ModelAdmin):
     search_fields = ('user', 'liked_by')
 
 class BlockAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user','blocked_by')
-    list_filter = ('user', 'blocked_by')
+    list_display = ('id', 'user','blocked_by','report_status','description','ip_address')
+    list_filter = ('user', 'blocked_by','report_status')
     search_fields = ('user', 'blocked_by')
 
 class PokeAdmin(admin.ModelAdmin):

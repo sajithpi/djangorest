@@ -300,7 +300,9 @@ class BLockUser(GenericAPIView):
             
             # Get the user to be blocked/unblocked from the request data
             user = request.data.get('user')
-            
+            report_status = request.data.get('report_status',3)
+            report_description = request.data.get('report_description','block')
+            ip_address = request.META.get('REMOTE_ADDR')
             # Get the UserProfile of the user who is performing the action (the one blocking/unblocking)
             blocked_by = UserProfile.objects.get(user__id=request.user.id)
             
@@ -320,7 +322,11 @@ class BLockUser(GenericAPIView):
                                 status=status.HTTP_200_OK)
             else:
                 # If a 'BlockedUser' entry does not exist, create a new one (block)
-                block_user = BlockedUser.objects.create(user=user, blocked_by=blocked_by)
+                block_user = BlockedUser.objects.create(user=user, 
+                                                        blocked_by=blocked_by,
+                                                        report_status = report_status,
+                                                        description = report_description,
+                                                        ip_address = ip_address)
                 block_user.save()
                 
                 # Remove favorite entries related to either user
@@ -379,6 +385,52 @@ class GetBlockedUsers(GenericAPIView):
             'my_blocked_users_data':my_blocked_users_data,
         }, status=status.HTTP_200_OK)
     
+
+class ReportUsers(GenericAPIView):
+    def get(self, request):
+        
+        user = User.objects.get(username = request.user)
+        print(f"USER ADMIN STATUS:{user.is_admin}")
+        if not user.is_admin:
+            return Response("You don't have privilege to access this api", status = status.HTTP_400_BAD_REQUEST)
+        
+        report_status = request.data.get('report_status',3)
+        if report_status == 3:
+            return Response({'message':'You have to pass report_status id'}, status = status.HTTP_400_BAD_REQUEST)
+        reported_users = BlockedUser.objects.filter(report_status = report_status).all()
+        reported_users_list = []
+        for reported_user in reported_users:
+            reported_users_dict = {
+                'id':reported_user.id,
+                'user':reported_user.user.user.username,
+                'reported_by':reported_user.blocked_by.user.username,
+                'ip_address':reported_user.ip_address
+            }
+            reported_users_list.append(reported_users_dict)
+
+        return Response(reported_users_list, status = status.HTTP_200_OK)
+
+    def put(self, request):
+        
+        user = User.objects.get(username = request.user)
+        
+        if not user.is_admin:
+            return Response("You don't have privilege to access this api", status = status.HTTP_400_BAD_REQUEST)
+        
+        report_id = request.data.get('report_id')
+        report_status = request.data.get('report_status')
+        
+        if not report_id:
+            return Response(f"You have to pass report id", status = status.HTTP_400_BAD_REQUEST)
+        if not report_status:
+            return Response(f"You have to pass report status", status.status.HTTP_400_BAD_REQUEST)
+        
+        report = BlockedUser.objects.get(id = report_id)
+        report.report_status = report_status
+        report.save()
+
+        return Response({'message':"Successfully Updated"}, status = status.HTTP_200_OK)
+        
 class PokeUser(GenericAPIView):
  
     def post(self, request):

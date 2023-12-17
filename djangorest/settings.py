@@ -119,7 +119,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-
+    # 'accounts.middleware.BlockIPMiddleware',
 ]
 
 ROOT_URLCONF = 'djangorest.urls'
