@@ -50,7 +50,7 @@ class UserSerializers(serializers.ModelSerializer):
         freePackageID = Package.objects.get(type = 'Free')
         sponsor_name = validated_data.get('sponsor_name')
      
-        if not sponsor_user:
+        if not sponsor_name:
             sponsor_user = User.objects.filter(is_admin = True).first()
         else:
             sponsor_user = User.objects.get(username = sponsor_name)
