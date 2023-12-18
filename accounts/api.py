@@ -1731,6 +1731,7 @@ class MlmRegister(GenericAPIView):
             
             # 'Sagalovskiy'
             user = User.objects.get(username=request.user)
+            
             sponsor_id = str(user.sponsor.id) if  user.sponsor else '1'
 
             print(f"sponsor_id:{sponsor_id}")
@@ -1739,7 +1740,6 @@ class MlmRegister(GenericAPIView):
 
             # Prepare data for the POST request
             data = {
-                '_token': settings.MLM_API_KEY,
                 'username': user.username,
                 'user_ref_id':user.id,
                 'sponsor_id': sponsor_id,
@@ -1753,7 +1753,7 @@ class MlmRegister(GenericAPIView):
             }
 
             # Make a POST request
-            response = requests.post(url, data=data)
+            response = requests.post(url, data=data, headers={'token':settings.MLM_API_KEY})
 
             # Check the response status
             if response.status_code == 200:
