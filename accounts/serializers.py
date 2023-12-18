@@ -48,10 +48,12 @@ class UserSerializers(serializers.ModelSerializer):
   
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
-        sponsor_name = validated_data.get('sponsor_name','sajith')
-        sponsor_user = User.objects.get(username = sponsor_name)
+        sponsor_name = validated_data.get('sponsor_name')
+     
         if not sponsor_user:
             sponsor_user = User.objects.filter(is_admin = True).first()
+        else:
+            sponsor_user = User.objects.get(username = sponsor_name)
         user = User.objects.create(email=validated_data['email'],
                                        username=validated_data['username'],
                                        first_name=validated_data['first_name'],
