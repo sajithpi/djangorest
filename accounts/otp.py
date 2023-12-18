@@ -164,7 +164,7 @@ def welcome_email(email, username, type):
                                 email_tls= mail_details['email_tls'])
     
     print(f"WELCOME MAIL STATUS:{mail_details.get('welcome_mail')}")
-    if not welcome_email:
+    if not mail_details.get('welcome_mail'):
         print(f"WELCOME MAIL IS TURNED OF, WILL NOT SENT MAIL TO THE NEW USER")
     else:
         email_otp_template = EmailTemplate.objects.filter(type='register').first()
