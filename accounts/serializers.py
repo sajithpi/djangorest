@@ -331,6 +331,8 @@ class ProfilePreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfilePreference
         fields = '__all__'
+        
+        
 class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
     family_choices = serializers.SlugRelatedField(
         many=True,

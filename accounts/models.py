@@ -265,7 +265,9 @@ class ProfilePreference(models.Model):
     workout_choices = models.ManyToManyField('Workout', related_name='profile_preferences_workout', blank=True)
     smoke_choices = models.ManyToManyField('SmokeChoice', related_name='profile_preferences_smoke', blank=True)
     languages_choices =  models.ManyToManyField('Language', related_name='profile_preferences_languages', blank=True)
-
+    minimum_age = models.PositiveIntegerField(null=True, blank = True)
+    maximum_age = models.PositiveIntegerField(null=True, blank = True)
+    
 class CoverPhoto(models.Model):
     
 

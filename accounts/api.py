@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework import generics
+from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData
@@ -835,6 +836,25 @@ class GetProfileMatches(GenericAPIView):
         print(f"USER {user} GENDER:{user_gender}, ORIENTATION:{user_orientation}")
         user_preferences = ProfilePreference.objects.get(user_profile=user_profile)
         print(f"user preferences:{user_preferences}")
+     
+        minimum_age_preference = user_preferences.minimum_age if user_preferences.minimum_age else 20
+        
+        maximum_age_preference =  user_preferences.maximum_age if user_preferences.maximum_age else 100
+        
+        minimum_age = settings.NOW - relativedelta(years=minimum_age_preference)
+        maximum_age = settings.NOW - relativedelta(years=maximum_age_preference)
+    
+        minimum_age_formatted = minimum_age.strftime('%Y-01-01 00:00:00')
+        maximum_age_formatted = maximum_age.strftime('%Y-12-30 23:59:59')
+        print(f"MINIMUM AGE: {minimum_age_formatted}")
+        print(f"MAXIMUM AGE: {maximum_age_formatted}")
+        # Convert formatted strings to datetime objects
+        minimum_age_date = datetime.strptime(minimum_age_formatted, '%Y-%m-%d %H:%M:%S').date()
+        maximum_age_date = datetime.strptime(maximum_age_formatted, '%Y-%m-%d %H:%M:%S').date()
+
+
+
+
         print(f"family preference:{user_preferences.family_choices.all()}")
         
         blocked_users = get_blocked_users_data(user_profile=user_profile)
@@ -928,13 +948,17 @@ class GetProfileMatches(GenericAPIView):
             matching_profiles = UserProfile.objects.filter(
             combined_filter & ~exclude_blocked_users,
             ~Q(user__id=user.id),
-            user__orientation=user_orientation
+            user__orientation=user_orientation, 
+            user__date_of_birth__lte = minimum_age_date,
+            user__date_of_birth__gte = maximum_age_date,
             )
         else:
             matching_profiles = UserProfile.objects.filter(
             combined_filter & ~exclude_blocked_users,
             user__gender=user_partner_gender_preference,
-            user__orientation=user_orientation
+            user__orientation=user_orientation,
+            user__date_of_birth__lte = minimum_age_date,
+            user__date_of_birth__gte = maximum_age_date,
                 )
             
         if report_type == 'adminReport':
