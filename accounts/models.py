@@ -67,7 +67,6 @@ class User(AbstractBaseUser):
     ORIENTATION_CHOICES = (
         ('Hetero', 'Heterosexual'),
         ('Homo', 'Homo'),
-        ('Pan', 'Pansexual'),
         ('Bi','Bisexual'),
     )
     MLM_CHOICES = (

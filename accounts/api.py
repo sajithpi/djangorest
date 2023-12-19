@@ -1280,7 +1280,7 @@ class PackageListView(GenericAPIView):
         """
         try:
             # Retrieve the list of packages
-            packages = Package.objects.all()
+            packages = Package.objects.filter(Package.price > 0)
             package_list = []
             for package in packages:
                 package_dict = {
