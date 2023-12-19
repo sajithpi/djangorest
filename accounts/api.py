@@ -1203,7 +1203,7 @@ class UserNotifications(GenericAPIView):
     )
     def get(self, request):
         user_profile = UserProfile.objects.get(user=self.request.user)
-        notifications = Notification.objects.filter(to_user=user_profile)
+        notifications = Notification.objects.filter(to_user=user_profile).order_by("-date_added")
         unseen_notifications_count = Notification.objects.filter(to_user=user_profile, user_has_seen=False).count()
 
         # Serialize the notifications using your custom serializer
