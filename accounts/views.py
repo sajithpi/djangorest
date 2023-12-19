@@ -126,7 +126,7 @@ class VerifyAccount(GenericAPIView):
                 print(f"user login otp:{user.login_otp} otp:{otp}")
                 if user.login_otp != otp:
                     return Response(f"OTP is invalid", status=status.HTTP_403_FORBIDDEN)
-                if user.login_otp_validity < now:
+                if user.login_otp_validity < settings.NOW:
                     return Response(f"Otp validity expired", status=status.HTTP_403_FORBIDDEN)
                 user.has_2fa_passed = True
                 user.login_status = True
