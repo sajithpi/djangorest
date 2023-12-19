@@ -123,7 +123,7 @@ class VerifyAccount(GenericAPIView):
                 user.save()
                 return Response(f"Account Verified Successfully",status=status.HTTP_200_OK)
             elif type == 'login':
-                print(f"user login otp:{user.login_otp} otp:{otp}")
+                print(f"user login otp:{user.login_otp} otp:{otp}, now:{settings.NOW}, otp validity:{user.login_otp_validity}")
                 if user.login_otp != otp:
                     return Response(f"OTP is invalid", status=status.HTTP_403_FORBIDDEN)
                 if user.login_otp_validity < settings.NOW:
