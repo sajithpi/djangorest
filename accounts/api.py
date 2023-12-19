@@ -1783,6 +1783,8 @@ class MlmRegister(GenericAPIView):
             if response.status_code == 200:
                 print('POST request successful!')
                 print('Response:', response.text)
+                user.mlm_status = 'active'
+                user.save()
                 return Response(response.text, status=status.HTTP_200_OK)
             else:
                 print(f'Error: {response.status_code}')

@@ -71,6 +71,7 @@ class User(AbstractBaseUser):
     )
     MLM_CHOICES = (
         ('inactive', 'inactive'),
+        ('upgraded','upgraded'),
         ('active', 'active'),
     )
     gender = models.CharField(max_length=2, choices=GENDER_CHOICES, null=True, blank=True)

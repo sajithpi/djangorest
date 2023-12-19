@@ -171,7 +171,7 @@ class CaptureOrderView(APIView):
                     user = User.objects.get(username =request.user)
                     user.package = package_data
                     user.package_validity = user_package_validity
-                    user.mlm_status = 'active'
+                    user.mlm_status = 'upgraded'
                     user.save()
 
                 return Response(response.json(), status=status.HTTP_200_OK)
