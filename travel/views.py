@@ -91,13 +91,19 @@ class TravelPlan(GenericAPIView):
             mutable_data = request.data.copy()
             mutable_data['user'] = user.id
             print(f"latitude:{mutable_data['latitude']}, longitude:{mutable_data['longitude']}")
+            
             country = get_country_from_coordinates(mutable_data['latitude'], mutable_data['longitude'])
             print(f"COUNTRY:{country}")
-            if country:
-                mutable_data['country'] = country
+            travel_data = {
+                'latitude':request.data.get('latitude'),
+                'longitude':request.data.get('longitude'),
                 
-            print(f"MUTABLE DATA:{mutable_data}")
-            serializer = MyTripSerializer(data=mutable_data, partial=True)
+            }
+            if country:
+                travel_data['country'] = country
+                # mutable_data['country'] = country
+            print(f"travel_data :{travel_data}")
+            serializer = MyTripSerializer(data=travel_data, partial=True)
 
             if serializer.is_valid():
                 # Save the validated data as a new TravelPlan instance
