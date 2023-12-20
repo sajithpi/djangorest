@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.conf import settings
 from geopy.geocoders import Nominatim
 from datetime import datetime
+import requests
 
 def get_country_from_coordinates(latitude, longitude):
     geolocator = Nominatim(user_agent="geoapiExercises")
@@ -86,32 +87,45 @@ class TravelPlan(GenericAPIView):
             user = User.objects.get(username=request.user)
             user_profile = UserProfile.objects.get(user=user)
             
+            latitude = request.data.get('latitude')
+            longitude = request.data.get('longitude')
+            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
             
-            print(f"TRIP:{user.username}")
-            mutable_data = request.data.copy()
-            mutable_data['user'] = user.id
-            print(f"latitude:{mutable_data['latitude']}, longitude:{mutable_data['longitude']}")
+            response = requests.get(url=url)
+            response.raise_for_status()
             
-            country = get_country_from_coordinates(mutable_data['latitude'], mutable_data['longitude'])
-            print(f"COUNTRY:{country}")
-            travel_data = {
-                'latitude':request.data.get('latitude'),
-                'longitude':request.data.get('longitude'),
+            if response.status_code == 200:
+                data = response.json()
+                print(f"DATA:{data}")
+                country = data['address']['country']
+                city = data['address']['city']
                 
-            }
-            if country:
-                travel_data['country'] = country
-                # mutable_data['country'] = country
-            print(f"travel_data :{travel_data}")
-            serializer = MyTripSerializer(data=travel_data, partial=True)
+                print(f"COUNTRY:{country}")
+                travel_data = {
+                    'latitude':latitude,
+                    'longitude':longitude,
+                    'country':country,
+                    'location':city,
+                    
+                }
+                if country:
+                    travel_data['country'] = country
+                    # mutable_data['country'] = country
+                print(f"travel_data :{travel_data}")
+                serializer = MyTripSerializer(data=travel_data, partial=True)
 
-            if serializer.is_valid():
-                # Save the validated data as a new TravelPlan instance
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                if serializer.is_valid():
+                    # Save the validated data as a new TravelPlan instance
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_200_OK)
+                else:
+                    
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
+                # Handle error
+                print(f"Error: {response.status_code}")
+                return Response({'message':'User Request is not loading, please try next time'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
                 
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             # Handle any other exceptions that might occur
