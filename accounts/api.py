@@ -36,10 +36,10 @@ class TwoFactorAuthRequired(permissions.BasePermission):
     def has_permission(self, request, view):
         #check if the user has passed 2fa
         user = User.objects.get(id=request.user.id)
-        if user.is_authenticated:
-            if user.has_2fa_enabled and not user.has_2fa_passed:
-                return False #Return false to deny the access
-            return True
+        # if user.is_authenticated:
+        if user.has_2fa_enabled and not user.has_2fa_passed:
+            return False #Return false to deny the access
+        return True
 class Test(GenericAPIView):
     permission_classes = []
     def get(self, request):
