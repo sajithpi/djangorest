@@ -1,6 +1,6 @@
 from django.contrib import admin
 from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
-
+from django.utils.safestring import mark_safe
 
 class UserAdmin(admin.ModelAdmin):
     list_display = ('id','username','sponsor','gender','orientation','email','get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
@@ -26,7 +26,10 @@ class ConfigurationsAdmin(admin.ModelAdmin):
     list_display = ('company_name', 'company_mail', 'email_host', 'email_port', 'email_host_user', 'email_host_password', 'email_tls', 'paypal_client_id','paypal_client_secret','paypal_base_url', 'welcome_mail')
     
 class CompanyDataAdmin(admin.ModelAdmin):
-    list_display = ('privacy_policy','terms_and_conditions')
+    list_display = ('privacy_policy','terms_and_conditions','display_logo')
+    
+    def display_logo(self, obj):
+        return mark_safe(f'<img src="{obj.company_logo.url}" width="50" height="50" />')
     
 class InterestAdmin(admin.ModelAdmin):
     list_display = ('id', 'name')

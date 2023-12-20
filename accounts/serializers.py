@@ -458,4 +458,34 @@ class PackageSerializer(serializers.ModelSerializer):
 class CompanyDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyData
-        fields = '__all__'
+        fields = ['company_logo','privacy_policy','terms_and_conditions']
+        
+        extra_kwargs = {
+            'company_logo':{'required': False},
+            'privacy_policy': {'required': False},
+            'terms_and_conditions': {'required': False},
+        }
+    
+    def update(self, instance, validated_data):
+        # Check if the 'package_img' field is present in the validated data
+        if 'company_logo' in validated_data:
+            #delete the old package_img
+            old_company_logo = instance.company_logo
+            if old_company_logo:
+                storage = default_storage
+                if storage.exists(old_company_logo.name):
+                    storage.delete(old_company_logo.name)
+
+                        # Update the 'package_img' field with the new image file
+            instance.company_logo = validated_data['company_logo']
+
+        # Call the parent class's update method to handle the other fields
+        instance = super().update(instance, validated_data)
+
+        # Return the updated instance
+        return instance
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['company_logo'] = instance.company_logo.url.replace("/media/","") if instance.company_logo else None
+        return ret

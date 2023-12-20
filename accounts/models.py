@@ -130,6 +130,9 @@ def kyc_upload_path(instance, filename):
     print(f"KYC:{instance}")
     return f'kyc/{instance.user_profile.user.username}/{filename}'
 
+def company_upload_path(instance, filename):
+    return f'company/{filename}'
+
 class Package(models.Model):
     
     PACKAGE_CHOICES = (
@@ -222,6 +225,7 @@ class Configurations(models.Model):
     company_address = models.CharField(max_length = 500, blank = True)
     
 class CompanyData(models.Model):
+    company_logo = models.ImageField(upload_to=company_upload_path, blank=True, null=True)
     privacy_policy = models.TextField()
     terms_and_conditions = models.TextField()
     
