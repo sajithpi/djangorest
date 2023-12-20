@@ -404,7 +404,7 @@ class GetProfileDetails(GenericAPIView):
                     cover_photo['rating'] = None
             try:
                 about_me = data['about_me'].replace('\"',"").replace('\"', ""),
-            except TypeError as e:
+            except AttributeError as e:
                 about_me = data['about_me']
             profile_data = {
                 'id':data['user']['id'],
