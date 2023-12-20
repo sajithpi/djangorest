@@ -402,10 +402,14 @@ class GetProfileDetails(GenericAPIView):
                 else:
                     # Handle the case where no rating is available for this cover photo
                     cover_photo['rating'] = None
-            
+            try:
+                about_me = data['about_me'].replace('\"',"").replace('\"', ""),
+            except TypeError as e:
+                about_me = data['about_me']
             profile_data = {
                 'id':data['user']['id'],
                 'username':data['user']['username'],
+                
                 'about_me':data['about_me'].replace('\"',"").replace('\"', ""),
                 'age': calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')) if user.showAge else False,
                 'profile_picture':data['profile_picture'],
