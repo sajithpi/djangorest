@@ -283,18 +283,33 @@ class UpdateUserLocation(GenericAPIView):
             user = User.objects.get(username=self.request.user)
             user_profile = UserProfile.objects.get(user=user)
             if self.request.data.get('longitude') and self.request.data.get('latitude'):
-                longitude =  self.request.data.get('longitude')
-                latitude = self.request.data.get('latitude')
-                user_profile.longitude = self.request.data.get('longitude')
-                user_profile.latitude = self.request.data.get('latitude')
-                cityAndProfle = getCityAndCountry(latitude,longitude)
-                    
-                # print(f"user_profile.country:{country}")
-                print(f"user_profile.city:{cityAndProfle}")
                 
-                user_profile.city =  cityAndProfle.get('city')
-                user_profile.country = cityAndProfle.get('country')
-                user_profile.save()
+                latitude = self.request.data.get('latitude')
+                longitude =  self.request.data.get('longitude')
+                
+                user_profile.latitude = latitude
+                user_profile.longitude = longitude
+                
+                url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
+                
+                response = requests.get(url=url)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f"DATA:{data}")
+                    country = data['address']['country']
+                    city = data['address'].get('location')
+                    if city is None:
+                        city = data['address'].get('town')
+                        print(f"CITY:{city}")
+                        if city is None:
+                            city = data['address'].get('city')
+                
+                
+                    
+                    user_profile.city = city
+                    user_profile.country = country
+                    user_profile.save()
                 return Response('Location Updated Successfully', status=status.HTTP_200_OK)
             return Response('Location arguments missing',status = status.HTTP_400_BAD_REQUEST)
         except Exception as e:
