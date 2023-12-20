@@ -310,7 +310,9 @@ class UpdateUserLocation(GenericAPIView):
                     user_profile.city = city
                     user_profile.country = country
                     user_profile.save()
-                return Response('Location Updated Successfully', status=status.HTTP_200_OK)
+                    return Response('Location Updated Successfully', status=status.HTTP_200_OK)
+                
+                    
             return Response('Location arguments missing',status = status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(f"Error in Location:{e}")

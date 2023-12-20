@@ -94,25 +94,24 @@ class TravelPlan(GenericAPIView):
             response = requests.get(url=url)
             response.raise_for_status()
             
+            mutable_data = request.data.copy()
+            mutable_data['user'] = user.id
+            
             if response.status_code == 200:
                 data = response.json()
                 print(f"DATA:{data}")
                 country = data['address']['country']
-                city = data['address']['city']
-                
+                city = data['address'].get('location')
+                if city is None:
+                    city = data['address'].get('town')
+                    print(f"CITY:{city}")
+                    if city is None:
+                            city = data['address'].get('city')
+                mutable_data['location'] = city
                 print(f"COUNTRY:{country}")
-                travel_data = {
-                    'latitude':latitude,
-                    'longitude':longitude,
-                    'country':country,
-                    'location':city,
-                    
-                }
-                if country:
-                    travel_data['country'] = country
+              
                     # mutable_data['country'] = country
-                print(f"travel_data :{travel_data}")
-                serializer = MyTripSerializer(data=travel_data, partial=True)
+                serializer = MyTripSerializer(data=mutable_data, partial=True)
 
                 if serializer.is_valid():
                     # Save the validated data as a new TravelPlan instance
