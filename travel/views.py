@@ -115,6 +115,7 @@ class TravelPlan(GenericAPIView):
 
         except Exception as e:
             # Handle any other exceptions that might occur
+            print(f"ERROR:{e}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @swagger_auto_schema(
