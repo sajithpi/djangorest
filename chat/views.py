@@ -278,11 +278,13 @@ class GetChatRooms(GenericAPIView):
                 room_dict['profile_pic'] = str(room_user.profile_picture)
                 room_dict['active_status'] = room_user.user.login_status
                 last_message = Chat.objects.filter(room_id = room.id).order_by("-timestamp").first()
-                
-                room_dict['read_status'] = last_message.is_read if last_message else ''
-                room_dict['last_message_user'] = "You" if last_message and last_message.sender.user.username  == user.username else last_message.sender.user.username
-                room_dict['last_message'] = last_message.content 
-                
+                if last_message is not None:
+                    room_dict['read_status'] = last_message.is_read if last_message else ''
+                    room_dict['last_message_user'] = "You" if last_message and last_message.sender.user.username  == user.username else last_message.sender.user.username
+                    room_dict['last_message'] = last_message.content 
+                else:
+                    room_dict['read_status'] = room_dict['last_message_user'] =  room_dict['last_message'] = ''
+                    
                 if room_user.user.last_login:
                     last_login_utc = room_user.user.last_login.replace(tzinfo=timezone.utc)
                     last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
