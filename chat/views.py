@@ -290,14 +290,21 @@ class GetChatRooms(GenericAPIView):
                     last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
                     room_dict['last_login'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
                     print(f"last login:{room_user.user.last_login} current time:{settings.NOW}")
-                    time_difference = room_user.user.last_login - settings.NOW
-                    
+                    time_difference = settings.NOW - room_user.user.last_login 
+                    room_dict['current_time'] =  settings.NOW
                     # Extract the components of the time difference
-                    days = time_difference.days
-                    hours, remainder = divmod(time_difference.seconds, 3600)
+                    days, seconds = divmod(time_difference.seconds, 86400)  # 86400 seconds in a day
+                    hours, remainder = divmod(seconds, 3600)
                     minutes, seconds = divmod(remainder, 60)
                     
                     print(f"USER:{room_user.user.username} Time difference: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds.")
+                    
+                    room_dict['time_difference'] = {
+                        'days': days,
+                        'hours': hours,
+                        'minutes': minutes,
+                        'seconds': seconds
+                    }
                     
                 unread_messages = Chat.objects.filter(receiver = user_profile, is_read = False, room = room).count()
                 print(f"unread_messages:{unread_messages}")
