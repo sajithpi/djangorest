@@ -123,10 +123,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         censored_message = str(message)
         room = await database_sync_to_async(RoomChat.objects.get)(id=room_id)
 
-        # sender_user = await database_sync_to_async(User.objects.get)(username=sender_user)
+        sender_user = await database_sync_to_async(User.objects.get)(username=sender_user)
         sender_user_profile = await database_sync_to_async(UserProfile.objects.get)(user__username=sender_user)
 
-        # received_user = await database_sync_to_async(User.objects.get)(username=received_user)
+        received_user = await database_sync_to_async(User.objects.get)(username=received_user)
         received_user_profile = await database_sync_to_async(UserProfile.objects.get)(user__username=received_user)
         encrypted_message  = room.encrypt_content(censored_message, room.encryption_key)
         chat = Chat(
