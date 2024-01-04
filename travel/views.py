@@ -107,7 +107,10 @@ class TravelPlan(GenericAPIView):
                     print(f"CITY:{city}")
                     if city is None:
                             city = data['address'].get('city')
+                    if city is None:
+                        city = data['address'].get('region',country)
                 mutable_data['location'] = city
+                mutable_data['country'] = country
                 print(f"COUNTRY:{country}")
               
                     # mutable_data['country'] = country
