@@ -393,6 +393,7 @@ class GetProfileDetails(GenericAPIView):
             cover_photo_rating_map = {rating['id']: rating['rating'] for rating in rating_users}
 
             # Iterate through the cover photos and add the rating
+
             for cover_photo in data['cover_photos']:
                 cover_photo_id = cover_photo['id']
                 cover_photo['image'] = cover_photo['image'].replace('/media','')
