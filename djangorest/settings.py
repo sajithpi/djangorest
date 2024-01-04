@@ -246,8 +246,12 @@ if LIVE_MODE == True:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
+    # FORCE_SCRIPT_NAME = '/djangoapi'
+    # MEDIA_URL = '/djangoapi/media/'
+    # STATIC_URL = '/djangoapi/static/'
     FORCE_SCRIPT_NAME = '/djangoapi'
-    MEDIA_URL = '/djangoapi/media/'
+    # MEDIA_URL = '/djangoapi/media/'
+    MEDIA_URL = '/media/'
     STATIC_URL = '/djangoapi/static/'
 
 # ALLOWED_HOSTS = ['aleksandr.mlmadmin.iossmlm.com']

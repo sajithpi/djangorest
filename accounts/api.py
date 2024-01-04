@@ -395,6 +395,7 @@ class GetProfileDetails(GenericAPIView):
             # Iterate through the cover photos and add the rating
             for cover_photo in data['cover_photos']:
                 cover_photo_id = cover_photo['id']
+                cover_photo['image'] = cover_photo['image'].replace('/media','')
                 
                 # Check if a rating exists for this cover photo ID
                 if cover_photo_id in cover_photo_rating_map:
@@ -412,7 +413,7 @@ class GetProfileDetails(GenericAPIView):
                 
                 'about_me':about_me,
                 'age': calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')) if user.showAge else False,
-                'profile_picture':data['profile_picture'],
+                'profile_picture':data['profile_picture'].replace('/media',''),
                 'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
                 'interests':data['interests'],
                 'cover_photos':data['cover_photos'],
