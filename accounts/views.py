@@ -54,7 +54,6 @@ class RegisterView(GenericAPIView):
             # profile_photo_data = cover_photos_data[0] if cover_photos_data else None
 
             # Extract the interests data from request data as a list
-            interests_data = json.loads(request.data.get('interests', '[]')) # Use getlist to retrieve a list 
             try:
                 interests_data = json.loads(request.data.get('interests', '[]'))
             except json.JSONDecodeError as e:
