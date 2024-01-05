@@ -408,6 +408,11 @@ class GetProfileDetails(GenericAPIView):
                 about_me = data['about_me'].replace('\"',"").replace('\"', ""),
             except AttributeError as e:
                 about_me = data['about_me']
+            if data['cover_photos']:
+                data['cover_photos'] = [{'id': i, 'image': str(cover_photo['image'])} for i, cover_photo in enumerate(data['cover_photos'], start=1)]
+                data['cover_photos'].insert(0, {'id': 0, 'image': str(profile.profile_picture) if profile.profile_picture else None})
+            else:
+                data['cover_photos'] = [{'id': 0, 'image': str(profile.profile_picture) if profile.profile_picture else None}]
             profile_data = {
                 'id':data['user']['id'],
                 'username':data['user']['username'],
@@ -417,6 +422,7 @@ class GetProfileDetails(GenericAPIView):
                 'profile_picture':data['profile_picture'].replace('/media',''),
                 'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
                 'interests':data['interests'],
+                
                 'cover_photos':data['cover_photos'],
                 'favorite_status':favorite_status,
                 'like_status':like_status,
