@@ -223,10 +223,7 @@ class GetUserData(GenericAPIView):
                     for interest_name in interests_data:
                         print(f"interest_name:{interest_name}")
                         interest_name = interest_name.strip()
-                        if device == 'web':
-                            interest= Interest.objects.get(name=interest_name)
-                        else:
-                            interest= Interest.objects.get(id=interest_name)
+                        interest= Interest.objects.get(name=interest_name)
                         if interest:
                             # user.user_ interests.add(interest)
                             user.interests.add(interest)
@@ -413,7 +410,7 @@ class GetProfileDetails(GenericAPIView):
                 about_me = data['about_me']
             if data['cover_photos']:
                 data['cover_photos'] = [{'id': i, 'image': str(cover_photo['image']).replace('/djangoapi', '/')} for i, cover_photo in enumerate(data['cover_photos'], start=1)]
-                data['cover_photos'].insert(0, {'id': 0, 'image': str(profile.profile_picture) if profile.profile_picture else None})
+                data['cover_photos'].insert(0, {'id': 0, 'image': '/'+str(profile.profile_picture) if profile.profile_picture else None})
             else:
                 data['cover_photos'] = [{'id': 0, 'image': str(profile.profile_picture) if profile.profile_picture else None}]
             profile_data = {

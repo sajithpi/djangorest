@@ -42,6 +42,8 @@ class RegisterView(GenericAPIView):
             serializer = UserSerializers(data=request.data, partial = True)
             serializer.is_valid(raise_exception=True)
             
+            device = request.headers.get('device','web')
+            
             # Extract cover photos from request data
             cover_photos_data = request.FILES.getlist('cover_photos')
             
@@ -72,7 +74,10 @@ class RegisterView(GenericAPIView):
                 # Add interests
                 if interests_data:
                     for interest_name in interests_data:
-                        interest = Interest.objects.get(name=interest_name)
+                        if device == 'web':
+                            interest = Interest.objects.get(name=interest_name)
+                        else:
+                            interest = Interest.objects.get(id=interest_name)
                         if interest:
                             user.interests.add(interest)
                             
