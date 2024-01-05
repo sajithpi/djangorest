@@ -55,7 +55,7 @@ class RegisterView(GenericAPIView):
 
             # Extract the interests data from request data as a list
             interests_data = json.loads(request.data.get('interests', '[]')) # Use getlist to retrieve a list 
-            
+            print(f"request data:{request.data}")
             with transaction.atomic():
                 # Save the user
                 user = serializer.save()
