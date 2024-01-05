@@ -73,7 +73,9 @@ class RegisterView(GenericAPIView):
 
                 # Add interests
                 if interests_data:
+                    print(f"interests_data:{interests_data}")
                     for interest_name in interests_data:
+                        print(f"interest_name:{interest_name}")
                         if device == 'web':
                             interest = Interest.objects.get(name=interest_name)
                         else:
