@@ -89,6 +89,7 @@ class RegisterView(GenericAPIView):
                         interests_data = request.data.get('interests', '[]')
                         # interests_data = request.data.get('interests', '[]')
                         if interests_data:
+                            interests_data = json.loads(interests_data)
                             for interest_name in interests_data:
                                 print(f"interest_name:{interest_name}")
                                 interest= Interest.objects.get(id=interest_name)
