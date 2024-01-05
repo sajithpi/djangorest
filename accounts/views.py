@@ -91,7 +91,6 @@ class RegisterView(GenericAPIView):
                         if interests_data:
                             for interest_name in interests_data:
                                 print(f"interest_name:{interest_name}")
-                                interest_name = interest_name.strip()
                                 interest= Interest.objects.get(id=interest_name)
                                 if interest:
                                     # user.user_ interests.add(interest)
