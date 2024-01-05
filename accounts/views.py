@@ -76,34 +76,37 @@ class RegisterView(GenericAPIView):
                     user_profile.save()
 
 
-               
+            
+                if device == 'web':
                     # Add interests
-                if interests_data:
-                    print(f"interests_data:{interests_data}")
-                    # if device == 'web':
-                        # interests_data = json.loads(interests_data)
-                    for interest_name in interests_data:
-                        print(f"interest_name:{interest_name}")
-                        if device == 'web':
-                            interest = Interest.objects.get(name=interest_name)
-                        else:
-                            interest= Interest.objects.get(id=interest_name)
-                        if interest:
-                            user.interests.add(interest)
-                # else:
-                #                 # Update user interests
-                #     if 'interests' in request.data:
-                #         print(f"interest data json:{request.data.get('interests')}")
-                #         interests_data = request.data.get('interests', '[]')
-                #         # interests_data = request.data.get('interests', '[]')
-                #         if interests_data:
-                #             interests_data = json.loads(interests_data)
-                #             for interest_name in interests_data:
-                #                 print(f"interest_name:{interest_name}")
-                #                 interest= Interest.objects.get(id=interest_name)
-                #                 if interest:
-                #                     # user.user_ interests.add(interest)
-                #                     user.interests.add(interest)
+                    if interests_data:
+                        print(f"interests_data:{interests_data}")
+                        # if device == 'web':
+                            # interests_data = json.loads(interests_data)
+                        for interest_name in interests_data:
+                            print(f"interest_name:{interest_name}")
+                            if device == 'web':
+                                interest = Interest.objects.get(name=interest_name)
+                            else:
+                                interest= Interest.objects.get(id=interest_name)
+                            if interest:
+                                user.interests.add(interest)
+                else:
+                    if 'interests' in request.data:
+                        print(f"interest data json:{request.data.get('interests')}")
+                        interests_data = request.data.get('interests', '[]')
+                        
+                        # Extracting individual values from the 'interests' list
+                        interests_data = [int(num) for interest in interests_data for num in interest.split(',') if num.isdigit()]
+                        
+                        if interests_data:
+                            for interest_id in interests_data:
+                                print(f"interest_id: {interest_id}")
+                                try:
+                                    interest = Interest.objects.get(id=interest_id)
+                                    user.interests.add(interest)
+                                except Interest.DoesNotExist:
+                                    print(f"Interest with ID '{interest_id}' does not exist.")
                             
                 threading.Thread(target=welcome_email, args=(serializer.data['email'], serializer.data['username'],'register')).start()
 
