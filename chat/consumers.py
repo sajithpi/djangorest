@@ -10,6 +10,55 @@ from better_profanity import profanity
 from django.utils import timezone
 
 
+
+
+class ChatNotificationConsumer(AsyncWebsocketConsumer):
+
+
+    async def connect(self):
+        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
+        self.room_group_name = f"chat_notification_{self.room_name}"
+
+        # Join room group
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        # Leave room group
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        sender_user = text_data_json['sender_user']
+        received_user = text_data_json['received_user']
+        message = text_data_json['message']
+        room_id  = text_data_json['room_id']
+
+        # await self.send_notification(sender_user, received_user, message)
+
+        await self.send(text_data=json.dumps({
+            'message': 'Notification sent successfully',
+            "received_user":received_user,
+            'unread_message':message,
+            'room_id':room_id,
+        }))
+
+    async def send_notification(self, event):
+        sender_user = event['sender_user']
+        received_user = event['received_user']
+        message = event['message']
+        room_id = event['room_id']
+        
+        await self.send(text_data=json.dumps({
+            'sender_user': sender_user,
+            'received_user': received_user,
+            'message': message,
+            'room_id':room_id,
+        }))
+
+
+
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
@@ -163,6 +212,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'file':file,
             'timestamp':timestamp,
         }))
+        
+        # Send notification to ChatNotificationConsumer
+        await self.channel_layer.send(
+            "notification_channel",
+            {
+                "type": "send.notification",
+                "sender_user": sender_user.username,
+                "received_user": received_user.username,
+                "message": censored_message,
+                "room_id":room_id,
+            }
+        )
 
     # Receive message from room group
     async def chat_message(self, event):
