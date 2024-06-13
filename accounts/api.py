@@ -1788,6 +1788,9 @@ class MlmRegister(GenericAPIView):
             # 'Sagalovskiy'
             user = User.objects.get(username=request.user)
             
+            if user.mlm_status == 'active':
+                   return Response(f"User {user.username} is already exists in the mlm system", status=status.HTTP_200_OK)
+            
             sponsorName = str(user.sponsor_username) if  user.sponsor_username else None
 
             print(f"sponsor_id:{sponsorName}")
