@@ -57,7 +57,7 @@ class User(AbstractBaseUser):
     interests = models.ManyToManyField('Interest', related_name='users', blank=True)
     
     # Add sponsor field as a foreign key to the same User model
-    sponsor = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sponsored_users')
+    sponsor_username = models.CharField(max_length=50, default = None, blank=True, null = True)
     
     GENDER_CHOICES = (
         ('M', 'Male'),
