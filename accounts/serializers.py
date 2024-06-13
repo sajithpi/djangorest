@@ -159,6 +159,11 @@ class SetNewPasswordSerializer(serializers.Serializer):
         return super().validate(attrs)
     
 class CoverPhotoSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        return str(obj.image.url.replace('/media', ''))
+
     class Meta:
         model = CoverPhoto
         fields = '__all__'
@@ -185,6 +190,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
     height = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
     
     package_expired = serializers.SerializerMethodField()
     # def get_drink_name(self, obj):
@@ -233,6 +239,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
          # Access the user's interests through the UserProfile's user field
         return [interest.name for interest in obj.user.interests.all()]
     
+    def get_profile_picture(self, obj):
+   
+        return str(obj.profile_picture.url.replace('/media', ''))
+
     
     def get_languages(self, obj):
         device = self.context.get('device')
