@@ -15,6 +15,7 @@ from django.conf import settings
 from geopy.geocoders import Nominatim
 from datetime import datetime
 import requests
+from accounts.api import get_blocked_users_data, add_notification, remove_notification
 
 def get_country_from_coordinates(latitude, longitude):
     geolocator = Nominatim(user_agent="geoapiExercises")
@@ -277,6 +278,7 @@ class RequestTrip(GenericAPIView):
 
             if serializer.is_valid():
                 serializer.save()
+                add_notification(from_user=favored_by, to_user=user, type='follow', description=description)
                 return Response({'status': 'request', 'message': 'Trip requested successfully'}, status=status.HTTP_200_OK)
             else:
                 # Return a response with validation errors
