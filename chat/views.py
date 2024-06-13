@@ -107,9 +107,9 @@ class chatRoom(GenericAPIView):
                 last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
                 user_chat['timestamp'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
                 user_chat['sender_user'] = chat.sender.user.username
-                user_chat['sender_profile_pic'] = str(chat.sender.profile_picture)
+                user_chat['sender_profile_pic'] = '/'+str(chat.sender.profile_picture)
                 user_chat['received_user'] = chat.receiver.user.username
-                user_chat['received_user_profile_photo'] = str(chat.receiver.profile_picture)
+                user_chat['received_user_profile_photo'] = '/'+str(chat.receiver.profile_picture)
                 user_chat['is_read'] = chat.is_read
                 # formated_timestamp = datetime.strftime()
                 # if chat.receiver.user != user_profile.user:
