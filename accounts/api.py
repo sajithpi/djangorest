@@ -1805,7 +1805,8 @@ class MlmRegister(GenericAPIView):
                 'email': user.email,
                 'mobile': user.phone_number,
                 'password': 12345678,  # Note: Sending the password in plaintext is not recommended
-                'totalAmount': '100'
+                'totalAmount': '100',
+                '_token':settings.MLM_API_KEY,
             }
 
             # Make a POST request

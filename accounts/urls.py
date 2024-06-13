@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/login/refresh/', jwt_views.TokenRefreshView.as_view(), name ='token_refresh'),
     path('api/logout',LogoutView.as_view(),name='logout'),
     path('api/register',RegisterView.as_view(), name="sign_up"),
+    path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
   
     path('api/reset-password',PasswordReset.as_view(), name='reset-password'),
 
@@ -62,7 +63,7 @@ urlpatterns = [
     path('api/get-kyc-category',GetKycCategory.as_view(), name='get-kyc-category'),
     
 
-    path('api/register-mlm',MlmRegister.as_view(), name='register-mlm'),
+
     
     path('api/contact-us',ContactUsMail.as_view(),name='contact-us'),
     
