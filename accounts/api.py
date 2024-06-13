@@ -409,10 +409,10 @@ class GetProfileDetails(GenericAPIView):
                 about_me = data['about_me'].replace('\"',"").replace('\"', ""),
             except AttributeError as e:
                 about_me = data['about_me']
-            if data['cover_photos'] and data['profile_picture']:
+            if data['cover_photos'] and data['profile_picture'] is not None:
                 data['cover_photos'] = [{'id': i, 'image': str(cover_photo['image']).replace('/djangoapi', '/')} for i, cover_photo in enumerate(data['cover_photos'], start=1)]
                 data['cover_photos'].insert(0, {'id': 0, 'image': '/'+str(profile.profile_picture) if profile.profile_picture else None})
-            else:
+            elif data['profile_picture']:
                 data['cover_photos'] = [{'id': 0, 'image': str(profile.profile_picture) if profile.profile_picture else None}]
             profile_data = {
                 'id':data['user']['id'],
