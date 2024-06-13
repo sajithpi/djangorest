@@ -1808,7 +1808,7 @@ class MlmRegister(GenericAPIView):
                 'totalAmount': '100',
                 '_token':settings.MLM_API_KEY,
             }
-
+            print(f"mlm_api_data:{data}")
             # Make a POST request
             response = requests.post(url, data=data, headers={'token':settings.MLM_API_KEY})
 
