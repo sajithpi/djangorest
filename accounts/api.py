@@ -374,7 +374,8 @@ class GetProfileDetails(GenericAPIView):
             # user_profile = UserProfile.objects.filter(user=user).values('user__username', 'user__date_of_birth', 'user__interests', 'user__cover').first()
             profile = UserProfile.objects.get(user=user)
         
-                # Fetch user interests
+            print(f"profile:{profile}")
+            # Fetch user interests
             interests = profile.user.interests.all()
             
             # Serialize profile data with interests
