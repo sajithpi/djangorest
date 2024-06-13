@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
             name='CompanyData',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('company_logo',models.ImageField())
                 ('privacy_policy', models.TextField()),
                 ('terms_and_conditions', models.TextField()),
             ],
