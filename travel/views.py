@@ -447,7 +447,7 @@ class ListTrips(GenericAPIView):
                     trip['trip_id'] = matching_Trip.id
                     trip['request_status'] = self.get_request_status(matching_Trip.id, user.id)
                     trip['location'] = matching_Trip.location
-                    trip['profile_picture'] = str(matching_Trip.user.profile_picture)
+                    trip['profile_picture'] = '/' + str(matching_Trip.user.profile_picture) if matching_Trip.user.profile_picture else None
                     trip['days'] = matching_Trip.days
                     trip['description'] = matching_Trip.description
                     trip['date'] = matching_Trip.travel_date
