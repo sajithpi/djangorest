@@ -167,7 +167,7 @@ class CoverPhotoSerializer(serializers.ModelSerializer):
                 return str(obj.image.url.replace('/media', ''))
             return None
         except Exception as e:
-            print(f"Error in get_cover_photos: {str(e)}")
+            print(f"Error in CoverPhotoSerializer: {str(e)}")
             return None
 
     class Meta:
