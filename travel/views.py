@@ -259,7 +259,7 @@ class RequestTrip(GenericAPIView):
             user_profile = UserProfile.objects.get(user=user)
             trip = MyTrip.objects.get(id=request.data.get('trip'))
             
-            to_user_profile = UserProfile.objects.get(user = trip.user.user.username)
+            to_user_profile = UserProfile.objects.get(user = trip.user.user)
             
             
         
