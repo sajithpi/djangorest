@@ -240,8 +240,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return [interest.name for interest in obj.user.interests.all()]
     
     def get_profile_picture(self, obj):
-   
-        return str(obj.profile_picture.url.replace('/media', ''))
+        try:
+            if obj.profile_picture:
+                return str(obj.profile_picture.url.replace('/media', ''))
+            return None
+        except Exception as e:
+            print(f"Error in get_profile_picture: {str(e)}")
+            return None
+
 
     
     def get_languages(self, obj):
