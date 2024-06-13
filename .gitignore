@@ -50,7 +50,8 @@ followers/__pycache__
 followers/migrations/__pycache__
 social_auth/__pycache__
 social_auth/migrations/__pycache__
-media/
+media/kyc
+media/users
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
