@@ -12,14 +12,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+
         migrations.AddField(
             model_name='user',
-            name='sponsor',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sponsored_users', to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='sponsor_name',
+            name='sponsor_username',
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
     ]
