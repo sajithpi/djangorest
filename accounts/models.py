@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.conf import settings
 import json
+import os
 # Create your models here.
 
 class UserManager(BaseUserManager):
@@ -224,10 +225,15 @@ class Configurations(models.Model):
     welcome_mail = models.BooleanField(default = True)
     company_address = models.CharField(max_length = 500, blank = True)
     
+    
+def default_company_logo():
+    dummy_logo_path = os.path.join(settings.MEDIA_ROOT, 'company', 'dummy_logo.png')
+    return dummy_logo_path # Path to your default image file
+
 class CompanyData(models.Model):
-    company_logo = models.ImageField(upload_to=company_upload_path, default=None, blank=True, null=True)
-    privacy_policy = models.TextField()
-    terms_and_conditions = models.TextField()
+    company_logo = models.ImageField(upload_to=company_upload_path, default=default_company_logo, blank=True, null=True)
+    privacy_policy = models.TextField(default ='privacy policy dummy content')
+    terms_and_conditions = models.TextField(default = 'terms and conditions dummy content')
     
     
 class KycCategory(models.Model):

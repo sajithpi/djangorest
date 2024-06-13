@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
       ('accounts', '0073_companydata_configurations'),  # Include the correct previous migration
     ]
 
-    operations = [
+    # operations = [
 
-        migrations.RunPython(seed_packages),  # Add this line to run the Python code
-    ]
+    #     migrations.RunPython(seed_packages),  # Add this line to run the Python code
+    # ]
