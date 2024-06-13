@@ -449,7 +449,7 @@ class ListTrips(GenericAPIView):
                     trip['location'] = matching_Trip.location
                     trip['profile_picture'] = '/' + str(matching_Trip.user.profile_picture) if matching_Trip.user.profile_picture else None
                     trip['days'] = matching_Trip.days
-                    trip['description'] = matching_Trip.description
+                    trip['description'] = str(matching_Trip.description[:110]) 
                     trip['date'] = matching_Trip.travel_date
                     trip['status'] = matching_Trip.status
                     
