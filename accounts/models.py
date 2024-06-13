@@ -225,7 +225,7 @@ class Configurations(models.Model):
     company_address = models.CharField(max_length = 500, blank = True)
     
 class CompanyData(models.Model):
-    company_logo = models.ImageField(upload_to=company_upload_path, blank=True, null=True)
+    company_logo = models.ImageField(upload_to=company_upload_path, default=None, blank=True, null=True)
     privacy_policy = models.TextField()
     terms_and_conditions = models.TextField()
     
