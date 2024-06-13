@@ -259,6 +259,9 @@ class RequestTrip(GenericAPIView):
             user_profile = UserProfile.objects.get(user=user)
             trip = MyTrip.objects.get(id=request.data.get('trip'))
             
+            to_user_profile = UserProfile.objects.get(user = trip.user.user.username)
+            
+            
         
 
             mutable_data = request.data.copy()
@@ -281,7 +284,7 @@ class RequestTrip(GenericAPIView):
 
             if serializer.is_valid():
                 serializer.save()
-                add_notification(from_user=user, to_user=trip.user.user.username, type='travel', description=description)
+                add_notification(from_user=user_profile, to_user=to_user_profile, type='travel', description=description)
                 return Response({'status': 'request', 'message': 'Trip requested successfully'}, status=status.HTTP_200_OK)
             else:
                 # Return a response with validation errors
