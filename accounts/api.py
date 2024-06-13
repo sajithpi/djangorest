@@ -441,7 +441,7 @@ class getLoginUserData(GenericAPIView):
         user = User.objects.get(username = self.request.user)
         user_profile = UserProfile.objects.get(user = user)
         company_profile_photo = CompanyData.objects.first()
-        data =  {'user_id':user.id ,'username':user.username, 'profile_picture':str(user_profile.profile_picture), 'company_logo':str(company_profile_photo.company_logo) if company_profile_photo.company_logo else None}
+        data =  {'user_id':user.id ,'username':user.username, 'profile_picture':'/'+str(user_profile.profile_picture), 'company_logo':str(company_profile_photo.company_logo) if company_profile_photo.company_logo else None}
         return Response(data, status=status.HTTP_200_OK)
     
 class GetMyPreferences(GenericAPIView):
