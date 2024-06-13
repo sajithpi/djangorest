@@ -313,7 +313,7 @@ class UpdateUserLocation(GenericAPIView):
                     return Response('Location Updated Successfully', status=status.HTTP_200_OK)
                 
                     
-            return Response('Location arguments missing',status = status.HTTP_400_BAD_REQUEST)
+            return Response('Location arguments missing=> longitude, latitude',status = status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(f"Error in Location:{e}")
             return Response(f'Error in location updation:{str(e)}',status = status.HTTP_400_BAD_REQUEST)
