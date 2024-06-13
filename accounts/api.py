@@ -1788,7 +1788,7 @@ class MlmRegister(GenericAPIView):
             # 'Sagalovskiy'
             user = User.objects.get(username=request.user)
             
-            sponsor_id = str(user.sponsor.id) if  user.sponsor else '1'
+            sponsor_id = str(user.sponsor_username) if  user.sponsor_username else '1'
 
             print(f"sponsor_id:{sponsor_id}")
             # MLM API endpoint URL
