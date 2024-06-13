@@ -44,7 +44,7 @@ class UserSerializers(serializers.ModelSerializer):
         return None    
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor","mlm_status","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor_username","mlm_status","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
   
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
@@ -58,7 +58,7 @@ class UserSerializers(serializers.ModelSerializer):
                                        username=validated_data['username'],
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
-                                       sponsor = sponsor_user,
+                                       sponsor_username = sponsor_user.username,
                                        package = freePackageID,
                                        gender = validated_data["gender"],
                                        orientation = validated_data["orientation"],
