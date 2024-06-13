@@ -162,7 +162,13 @@ class CoverPhotoSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
 
     def get_image(self, obj):
-        return str(obj.image.url.replace('/media', ''))
+        try:    
+            if obj.image:  
+                return str(obj.image.url.replace('/media', ''))
+            return None
+        except Exception as e:
+            print(f"Error in get_cover_photos: {str(e)}")
+            return None
 
     class Meta:
         model = CoverPhoto
