@@ -8,7 +8,7 @@ def seed_packages(apps, schema_editor):
 
    
     
-    CompanyData.objects.create(
+    CompanyData.objects.create(company_logo = None,
                             privacy_policy='privacy policy dummy content',
                             terms_and_conditions='terms and conditions dummy content',)
     
