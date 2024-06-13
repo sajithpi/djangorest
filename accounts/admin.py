@@ -3,7 +3,7 @@ from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Worko
 from django.utils.safestring import mark_safe
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id','username','sponsor_username','gender','orientation','email','get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
+    list_display = ('id','username','sponsor_username','gender','orientation','email','mlm_status','get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
     list_filter = ('id','username')
     search_fields = ('id','username','email')
     
