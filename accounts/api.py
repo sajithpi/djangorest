@@ -1792,8 +1792,8 @@ class MlmRegister(GenericAPIView):
             if user.mlm_status == 'active':
                    return Response(f"User {user.username} is already exists in the mlm system", status=status.HTTP_200_OK)
             
-            sponsorName = str(user.sponsor_username) if  user.sponsor_username else None
-
+            sponsorName = request.data.get('sponsorName') 
+            
             print(f"sponsor_id:{sponsorName}")
             # MLM API endpoint URL
             url = f'{settings.MLM_ADMIN_URL}/api/register'
