@@ -236,7 +236,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         
         # Inside ChatConsumer.receive after saving the message
         await self.channel_layer.send(
-            "notification_channel",  # This should match the group/channel name in ChatNotificationConsumer
+            f"notification_{received_user.username}",  # This should match the group/channel name in ChatNotificationConsumer
             {
                 "type": "send.notification",
                 "sender_user": sender_user.username,
