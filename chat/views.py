@@ -281,7 +281,7 @@ class GetChatRooms(GenericAPIView):
                 last_message = Chat.objects.filter(room_id = room.id).order_by("-timestamp").first()
                 if last_message is not None:
                     room_dict['read_status'] = last_message.is_read if last_message else ''
-                    room_dict['last_message_user'] = "You" if last_message and last_message.sender.user.username  == user.username else last_message.sender.user.username
+                    room_dict['last_message_user'] = "You" if last_message and last_message.sender.user.username  == user_profile.user.username else last_message.sender.user.username
                     room_dict['last_message'] = room.decrypt_content(last_message.content , room.encryption_key) if last_message.content  else '' 
                 else:
                     room_dict['read_status'] = room_dict['last_message_user'] =  room_dict['last_message'] = ''
