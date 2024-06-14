@@ -14,11 +14,9 @@ from django.utils import timezone
 
 class ChatNotificationConsumer(AsyncWebsocketConsumer):
 
-
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_notification_{self.room_name}"
-
 
         print(f"Connecting to room: {self.room_name}, group: {self.room_group_name}")
         # Join room group
@@ -35,15 +33,20 @@ class ChatNotificationConsumer(AsyncWebsocketConsumer):
         sender_user = text_data_json['sender_user']
         received_user = text_data_json['received_user']
         message = text_data_json['message']
-        room_id  = text_data_json['room_id']
-        print(f"ChatNotificationConsumer=> receive:{text_data_json}")
-        # await self.send_notification(sender_user, received_user, message)
+        room_id = text_data_json['room_id']
 
+        print(f"Received message from {sender_user} to {received_user}: {message}")
+
+        # Optionally, you can process the message or trigger further actions here
+
+        # Send notification to client
         await self.send(text_data=json.dumps({
-            'message': 'Notification sent successfully',
-            "received_user":received_user,
-            'unread_message':message,
-            'room_id':room_id,
+            'type': 'notification',
+            'sender_user': sender_user,
+            'received_user': received_user,
+            'message': message,
+            'room_id': room_id,
+            'timestamp': timezone.now().isoformat(),
         }))
 
     async def send_notification(self, event):
@@ -51,14 +54,21 @@ class ChatNotificationConsumer(AsyncWebsocketConsumer):
         received_user = event['received_user']
         message = event['message']
         room_id = event['room_id']
-        print(f"send_notification=> receive:{event}")
+
+        print(f"Sending notification to {received_user} from {sender_user}: {message}")
+
+        # Construct your notification message or payload
+        notification_message = f"{sender_user} sent you a new message: {message}"
+
+        # Send notification back to the WebSocket client
         await self.send(text_data=json.dumps({
+            'type': 'notification',
             'sender_user': sender_user,
             'received_user': received_user,
-            'message': message,
-            'room_id':room_id,
+            'message': notification_message,
+            'room_id': room_id,
+            'timestamp': timezone.now().isoformat(),
         }))
-
 
 
 class NotificationConsumer(AsyncWebsocketConsumer):
@@ -224,15 +234,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'timestamp':timestamp,
         }))
         
-        # Send notification to ChatNotificationConsumer
+        # Inside ChatConsumer.receive after saving the message
         await self.channel_layer.send(
-            "notification_channel",
+            "notification_channel",  # This should match the group/channel name in ChatNotificationConsumer
             {
                 "type": "send.notification",
                 "sender_user": sender_user.username,
                 "received_user": received_user.username,
                 "message": censored_message,
-                "room_id":room_id,
+                "room_id": room_id,
             }
         )
 
