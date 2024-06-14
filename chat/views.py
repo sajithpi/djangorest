@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from drf_yasg import openapi
@@ -189,9 +189,10 @@ class chatRoom(GenericAPIView):
             receiver_user = request.data.get('receiver_user')
 
             # Get sender's user and profile
-            sender = User.objects.get(username=request.user)
-            sender_profile = UserProfile.objects.get(user=sender)
-
+            # sender = User.objects.get(username=request.user)
+            
+            # sender_profile = UserProfile.objects.get(user=sender)
+            sender_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.user)
             # Get receiver's user and profile
             receiver = User.objects.get(username=receiver_user)
             receiver_profile = UserProfile.objects.get(user=receiver)
@@ -261,9 +262,9 @@ class GetChatRooms(GenericAPIView):
         """
         try:
             # Retrieve the authenticated user and their profile
-            user = User.objects.get(username=self.request.user)
-            user_profile = UserProfile.objects.get(user=user)
-
+            # user = User.objects.get(username=self.request.user)
+            # user_profile = UserProfile.objects.get(user=user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
             # Query for chat rooms involving the authenticated user
             rooms = RoomChat.objects.filter(Q(senderProfile=user_profile) | Q(receiverProfile=user_profile)).all()
 

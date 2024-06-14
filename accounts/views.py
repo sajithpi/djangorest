@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
@@ -362,8 +362,9 @@ class Testimonial(GenericAPIView):
     def post(self, request):
         try:
             print(f"USER:{request.user}")
-            user = User.objects.get(username = request.user)
-            user_profile = UserProfile.objects.get(user = user)
+            # user = User.objects.get(username = request.user)
+            # user_profile = UserProfile.objects.get(user = user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.user)
             
             description = request.data.get('description')
             if description:

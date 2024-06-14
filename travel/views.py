@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from . models import TravelAim, MyTrip, TravelRequest
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -56,8 +56,9 @@ class TravelPlan(GenericAPIView):
 
     def get(self, request):
         try:
-            user = User.objects.get(username = self.request.user)
-            user_profile = UserProfile.objects.get(user = user)
+            # user = User.objects.get(username = self.request.user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
+            # user_profile = UserProfile.objects.get(user = user)
 
             my_trips = MyTrip.objects.filter(user = user_profile)
             
@@ -86,7 +87,7 @@ class TravelPlan(GenericAPIView):
         """
         try:
             user = User.objects.get(username=request.user)
-            user_profile = UserProfile.objects.get(user=user)
+            # user_profile = UserProfile.objects.get(user=user)
             
             latitude = request.data.get('latitude')
             longitude = request.data.get('longitude')
@@ -204,8 +205,9 @@ class TravelPlan(GenericAPIView):
     )
     def delete(self, request):
         try:
-            user = User.objects.get(username=self.request.user)
-            user_profile = UserProfile.objects.get(user=user)
+            # user = User.objects.get(username=self.request.user)
+            # user_profile = UserProfile.objects.get(user=user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.self.request.user)
             trip_id = request.data.get('trip_id')
             print(f"TRIP ID: {trip_id}")
 
@@ -255,8 +257,8 @@ class RequestTrip(GenericAPIView):
     )
     def post(self, request):
         try:
-            user = User.objects.get(username=request.user)
-            user_profile = UserProfile.objects.get(user=user)
+            # user = User.objects.get(username=request.user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.user.username)
             trip = MyTrip.objects.get(id=request.data.get('trip'))
             
             to_user_profile = UserProfile.objects.get(user = trip.user.user)
@@ -267,7 +269,7 @@ class RequestTrip(GenericAPIView):
             mutable_data = request.data.copy()
             mutable_data['requested_user'] = user_profile.id
             mutable_data['trip'] = trip.id
-            description = f'User:{user.username} requested a travel request'
+            description = f'User:{user_profile.user.username} requested a travel request'
 
             try:
                 # Check if a travel request for the specified trip and user exists
@@ -376,8 +378,9 @@ class ListTrips(GenericAPIView):
     def get(self, request):
         try:
             
-            user = User.objects.get(username = self.request.user)
-            user_profile = UserProfile.objects.get(user = user)
+            # user = User.objects.get(username = self.request.user)
+            # user_profile = UserProfile.objects.get(user = user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
             user_gender = user_profile.user.gender
             user_orientation = user_profile.user.orientation
             

@@ -1741,6 +1741,7 @@ class UploadKYC(GenericAPIView):
             user = User.objects.get(username=request.user)
 
             # Get the user's profile
+            
             user_profile = UserProfile.objects.get(user=user)
 
             # Extract 'kyc_id' from the request data
