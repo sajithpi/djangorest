@@ -19,6 +19,8 @@ class ChatNotificationConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = f"chat_notification_{self.room_name}"
 
+
+        print(f"Connecting to room: {self.room_name}, group: {self.room_group_name}")
         # Join room group
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -34,7 +36,7 @@ class ChatNotificationConsumer(AsyncWebsocketConsumer):
         received_user = text_data_json['received_user']
         message = text_data_json['message']
         room_id  = text_data_json['room_id']
-
+        print(f"ChatNotificationConsumer=> receive:{text_data_json}")
         # await self.send_notification(sender_user, received_user, message)
 
         await self.send(text_data=json.dumps({
@@ -49,7 +51,7 @@ class ChatNotificationConsumer(AsyncWebsocketConsumer):
         received_user = event['received_user']
         message = event['message']
         room_id = event['room_id']
-        
+        print(f"send_notification=> receive:{event}")
         await self.send(text_data=json.dumps({
             'sender_user': sender_user,
             'received_user': received_user,
