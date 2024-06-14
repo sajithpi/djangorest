@@ -447,6 +447,7 @@ class GetTestimonialsView(GenericAPIView):
     def get(self, request):
         try:
             # user = User.objects.get(username = request.user)
+            count = 0
             try:
                 type = request.headers['type']
                 
