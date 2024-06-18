@@ -628,29 +628,7 @@ class MyTravelRequests(GenericAPIView):
                 # Handle any other unexpected exceptions
                 return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        @swagger_auto_schema(
-            request_body=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    'trip_request_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the travel request"),
-                    'trip_status': openapi.Schema(type=openapi.TYPE_STRING, 
-                                                description="New status for the travel request",
-                                                enum=["ACCEPTED", "REJECTED", "PENDING"],  # Possible values for trip_status
-                                                ),
-            
-                    'trip_id': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the trip"),
-                },
-                required=['trip_request_id', 'trip_status', 'trip_id'],
-            ),
-            responses={
-                200: 'Travel request status updated successfully',
-                400: 'Bad Request - Missing or invalid parameters',
-                404: 'Travel request not found for the given ID',
-                500: 'Internal Server Error',
-            },
-            tags=["Travel"],
-            operation_description="Update the status of a requested trip.",
-        )
+ 
     @swagger_auto_schema(
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
