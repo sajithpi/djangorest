@@ -70,7 +70,7 @@ class TravelPlan(GenericAPIView):
             serializer.is_valid()
             
             
-            return Response({'trips:'serializer.data, 'trip_count':trip_count}, status=status.HTTP_200_OK)
+            return Response({'trips':serializer.data, 'trip_count':trip_count}, status=status.HTTP_200_OK)
         except Exception as e:
             print(f"ERROR:{e}")
             return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
