@@ -62,11 +62,15 @@ class TravelPlan(GenericAPIView):
 
             my_trips = MyTrip.objects.filter(user = user_profile)
             
+             # Get count of trips
+            trip_count = my_trips.count()
+            
             serializer = MyTripSerializer(data= my_trips, many = True)
             
             serializer.is_valid()
             
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            
+            return Response({'trips:'serializer.data, 'trip_count':trip_count}, status=status.HTTP_200_OK)
         except Exception as e:
             print(f"ERROR:{e}")
             return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
