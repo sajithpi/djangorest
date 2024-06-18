@@ -520,7 +520,7 @@ class MyTravelRequests(GenericAPIView):
         tags=["Travel"],
         operation_description="Update the status of a requested trip.",
     )
-    def post(self, request):
+    def get(self, request):
         """
         Retrieve the list of requested users for the specified trip.
 
