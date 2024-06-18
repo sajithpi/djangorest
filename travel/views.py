@@ -555,7 +555,7 @@ class MyTravelRequests(GenericAPIView):
                 user_dict['username'] = trip_details.user.user.username
                 user_dict['profile_pic'] = str(trip_details.user.profile_picture)
                 user_dict['travel_date'] = trip_details.travel_date
-                user_dict['travel_date'] = trip_details.days
+                user_dict['days'] = trip_details.days
                 user_dict['location'] = trip_details.location
                 user_dict['description'] = trip_request.description
                 user_dict['status'] = trip_request.status
