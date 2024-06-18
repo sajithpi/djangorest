@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from . models import TravelAim, MyTrip, TravelRequest
 from rest_framework.generics import GenericAPIView
+from django.http import JsonResponse
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from accounts.api import TwoFactorAuthRequired
@@ -61,16 +62,31 @@ class TravelPlan(GenericAPIView):
             # user_profile = UserProfile.objects.get(user = user)
 
             my_trips = MyTrip.objects.filter(user = user_profile)
+            tripDetailsList = []
+            for trip in my_trips:
+                trip_count = TravelRequest.objects.filter(trip = trip, status = 'PENDING').count()
+                print(f"trip_count:{trip_count}")
+                tripDetailsDict = {'trip':trip.id,
+                                    "user": trip.user.user.username,
+                                    "latitude": trip.latitude,
+                                    "longitude": trip.longitude,
+                                    "looking_for": trip.looking_for,
+                                    "location": trip.location,
+                                    "country": trip.country,
+                                    'travel_date': trip.travel_date.strftime('%Y-%m-%d %H:%M:%S') if trip.travel_date else None,
+                                    "days": trip.days,
+                                    "description": trip.description,
+                                    'request_count':trip_count,
+                                    "status": trip.status}
+                tripDetailsList.append(tripDetailsDict)
+                
+            print(f"tripDetailsList:{tripDetailsList}")
+            # serializer = MyTripSerializer(data= my_trips, many = True)
             
-             # Get count of trips
-            trip_count = my_trips.count()
-            
-            serializer = MyTripSerializer(data= my_trips, many = True)
-            
-            serializer.is_valid()
+            # serializer.is_valid()
             
             
-            return Response({'trips':serializer.data, 'trip_count':trip_count}, status=status.HTTP_200_OK)
+            return JsonResponse(tripDetailsList, safe = False, status=status.HTTP_200_OK)
         except Exception as e:
             print(f"ERROR:{e}")
             return Response(f"error:{str(e)}", status=status.HTTP_400_BAD_REQUEST)
