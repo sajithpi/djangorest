@@ -64,7 +64,7 @@ class TravelPlan(GenericAPIView):
             my_trips = MyTrip.objects.filter(user = user_profile)
             tripDetailsList = []
             for trip in my_trips:
-                trip_count = TravelRequest.objects.filter(trip = trip, status = 'PENDING').count()
+                trip_count = TravelRequest.objects.filter(trip = trip.id, status = 'PENDING').count()
                 print(f"trip_count:{trip_count}")
                 tripDetailsDict = {'trip':trip.id,
                                     "user": trip.user.user.username,
@@ -534,11 +534,13 @@ class MyTravelRequests(GenericAPIView):
         """
         try:
             # Assuming trip_id is sent as a query parameter or in the request body
-            trip_id = request.data['tripId']
-            print(f"TRIP ID:{trip_id}")
-            trip = MyTrip.objects.get(id = trip_id)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
+            # trips = MyTrip.objects.filter(user = user_profile)
+            # trip_id = request.data['tripId']
+            # print(f"TRIP ID:{trip_id}")
+            # trip = MyTrip.objects.get(id = trip_id)
             # Fetch the travel request based on the provided trip_id
-            trip_requests = TravelRequest.objects.filter(trip=trip)
+            trip_requests = TravelRequest.objects.filter(requested_user=user_profile)
             
             user_list = []
             
