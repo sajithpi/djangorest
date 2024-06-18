@@ -546,12 +546,17 @@ class MyTravelRequests(GenericAPIView):
             
             # Iterate over each travel request and extract relevant information
             for trip_request in trip_requests:
+                
+                trip_details = MyTrip.objects.get(id = trip_request.trip.id)
                 user_dict = {}
                 user_dict['id'] = trip_request.id
-                user_dict['user_id'] = trip_request.requested_user.user.id
+                user_dict['user_id'] = trip_details.user.id
                 user_dict['trip_id'] = trip_request.trip.id
-                user_dict['username'] = trip_request.requested_user.user.username
-                user_dict['profile_pic'] = str(trip_request.requested_user.profile_picture)
+                user_dict['username'] = trip_details.user.user.username
+                user_dict['profile_pic'] = str(trip_details.user.profile_picture)
+                user_dict['travel_date'] = trip_details.travel_date
+                user_dict['travel_date'] = trip_details.days
+                user_dict['location'] = trip_details.location
                 user_dict['description'] = trip_request.description
                 user_dict['status'] = trip_request.status
                 
