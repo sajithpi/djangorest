@@ -442,7 +442,7 @@ class getLoginUserData(GenericAPIView):
         user = User.objects.get(username = self.request.user)
         user_profile = UserProfile.objects.get(user = user)
         company_profile_photo = CompanyData.objects.first()
-        data =  {'user_id':user.id ,'username':user.username, 'profile_picture':'/'+str(user_profile.profile_picture), 'company_logo':str(company_profile_photo.company_logo) if company_profile_photo.company_logo else None}
+        data =  {'user_id':user.id ,'username':user.username, 'profile_picture':'/'+str(user_profile.profile_picture) if user_profile.profile_picture else None , 'company_logo':str(company_profile_photo.company_logo) if company_profile_photo.company_logo else None}
         return Response(data, status=status.HTTP_200_OK)
     
 class GetMyPreferences(GenericAPIView):
@@ -1020,13 +1020,13 @@ class GetProfileMatches(GenericAPIView):
                 age = current_date.year - profile.user.date_of_birth.year - ((current_date.month, current_date.day) < (profile.user.date_of_birth.month, profile.user.date_of_birth.day)) 
                 preferences_by_user_id['age'] = age if profile.user.showAge else False
             preferences_by_user_id['profile_picture'] = {
-                'id':1, 'image':str(profile.profile_picture) if profile.profile_picture else None}
+                'id':1, 'image':'/' + str(profile.profile_picture) if profile.profile_picture else None}
             if cover_photos:
-                preferences_by_user_id['cover_photos'] = [{'id':i, 'image':str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
-                preferences_by_user_id['cover_photos'].insert(0, {'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None})
+                preferences_by_user_id['cover_photos'] = [{'id':i, 'image':'/' + str(cover_photo.image)} for i,cover_photo in enumerate(cover_photos, start=1)]
+                preferences_by_user_id['cover_photos'].insert(0, {'id':0, 'image': '/' + str(profile.profile_picture) if profile.profile_picture else None})
             else:
          
-                preferences_by_user_id['cover_photos'] = [{'id':0, 'image':str(profile.profile_picture) if profile.profile_picture else None}]
+                preferences_by_user_id['cover_photos'] = [{'id':0, 'image':'/' + str(profile.profile_picture) if profile.profile_picture else None}]
            
            
             preferences_by_user_id['height'] = profile.height
