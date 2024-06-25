@@ -276,7 +276,7 @@ class GetChatRooms(GenericAPIView):
                 
                 room_user = room.senderProfile if room.senderProfile.user.id != user_profile.user.id else room.receiverProfile
                 room_dict['username'] = room_user.user.username
-                room_dict['profile_pic'] = str(room_user.profile_picture)
+                room_dict['profile_pic'] = '/' + str(room_user.profile_picture) if room_user.profile_picture else None
                 room_dict['active_status'] = room_user.user.login_status
                 last_message = Chat.objects.filter(room_id = room.id).order_by("-timestamp").first()
                 if last_message is not None:
