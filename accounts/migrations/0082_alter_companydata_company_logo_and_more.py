@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('data', models.CharField(blank=True, max_length=1000, null=True)),
                 ('status', models.SmallIntegerField(choices=[(0, 'Initiated'), (1, 'Success'), (2, 'Failed')], default=0)),
-                ('user_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.userprofile')),
+                ('user_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='accounts.user')),
             ],
         ),
     ]

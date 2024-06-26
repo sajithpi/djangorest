@@ -163,7 +163,7 @@ class Order(models.Model):
         (1, 'Success'),    # Order successfully completed
         (2, 'Failed'),     # Order failed
     )
-    user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
+    user_id = models.ForeignKey("User", on_delete = models.CASCADE, blank = True, null = True)
     order_id = models.CharField(max_length = 100, blank = True, null = True)
     package_id = models.ForeignKey(Package, on_delete =models.SET_NULL, blank = True, null = True)
     price = models.CharField(max_length=10, default=None, null=True, blank=True)
