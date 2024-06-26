@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, MlmApiHistory, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
 from django.utils.safestring import mark_safe
 
 class UserAdmin(admin.ModelAdmin):
@@ -97,3 +97,4 @@ admin.site.register(EducationType, ChoiceAdmin)
 admin.site.register(Language, ChoiceAdmin)
 admin.site.register(ProfilePreference, ProfilePreferenceAdmin)
 admin.site.register(UserTestimonial, TestimonialAdmin)
+admin.site.register(MlmApiHistory, MlmAdmin)
