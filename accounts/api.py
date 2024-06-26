@@ -10,6 +10,7 @@ from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from rest_framework.serializers import Serializer
 from datetime import datetime
@@ -1823,11 +1824,11 @@ class MlmRegister(GenericAPIView):
                 'user_ref_id':user.id,
                 'sponsorName': sponsorName,
                 'first_name': user.username,
-                'date_of_birth': user.date_of_birth,
+                'date_of_birth': user.date_of_birth.isoformat() if user.date_of_birth else None,
                 'gender': user.gender,
                 'email': user.email,
                 'mobile': user.phone_number,
-                'password': 12345678,  # Note: Sending the password in plaintext is not recommended
+                'password': make_password('12345678'),  # Note: Sending the password in plaintext is not recommended
                 'totalAmount': '100',
                 '_token':settings.MLM_API_KEY,
             }
