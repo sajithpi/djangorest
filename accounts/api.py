@@ -1836,7 +1836,7 @@ class MlmRegister(GenericAPIView):
             print(f"mlm_api_data:{data}")
             # Make a POST request
             
-            mlm_api_history = MlmApiHistory.objects.create(user_id = user, data = json.dumps(data), status = 0) #Initiated
+            mlm_api_history = MlmApiHistory.objects.create(user = user, data = json.dumps(data), status = 0) #Initiated
             
             # Get the ID of the newly created entry
             mlm_api_history_id = mlm_api_history.id

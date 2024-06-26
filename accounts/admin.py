@@ -16,9 +16,9 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ('id','user')
 
 class MlmAdmin(admin.ModelAdmin):
-    list_display = ('id','user_id', 'data', 'status')
-    list_filter = ('id','user_id',)
-    search_fields = ('id','user_id')
+    list_display = ('id','user', 'data', 'status')
+    list_filter = ('id','user',)
+    search_fields = ('id','user')
     
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')

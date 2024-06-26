@@ -178,7 +178,7 @@ class MlmApiHistory(models.Model):
     (1, 'Success'),    # API Call successfully completed
     (2, 'Failed'),     # API Call failed
     )
-    user_id = models.ForeignKey("User", on_delete = models.CASCADE, blank = True, null = True)
+    user = models.ForeignKey("User", on_delete = models.CASCADE, blank = True, null = True)
     data = models.CharField(max_length = 1000, blank = True, null = True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
     
