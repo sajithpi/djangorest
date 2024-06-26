@@ -112,8 +112,12 @@ class TravelPlan(GenericAPIView):
             latitude = request.data.get('latitude')
             longitude = request.data.get('longitude')
             url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
+            headers = {
+                'User-Agent': 'Dating-App (your_email@example.com)'  # Replace with your app name and a valid contact email
+            }
+
             
-            response = requests.get(url=url)
+            response = requests.get(url=url, headers=headers)
             response.raise_for_status()
             
             mutable_data = request.data.copy()
