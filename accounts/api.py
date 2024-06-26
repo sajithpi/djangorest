@@ -4,7 +4,7 @@ from rest_framework import generics
 from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData, MlmApiHistory
 from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer , CompanyDataSerializer, ConfigurationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
@@ -1816,20 +1816,38 @@ class MlmRegister(GenericAPIView):
             }
             print(f"mlm_api_data:{data}")
             # Make a POST request
+            
+            mlm_api_history = MlmApiHistory.objects.create(user_id = user, data = json.dumps(data), status = 0) #Initiated
+            
+            # Get the ID of the newly created entry
+            mlm_api_history_id = mlm_api_history.id
+            
             response = requests.post(url, data=data, headers={'token':settings.MLM_API_KEY})
 
             # Check the response status
             if response.status_code == 200:
+                
                 print('POST request successful!')
                 print('Response:', response.text)
                 user.mlm_status = 'active'
                 user.sponsor_username = sponsorName
       
                 user.save()
+                
+                # mlm_api_historyData = MlmApiHistory.objects.get(id = mlm_api_history_id)
+                mlm_api_history.status = 1 #Success
+                mlm_api_history.save()
+                
                 return Response(response.text, status=status.HTTP_200_OK)
+            
             else:
+                
                 print(f'Error: {response.status_code}')
                 print('Response:', response.text)
+                
+                mlm_api_history.status = 0 #Failed
+                mlm_api_history.save()
+                
                 return Response(response.text, status=status.HTTP_400_BAD_REQUEST)
 
         except User.DoesNotExist:

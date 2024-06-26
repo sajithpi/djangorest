@@ -171,6 +171,17 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
     
+    
+class MlmApiHistory(models.Model):
+    STATUS_CHOICES = (
+    (0, 'Initiated'),  # API Call initiated
+    (1, 'Success'),    # API Call successfully completed
+    (2, 'Failed'),     # API Call failed
+    )
+    user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
+    data = models.CharField(max_length = 1000, blank = True, null = True)
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
+    
 class UserProfile(models.Model):
     
    

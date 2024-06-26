@@ -9,9 +9,9 @@ class Migration(migrations.Migration):
         ('accounts', '0063_user_sponsor_user_sponsor_name'),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='user',
-            name='sponsor_name',
-        ),
-    ]
+    # operations = [
+    #     # migrations.RemoveField(
+    #     #     model_name='user',
+    #     #     name='sponsor_name',
+    #     # ),
+    # ]
