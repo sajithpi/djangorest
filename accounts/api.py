@@ -1794,6 +1794,8 @@ class MlmRegister(GenericAPIView):
             
             sponsorName = request.data.get('sponsorName') 
             
+        
+            
             print(f"sponsor_id:{sponsorName}")
             # MLM API endpoint URL
             url = f'{settings.MLM_ADMIN_URL}/api/register'
@@ -1821,6 +1823,8 @@ class MlmRegister(GenericAPIView):
                 print('POST request successful!')
                 print('Response:', response.text)
                 user.mlm_status = 'active'
+                user.sponsor_username = sponsorName
+      
                 user.save()
                 return Response(response.text, status=status.HTTP_200_OK)
             else:
