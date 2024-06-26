@@ -484,7 +484,7 @@ class GetTestimonialsView(GenericAPIView):
                 testimonial_dict = {}
                 testimonial_dict['id'] = testimonial.id
                 testimonial_dict['user'] = testimonial.user.user.username
-                testimonial_dict['profile_picture'] = str(testimonial.user.profile_picture)
+                testimonial_dict['profile_picture'] = '/' + str(testimonial.user.profile_picture) if testimonial.user.profile_picture else None
                 # testimonial_dict['location'] = 
                 testimonial_dict['description'] = testimonial.description
                 testimonial_dict['status'] = testimonial.status
