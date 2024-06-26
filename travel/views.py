@@ -231,7 +231,7 @@ class TravelPlan(GenericAPIView):
         try:
             # user = User.objects.get(username=self.request.user)
             # user_profile = UserProfile.objects.get(user=user)
-            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.self.request.user)
+            user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=request.user)
             trip_id = request.data.get('trip_id')
             print(f"TRIP ID: {trip_id}")
 
