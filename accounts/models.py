@@ -163,7 +163,7 @@ class Order(models.Model):
         (1, 'Success'),    # Order successfully completed
         (2, 'Failed'),     # Order failed
     )
-    user_id = models.ForeignKey("User", on_delete = models.CASCADE, blank = True, null = True)
+    user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
     order_id = models.CharField(max_length = 100, blank = True, null = True)
     package_id = models.ForeignKey(Package, on_delete =models.SET_NULL, blank = True, null = True)
     price = models.CharField(max_length=10, default=None, null=True, blank=True)
@@ -178,7 +178,7 @@ class MlmApiHistory(models.Model):
     (1, 'Success'),    # API Call successfully completed
     (2, 'Failed'),     # API Call failed
     )
-    user_id = models.ForeignKey("UserProfile", on_delete = models.CASCADE, blank = True, null = True)
+    user_id = models.ForeignKey("User", on_delete = models.CASCADE, blank = True, null = True)
     data = models.CharField(max_length = 1000, blank = True, null = True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0)
     
