@@ -107,12 +107,10 @@ def register_social_user(provider, user_id, email, name):
         #       'email':email,
         #      'password':SOCIAL_SECRET
         # }   
-        # default_site_language = SiteLanguage.objects.get_or_create(site_language = 'en')
         username = generate_username(name) 
         user = User.objects.create(
             username=username,
             email=email,
-            # site_language = default_site_language,
         )
     
         # Set the user's password using set_password
@@ -161,10 +159,8 @@ def register_social_user_for_android(provider, user_id, name):
         #      'username':generate_username(name),
         #      'password':SOCIAL_SECRET
         # }    
-        default_site_language = SiteLanguage.objects.get_or_create(site_language = 'en')
         user = User.objects.create(
              username=username,
-             site_language = default_site_language,
         )
     
         # Set the user's password using set_password
