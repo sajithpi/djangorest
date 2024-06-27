@@ -59,6 +59,7 @@ class UserSerializers(serializers.ModelSerializer):
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
                                        sponsor_username = sponsor_user.username,
+                                       site_language =  'en',
                                        package = freePackageID,
                                        gender = validated_data["gender"],
                                        orientation = validated_data["orientation"],

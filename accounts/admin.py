@@ -1,14 +1,17 @@
 from django.contrib import admin
-from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, Workout, Religion, MlmApiHistory, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
+from . models import User, UserProfile, CoverPhoto, Interest, DrinkChoice, SiteLanguage, Workout, Religion, MlmApiHistory, FamilyPlanChoice, RelationShipGoal, SmokeChoice, EducationType, Language, ProfilePreference, Notification, UserTestimonial, Package, Order, KycCategory, KycDocument, EmailTemplate , CompanyData, Configurations
 from django.utils.safestring import mark_safe
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('id','username','sponsor_username','gender','orientation','email','mlm_status','get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
+    list_display = ('id','username','sponsor_username','gender','orientation','email','mlm_status', 'get_site_language', 'get_package_name','mlm_status', 'auth_provider','last_login', 'login_status', 'package_validity','date_joined','has_2fa_enabled')
     list_filter = ('id','username')
     search_fields = ('id','username','email')
     
     def get_package_name(self, obj):
         return obj.package.name if obj.package else None
+    
+    def get_site_language(self, obj):
+        return obj.site_language.site_language if obj.site_language else None
 
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('id','user','about_me','created_at','modified_at')
@@ -19,6 +22,9 @@ class MlmAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'data', 'status')
     list_filter = ('id','user',)
     search_fields = ('id','user')
+
+class SiteLanguageAdmin(admin.ModelAdmin):
+    list_display = ('id','site_language')
     
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
@@ -98,3 +104,4 @@ admin.site.register(Language, ChoiceAdmin)
 admin.site.register(ProfilePreference, ProfilePreferenceAdmin)
 admin.site.register(UserTestimonial, TestimonialAdmin)
 admin.site.register(MlmApiHistory, MlmAdmin)
+admin.site.register(SiteLanguage, SiteLanguageAdmin)

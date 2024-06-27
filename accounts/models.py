@@ -59,6 +59,8 @@ class User(AbstractBaseUser):
     # Add sponsor field as a foreign key to the same User model
     sponsor_username = models.CharField(max_length=50, default = None, blank=True, null = True)
     
+    site_language = models.ForeignKey("SiteLanguage", on_delete=models.SET_NULL, blank=True, null=True)
+    
     GENDER_CHOICES = (
         ('M', 'Male'),
         ('F', 'Female'),
@@ -134,6 +136,16 @@ def kyc_upload_path(instance, filename):
 def company_upload_path(instance, filename):
     return f'company/{filename}'
 
+class SiteLanguage(models.Model):
+    
+    LANGUAGE_CHOICES = (
+        ('en','en'),
+        ('zh','zh'),
+        ('es','es'),
+        ('ru','ru')
+    )   
+    site_language =  models.CharField(max_length=2,  choices=LANGUAGE_CHOICES, blank=True, null=True)
+    
 class Package(models.Model):
     
     PACKAGE_CHOICES = (
