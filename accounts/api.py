@@ -2190,12 +2190,41 @@ class CompanyDetails(APIView):
 class SiteLanguageDetails(APIView):
     permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
     
+    permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
+    
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(
+                'Successful response - Returns serialized site language data',
+                schema=SiteLanguageSerializer(many=True)
+            ),
+            404: "Not Found - Site language details not found"
+        },
+        operation_summary="Retrieve site language data",
+        operation_description="This API retrieves all available site languages.",
+        tags=["SiteLanguage"],
+    )
     def get(self, request):
-                
         site_languages = SiteLanguage.objects.all()
-        site_language_serializer = SiteLanguageSerializer(site_languages, many = True)
+        site_language_serializer = SiteLanguageSerializer(site_languages, many=True)
         return Response(site_language_serializer.data, status=status.HTTP_200_OK)
     
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'language_code': openapi.Schema(type=openapi.TYPE_STRING, description='Language code')
+            }
+        ),
+        responses={
+            200: openapi.Response('User language updated successfully'),
+            400: "Bad Request - Invalid language_code",
+            404: "Not Found - Invalid language_id"
+        },
+        operation_summary="Update user language",
+        operation_description="This API updates the user's language based on the provided language code.",
+        tags=["SiteLanguage"],
+    )
     def put(self, request):
         language_code = request.data.get('language_code')
         if not language_code:
