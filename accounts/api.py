@@ -2215,7 +2215,7 @@ class SiteLanguageDetails(APIView):
             return Response({"error": "language_code is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            site_language = SiteLanguage.objects.get(site_language=language_code)
+            site_language = SiteLanguage.objects.get(language_code=language_code)
         except SiteLanguage.DoesNotExist:
             return Response({"error": "Invalid language_id"}, status=status.HTTP_404_NOT_FOUND)
 
