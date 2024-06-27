@@ -120,7 +120,7 @@ class User(AbstractBaseUser):
         
     def save(self, *args, **kwargs):
         if not self.site_language:
-            self.site_language = SiteLanguage.objects.get(site_language='en')
+            self.site_language = SiteLanguage.objects.get(language_code='en')
  
         super(User, self).save(*args, **kwargs)
 
