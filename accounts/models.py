@@ -117,6 +117,11 @@ class User(AbstractBaseUser):
             'refresh':str(refresh),
             'access':str(refresh.access_token)
         }
+        
+    def save(self, *args, **kwargs):
+        if not self.site_language:
+            self.site_language = SiteLanguage.objects.get(site_language='en')
+        super(User, self).save(*args, **kwargs)
 
 def user_profile_picture_upload_path(instance, filename):
     # Generate the upload path based on the user's ID

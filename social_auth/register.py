@@ -2,7 +2,7 @@ from rest_framework.exceptions import AuthenticationFailed
 import random
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
-from accounts.models import User, UserProfile
+from accounts.models import User, UserProfile, SiteLanguage
 from django.contrib.auth import authenticate as django_authenticate
 from django.conf import settings
 from accounts.otp import send_otp_via_mail, send_otp_whatsapp, welcome_email
@@ -107,11 +107,12 @@ def register_social_user(provider, user_id, email, name):
         #       'email':email,
         #      'password':SOCIAL_SECRET
         # }   
+        # default_site_language = SiteLanguage.objects.get_or_create(site_language = 'en')
         username = generate_username(name) 
         user = User.objects.create(
             username=username,
             email=email,
-            site_language = 'en',
+            # site_language = default_site_language,
         )
     
         # Set the user's password using set_password
@@ -142,6 +143,7 @@ def register_social_user_for_android(provider, user_id, name):
         if provider == filtered_user_by_username[0].auth_provider:
             # registered_user_token = authenticate_for_android(name=username, password=SOCIAL_SECRET)
             user = User.objects.get(username=username)
+        
             refresh_token = RefreshToken.for_user(user)
             access_token = str(refresh_token.access_token)
             
@@ -159,9 +161,10 @@ def register_social_user_for_android(provider, user_id, name):
         #      'username':generate_username(name),
         #      'password':SOCIAL_SECRET
         # }    
+        default_site_language = SiteLanguage.objects.get_or_create(site_language = 'en')
         user = User.objects.create(
              username=username,
-             site_language = 'en',
+             site_language = default_site_language,
         )
     
         # Set the user's password using set_password

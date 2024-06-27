@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial, CompanyData, Configurations
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, SiteLanguage, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial, CompanyData, Configurations
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
@@ -54,12 +54,14 @@ class UserSerializers(serializers.ModelSerializer):
             sponsor_user = User.objects.filter(is_admin = True).first()
         else:
             sponsor_user = User.objects.get(username = sponsor_name)
+            
+        default_site_language = SiteLanguage.objects.get_or_create(site_language = 'en')
         user = User.objects.create(email=validated_data['email'],
                                        username=validated_data['username'],
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
                                        sponsor_username = sponsor_user.username,
-                                       site_language =  'en',
+                                       site_language = default_site_language,
                                        package = freePackageID,
                                        gender = validated_data["gender"],
                                        orientation = validated_data["orientation"],
