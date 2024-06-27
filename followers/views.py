@@ -104,7 +104,7 @@ class GetFavoriteUsers(GenericAPIView):
         user_id = request.user.id
         
         # Ensure the user exists or return a 404 response if not found
-        user = get_object_or_404(User, id=user_id)
+        user =  request.user #get_object_or_404(User, id=user_id)
         user_profile = UserProfile.objects.get(user = user)
         blocked_users = get_blocked_users_data(user_profile=user_profile)
         print(f"blocked_users:{blocked_users}")
@@ -250,7 +250,7 @@ class GetLikeUsers(GenericAPIView):
         user_id = request.user.id
         
         # Ensure the user exists or return a 404 response if not found
-        user = get_object_or_404(User, id=user_id)
+        user =  request.user #get_object_or_404(User, id=user_id)
         user_profile = UserProfile.objects.get(user = user)
         # Calculate total likes you got and your likes 
         admire_count = Like.objects.filter(user=user_profile).count()

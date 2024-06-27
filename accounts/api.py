@@ -2016,7 +2016,7 @@ class MailContent(GenericAPIView):
         """
         try:
             mail_type = request.data['type']
-            user = User.objects.get(id=request.user.id)
+            user = request.user #User.objects.get(id=request.user.id)
             if not user.is_admin:
                 return Response("User doesn't have privileges for this API", status=status.HTTP_401_UNAUTHORIZED)
 
