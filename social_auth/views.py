@@ -46,7 +46,9 @@ class GoogleSocialAuthView(generics.GenericAPIView):
     
 class FacebookSocialAuthView(generics.GenericAPIView):
 
-    # serializer_class = FacebookSocialAuthSerializer
+    serializer_class = FacebookSocialAuthSerializer
+    
+    
     permission_classes = [AllowAny]
     
     def post(self, request):

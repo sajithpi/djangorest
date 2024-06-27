@@ -135,6 +135,9 @@ def user_cover_photo_upload_path(instance, filename):
 def package_upload_path(instance, filename):
     return f'packages/{instance.name}/{filename}'
 
+def site_language_upload_path(instance, filename):
+    return f'site_language/{instance.name}/{filename}'
+
 def kyc_upload_path(instance, filename):
     print(f"KYC:{instance}")
     return f'kyc/{instance.user_profile.user.username}/{filename}'
@@ -144,13 +147,17 @@ def company_upload_path(instance, filename):
 
 class SiteLanguage(models.Model):
     
-    LANGUAGE_CHOICES = (
+    LANGUAGE_CODE_CHOICES = (
         ('en','en'),
         ('zh','zh'),
         ('es','es'),
         ('ru','ru')
     )   
-    site_language =  models.CharField(max_length=2,  choices=LANGUAGE_CHOICES, blank=True, null=True)
+  
+    language_code =  models.CharField(max_length=2,  choices=LANGUAGE_CODE_CHOICES, blank=True, null=True)
+    site_language =  models.CharField(max_length=50, blank=True, null=True)
+    package_img = models.ImageField(upload_to=site_language_upload_path, blank=True, null=True)
+    
     
 class Package(models.Model):
     

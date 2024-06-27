@@ -1,11 +1,11 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, SiteLanguageDetails, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory, getUserProfilesForAdmin , CompanyDetails, AdminConfigurations
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, SiteLanguageDetails, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory, getUserProfilesForAdmin , CompanyDetails, AdminConfigurations
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
 from . paypal import PayPalPaymentView, CaptureOrderView
 urlpatterns = [
-    path('api/test',Test.as_view(), name='test'),
+    
     path('api/getUser-data', GetUserData.as_view(), name='getUser-data'),
     path('api/get-profile-data', GetProfileDetails.as_view(), name='get-profile-data'),
     path('api/get-login-user-data',getLoginUserData.as_view(), name='get-login-user-data'),

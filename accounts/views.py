@@ -209,6 +209,9 @@ class sendOTP(GenericAPIView):
             return Response(f"{type} Otp sent into your email")
         
 class LogoutView(GenericAPIView):
+    
+    def get_serializer_class(self):
+        return None  # Return None since no serializer is needed
     @swagger_auto_schema(
         responses={
             200: "User Logout Successful",

@@ -33,8 +33,17 @@ def get_country_from_coordinates(latitude, longitude):
 
 
 class TravelLookingFor(GenericAPIView):
+    
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
-
+    @swagger_auto_schema(
+        responses={
+            200: "Successful response - Returns serialized travel aims data",
+            404: "Not Found - Travel aims not found"
+        },
+        operation_summary="Retrieve travel aims",
+        operation_description="This API retrieves all available travel aims.",
+        tags=["TravelLookingFor"]
+    )
     def get(self, request):
         travel_aims = TravelAim.objects.all()
         device = request.query_params.get('device')
@@ -45,7 +54,7 @@ class TravelLookingFor(GenericAPIView):
 class TravelPlan(GenericAPIView):
     permission_classes = [IsAuthenticated, TwoFactorAuthRequired]
     
- 
+    
     @swagger_auto_schema(
         operation_description="Retrieve a list of the user's travel plans.",
         responses={

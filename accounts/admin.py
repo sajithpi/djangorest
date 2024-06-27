@@ -24,7 +24,7 @@ class MlmAdmin(admin.ModelAdmin):
     search_fields = ('id','user')
 
 class SiteLanguageAdmin(admin.ModelAdmin):
-    list_display = ('id','site_language')
+    list_display = ('id','site_language','language_code','package_img')
     
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')

@@ -41,25 +41,7 @@ class TwoFactorAuthRequired(permissions.BasePermission):
             if user.has_2fa_enabled and not user.has_2fa_passed:
                 return False #Return false to deny the access
             return True
-class Test(GenericAPIView):
-    permission_classes = []
-    def get(self, request):
-        user_agent_string = request.META.get('HTTP_USER_AGENT')
-        user_agent = parse(user_agent_string)
 
-
-        
-        print(f"user agent details:{user_agent}, agent device:{user_agent.browser.family}")
-        os = user_agent.os.family
-        pc_device = user_agent.device.family
-        browser = user_agent.browser.family
-        # device = user_agent.device.family
-        print(f"os:{os}\npc_device:{pc_device}")
-
-
-    
-        print(f"browser:{browser}")
-        return Response(f"User Agent:{user_agent} device:{user_agent.device} browser:{user_agent.browser.family}")
 
 class GetUserData(GenericAPIView):
     permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
@@ -613,6 +595,8 @@ class CheckUserExists(GenericAPIView):
         
 class RemoveUserInterestView(GenericAPIView):
     
+    
+    
     permission_classes = [IsAuthenticated,]
     
     
@@ -633,15 +617,7 @@ class RemoveUserInterestView(GenericAPIView):
         try:
             
             user_id = request.user.id
-            # interest_id = request.data.get('interest_id',None)
-            # if not interest_id:
-            #     return Response({'status':False, 'message':'interest should be passed'}, status=status.HTTP_204_NO_CONTENT)
-            
-            # user = User.objects.get(id=user_id)
-            # interest = Interest.objects.get(id = interest_id)
-            # user.interests.remove(interest)
-            
-            
+
                         # Update user interests
             # interests_data = json.loads(request.data.get('interest_id', '[]'))
             device = request.headers.get('device','web')
@@ -2189,42 +2165,50 @@ class CompanyDetails(APIView):
         
 class SiteLanguageDetails(APIView):
     permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
+
     
-    permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
-    
-    @swagger_auto_schema(
-        responses={
-            200: openapi.Response(
-                'Successful response - Returns serialized site language data',
-                schema=SiteLanguageSerializer(many=True)
-            ),
-            404: "Not Found - Site language details not found"
-        },
-        operation_summary="Retrieve site language data",
-        operation_description="This API retrieves all available site languages.",
-        tags=["SiteLanguage"],
-    )
+    # @swagger_auto_schema(
+    #     manual_parameters=[
+    #         openapi.Parameter(
+    #             name='language_code',
+    #             in_=openapi.IN_QUERY,
+    #             type=openapi.TYPE_STRING,
+    #             required=True,
+    #             description='Language code'
+    #         )
+    #     ],
+    #     responses={
+    #         200: openapi.Response(
+    #             'Successful response - Returns serialized site language data',
+    #             schema=SiteLanguageSerializer(many=True)
+    #         ),
+    #         404: "Not Found - Site language details not found"
+    #     },
+    #     operation_summary="Retrieve site language data",
+    #     operation_description="This API retrieves all available site languages.",
+    #     tags=["SiteLanguage"],
+    # )
     def get(self, request):
         site_languages = SiteLanguage.objects.all()
         site_language_serializer = SiteLanguageSerializer(site_languages, many=True)
         return Response(site_language_serializer.data, status=status.HTTP_200_OK)
     
-    @swagger_auto_schema(
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'language_code': openapi.Schema(type=openapi.TYPE_STRING, description='Language code')
-            }
-        ),
-        responses={
-            200: openapi.Response('User language updated successfully'),
-            400: "Bad Request - Invalid language_code",
-            404: "Not Found - Invalid language_id"
-        },
-        operation_summary="Update user language",
-        operation_description="This API updates the user's language based on the provided language code.",
-        tags=["SiteLanguage"],
-    )
+    # @swagger_auto_schema(
+    #     request_body=openapi.Schema(
+    #         type=openapi.TYPE_OBJECT,
+    #         properties={
+    #             'language_code': openapi.Schema(type=openapi.TYPE_STRING, description='Language code')
+    #         }
+    #     ),
+    #     responses={
+    #         200: openapi.Response('User language updated successfully'),
+    #         400: "Bad Request - Invalid language_code",
+    #         404: "Not Found - Invalid language_id"
+    #     },
+    #     operation_summary="Update user language",
+    #     operation_description="This API updates the user's language based on the provided language code.",
+    #     tags=["SiteLanguage"],
+    # )
     def put(self, request):
         language_code = request.data.get('language_code')
         if not language_code:
