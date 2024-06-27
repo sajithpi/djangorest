@@ -512,3 +512,8 @@ class CompanyDataSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret['company_logo'] = instance.company_logo.url.replace("/media/","") if instance.company_logo else None
         return ret
+    
+class SiteLanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SiteLanguage
+        fields = '__all__'  # or specify the fields you want to include

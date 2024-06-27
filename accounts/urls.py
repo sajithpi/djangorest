@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory, getUserProfilesForAdmin , CompanyDetails, AdminConfigurations
+from .api import GetUserData, GetProfileDetails, getLoginUserData,PackageListView, UpdateProfilePhoto, SiteLanguageDetails, UpdateUserLocation, DeleteCoverPhoto, CheckUserExists, RemoveUserInterestView, GetPreferences, UpdateProfilePreference, GetProfileMatches, Enable2FA, Test, UserNotifications, GetMyPreferences, GetClientId, UploadKYC, MlmRegister, ContactUsMail, MailContent, CompanyDetails, GetKycCategory, getUserProfilesForAdmin , CompanyDetails, AdminConfigurations
 from .views import RegisterView, RequestPasswordResetEmail, PasswordTokenCheckAPI, SetNewPasswordAPI, IntrestListCreateView, VerifyAccount, sendOTP, LogoutView, Testimonial, PasswordReset, GetTestimonialsView
 from .serializers import CustomTokenObtainPairSerializer
 from rest_framework_simplejwt import views as jwt_views
@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/upload-cover-photo', GetUserData.as_view(), name='upload-cover-photo'),
     path('api/delete-cover-photo', DeleteCoverPhoto.as_view(), name='delete-cover-photo'),
     path('api/user-notifications', UserNotifications.as_view(), name='get-notifications'),
+    
    
 
     
@@ -73,5 +74,6 @@ urlpatterns = [
     
     path('api/configurations', AdminConfigurations.as_view(), name='configurations'),
     
+    path('api/site-language-details', SiteLanguageDetails.as_view(),name = 'site-language-details'),
 
 ]

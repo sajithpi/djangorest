@@ -4,8 +4,8 @@ from rest_framework import generics
 from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData, MlmApiHistory
-from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer , CompanyDataSerializer, ConfigurationSerializer
+from . models import User, UserProfile, CoverPhoto, Interest, Package, EducationType, RelationShipGoal, Religion, SiteLanguage, FamilyPlanChoice, DrinkChoice, Workout, Language, SmokeChoice, ProfilePreference, Notification, KycCategory, KycDocument, EmailTemplate, Configurations, CompanyData, MlmApiHistory
+from . serializers import UserSerializers, UpdateUserSerializer, PackageSerializer, UpdateUserProfileSerializer, CoverPhotoSerializer, SiteLanguageSerializer, UserProfileSerializer, ProfilePreferenceSerializerForMobile, InterestSerializer, CombinedSerializer, ProfilePreferenceSerializer, NotificationSerializer , CompanyDataSerializer, ConfigurationSerializer
 from chat.models import RoomChat, Chat
 from rest_framework import status, permissions
 from drf_yasg import openapi
@@ -2186,3 +2186,28 @@ class CompanyDetails(APIView):
             return Response(company_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(f"Company Details not found", status=status.HTTP_404_NOT_FOUND)
+        
+class SiteLanguageDetails(APIView):
+    permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
+    
+    def get(self, request):
+                
+        site_languages = SiteLanguage.objects.all()
+        site_language_serializer = SiteLanguageSerializer(site_languages, many = True)
+        return Response(site_language_serializer.data, status=status.HTTP_200_OK)
+    
+    def put(self, request):
+        language_code = request.data.get('language_code')
+        if not language_code:
+            return Response({"error": "language_code is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            site_language = SiteLanguage.objects.get(site_language=language_code)
+        except SiteLanguage.DoesNotExist:
+            return Response({"error": "Invalid language_id"}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        user.site_language = site_language
+        user.save()
+        
+        return Response({"message": "User language updated successfully"}, status=status.HTTP_200_OK)
