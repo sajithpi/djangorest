@@ -52,6 +52,7 @@ social_auth/__pycache__
 social_auth/migrations/__pycache__
 media/kyc
 media/users
+staticfiles/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
