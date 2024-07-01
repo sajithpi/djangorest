@@ -517,3 +517,10 @@ class SiteLanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = SiteLanguage
         fields = '__all__'  # or specify the fields you want to include
+        
+        
+    def to_representation(self, instance):
+        # Override to remove the "media" prefix from the 'package_img' field
+        ret = super().to_representation(instance)
+        ret['language_logo'] = instance.language_logo.replace('/media/','/media/media/') if instance.language_logo else None
+        return ret
