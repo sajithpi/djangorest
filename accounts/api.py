@@ -2191,6 +2191,7 @@ class SiteLanguageDetails(APIView):
     def get(self, request):
         site_languages = SiteLanguage.objects.all()
         site_language_serializer = SiteLanguageSerializer(site_languages, many=True)
+        
         return Response(site_language_serializer.data, status=status.HTTP_200_OK)
     
     # @swagger_auto_schema(
