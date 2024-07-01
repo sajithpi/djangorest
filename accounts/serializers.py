@@ -37,6 +37,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 class UserSerializers(serializers.ModelSerializer):
     
     package_name = serializers.SerializerMethodField()
+    site_language = serializers.SerializerMethodField()
+    site_language_logo = serializers.SerializerMethodField()
 
     def get_package_name(self, user):
         if user.package:
@@ -44,8 +46,14 @@ class UserSerializers(serializers.ModelSerializer):
         return None    
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor_username","mlm_status","site_language","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor_username","mlm_status","site_language","site_language_logo","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
   
+    def get_site_language(self, user):
+        return user.site_language.language_code
+        
+    def get_site_language_logo(self, user):
+        return user.site_language.language_logo.url
+    
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
         sponsor_name = validated_data.get('sponsor_name')
