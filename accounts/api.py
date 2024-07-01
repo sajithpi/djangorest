@@ -2195,19 +2195,24 @@ class SiteLanguageDetails(APIView):
     #     tags=["SiteLanguage"],
     # )
     def put(self, request):
-        language_code = request.data.get('language_code')
-        if not language_code:
-            return Response({"error": "language_code is required"}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            site_language = SiteLanguage.objects.get(language_code=language_code)
-        except SiteLanguage.DoesNotExist:
-            return Response({"error": "Invalid language_id"}, status=status.HTTP_404_NOT_FOUND)
-
-        user = request.user
-        user.site_language = site_language
-        user.save()
-        
-        return Response({"message": "User language updated successfully",
-                         "Data":{'language_code':site_language.language_code,
-                                 'image':site_language.language_logo}}, status=status.HTTP_200_OK)
+            language_code = request.data.get('language_code')
+            if not language_code:
+                return Response({"error": "language_code is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+            try:
+                site_language = SiteLanguage.objects.get(language_code=language_code)
+            except SiteLanguage.DoesNotExist:
+                return Response({"error": "Invalid language_id"}, status=status.HTTP_404_NOT_FOUND)
+    
+            user = request.user
+            print(f"SiteLanguageDetails=>put")
+            print(f"site_language:{site_language.language_code}, language_image:{site_language.language_logo.url}")
+            user.site_language = site_language
+            user.save()
+            
+            return Response({"message": "User language updated successfully",
+                             "Data":{'language_code':site_language.language_code,
+                                     'image':site_language.language_logo.url}}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"SiteLanguageDetails=>Error=>Put:{e}")
