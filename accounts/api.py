@@ -75,6 +75,8 @@ class GetUserData(GenericAPIView):
         # Get the user's profile
         user = self.request.user
         profile = UserProfile.objects.get(user=user)
+        
+        unread_messages = Chat.objects.filter(receiver = profile).count()
 
         # Fetch user interests
         interests = profile.user.interests.all()
@@ -86,6 +88,7 @@ class GetUserData(GenericAPIView):
 
         # Parse HTML tags to plain text using BeautifulSoup
         plain_text = ''
+        data['unread_messages'] = unread_messages
         if data['about_me']:
             soup = BeautifulSoup(data['about_me'], 'html.parser')
             plain_text = soup.get_text(separator=' ')
