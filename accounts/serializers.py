@@ -52,7 +52,7 @@ class UserSerializers(serializers.ModelSerializer):
         return user.site_language.language_code
         
     def get_site_language_logo(self, user):
-        return user.site_language.language_logo.url
+        return user.site_language.language_logo.url.replace('/media', '')
     
     def create(self, validated_data):
         freePackageID = Package.objects.get(type = 'Free')
@@ -522,8 +522,10 @@ class CompanyDataSerializer(serializers.ModelSerializer):
         return ret
     
 class SiteLanguageSerializer(serializers.ModelSerializer):
+    language_logo = serializers.SerializerMethodField()
     class Meta:
         model = SiteLanguage
-        fields = '__all__'  # or specify the fields you want to include
+        fields = ['language_code', 'site_language', 'language_logo']  # or specify the fields you want to include
         
-    
+    def get_language_logo(self, language):
+        return language.language_logo.url.replace("/media","")
