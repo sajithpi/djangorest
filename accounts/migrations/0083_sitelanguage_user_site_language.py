@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('language_code', models.CharField(blank=True, choices=[('en', 'en'), ('zh', 'zh'), ('es', 'es'), ('ru', 'ru')], max_length=2, null=True)),
                 ('site_language', models.CharField(blank=True, max_length=50, null=True)),
-                ('package_img', models.ImageField(blank=True, null=True, upload_to=accounts.models.site_language_upload_path)),
+                ('language_logo', models.ImageField(blank=True, null=True, upload_to=accounts.models.site_language_upload_path)),
             ],
         ),
         migrations.AddField(

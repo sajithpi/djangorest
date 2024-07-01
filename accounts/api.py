@@ -2223,4 +2223,6 @@ class SiteLanguageDetails(APIView):
         user.site_language = site_language
         user.save()
         
-        return Response({"message": "User language updated successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "User language updated successfully",
+                         "Data":{'language_code':site_language.language_code,
+                                 'image':site_language.language_logo}}, status=status.HTTP_200_OK)

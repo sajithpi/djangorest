@@ -23,8 +23,8 @@ class MlmAdmin(admin.ModelAdmin):
     list_filter = ('id','user',)
     search_fields = ('id','user')
 
-class SiteLanguageAdmin(admin.ModelAdmin):
-    list_display = ('id','site_language','language_code','package_img')
+# class SiteLanguageAdmin(admin.ModelAdmin):
+#     list_display = ('id','site_language','language_code','language_logo')
     
 class CoverPhotoAdmin(admin.ModelAdmin):
     list_display = ('id', 'user_profile', 'created_at')
@@ -104,4 +104,4 @@ admin.site.register(Language, ChoiceAdmin)
 admin.site.register(ProfilePreference, ProfilePreferenceAdmin)
 admin.site.register(UserTestimonial, TestimonialAdmin)
 admin.site.register(MlmApiHistory, MlmAdmin)
-admin.site.register(SiteLanguage, SiteLanguageAdmin)
+# admin.site.register(SiteLanguage, SiteLanguageAdmin)

@@ -156,7 +156,7 @@ class SiteLanguage(models.Model):
   
     language_code =  models.CharField(max_length=2,  choices=LANGUAGE_CODE_CHOICES, blank=True, null=True)
     site_language =  models.CharField(max_length=50, blank=True, null=True)
-    package_img = models.ImageField(upload_to=site_language_upload_path, blank=True, null=True)
+    language_logo = models.ImageField(upload_to=site_language_upload_path, blank=True, null=True)
     
     
 class Package(models.Model):
