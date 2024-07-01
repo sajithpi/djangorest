@@ -2167,32 +2167,16 @@ class SiteLanguageDetails(APIView):
     permission_classes = (IsAuthenticated, TwoFactorAuthRequired)
 
     
-    # @swagger_auto_schema(
-    #     manual_parameters=[
-    #         openapi.Parameter(
-    #             name='language_code',
-    #             in_=openapi.IN_QUERY,
-    #             type=openapi.TYPE_STRING,
-    #             required=True,
-    #             description='Language code'
-    #         )
-    #     ],
-    #     responses={
-    #         200: openapi.Response(
-    #             'Successful response - Returns serialized site language data',
-    #             schema=SiteLanguageSerializer(many=True)
-    #         ),
-    #         404: "Not Found - Site language details not found"
-    #     },
-    #     operation_summary="Retrieve site language data",
-    #     operation_description="This API retrieves all available site languages.",
-    #     tags=["SiteLanguage"],
-    # )
+
     def get(self, request):
-        site_languages = SiteLanguage.objects.all()
-        site_language_serializer = SiteLanguageSerializer(site_languages, many=True)
-        
-        return Response(site_language_serializer.data, status=status.HTTP_200_OK)
+        try:
+            print(f"SiteLanguageDetails=>Get")
+            site_languages = SiteLanguage.objects.all()
+            site_language_serializer = SiteLanguageSerializer(site_languages, many=True)
+            
+            return Response(site_language_serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"Error=>SiteLanguageDetails:{e}")
     
     # @swagger_auto_schema(
     #     request_body=openapi.Schema(
