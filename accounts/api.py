@@ -76,7 +76,7 @@ class GetUserData(GenericAPIView):
         user = self.request.user
         profile = UserProfile.objects.get(user=user)
         
-        unread_messages = Chat.objects.filter(receiver = profile).count()
+        unread_messages = Chat.objects.filter(receiver = profile, is_read = False).count()
 
         # Fetch user interests
         interests = profile.user.interests.all()
