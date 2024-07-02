@@ -12,65 +12,6 @@ from django.utils import timezone
 
 
 
-class ChatNotificationConsumer(AsyncWebsocketConsumer):
-
-    async def connect(self):
-        self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
-        self.room_group_name = f"chat_notification_{self.room_name}"
-
-        print(f"Connecting to room: {self.room_name}, group: {self.room_group_name}")
-        # Join room group
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        # Leave room group
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
-
-    async def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        sender_user = text_data_json['sender_user']
-        received_user = text_data_json['received_user']
-        message = text_data_json['message']
-        room_id = text_data_json['room_id']
-
-        print(f"Received message from {sender_user} to {received_user}: {message}")
-
-        # Optionally, you can process the message or trigger further actions here
-
-        # Send notification to client
-        await self.send(text_data=json.dumps({
-            'type': 'notification',
-            'sender_user': sender_user,
-            'received_user': received_user,
-            'message': message,
-            'room_id': room_id,
-            'timestamp': timezone.now().isoformat(),
-        }))
-
-    async def send_notification(self, event):
-        sender_user = event['sender_user']
-        received_user = event['received_user']
-        message = event['message']
-        room_id = event['room_id']
-
-        print(f"Sending notification to {received_user} from {sender_user}: {message}")
-
-        # Construct your notification message or payload
-        notification_message = f"{sender_user} sent you a new message: {message}"
-
-        # Send notification back to the WebSocket client
-        await self.send(text_data=json.dumps({
-            'type': 'notification',
-            'sender_user': sender_user,
-            'received_user': received_user,
-            'message': notification_message,
-            'room_id': room_id,
-            'timestamp': timezone.now().isoformat(),
-        }))
-
-
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
@@ -99,20 +40,27 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         message = text_data_json.get("message",'default')
         username = text_data_json["username"]
         notification_type = text_data_json.get("notification_type","normal")
-        print(f"message:{message}")
+        room_message_unread_count = await sync_to_async(
+            Chat.objects.filter(room=self.room_name, is_read = False).count
+        )()
+        
+        
+        print(f"room_message_unread_count:{room_message_unread_count} message:{message}")
         # Send message to room group
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat.message", "message": message,"username":username, "notification_type":notification_type}
+            self.room_group_name, {"type": "chat.message", "message": message,"username":username, "notification_type":notification_type, "room_message_unread_count":room_message_unread_count}
         )
+
 
     # Receive message from room group
     async def chat_message(self, event):
-        message = event["message"]
-        username = event["username"]
-        notification_type = event["notification_type"]
+        message = event.get("message")
+        username = event.get("username")
+        notification_type = event.get("notification_type")
+        room_message_unread_count = event.get("room_message_unread_count")
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({"message": message,"username":username, "notification_type":notification_type}))
+        await self.send(text_data=json.dumps({"message": message,"username":username, "notification_typeeee":notification_type, "room_message_unread_count":room_message_unread_count}))
         
         
         
@@ -181,7 +129,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
+    
         text_data_json = json.loads(text_data)
+        print(f"ChatConsumer=>{text_data_json}")
         message = text_data_json['message']
         room_id = text_data_json['room_id']
         sender_user = text_data_json['sender_user']
@@ -229,6 +179,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         response_message = "Your message was successfully received and processed."
         await self.send(text_data=json.dumps({
             'type': 'response_message',
+            'sender_user': sender_user.username,
             'message': censored_message,
             'sender_profile_pic':sender_profile_pic,
             'receiver_profile_pic':receiver_profile_pic,
