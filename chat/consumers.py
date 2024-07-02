@@ -96,9 +96,9 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     # Receive message from WebSocket
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
+        message = text_data_json.get("message",'default')
         username = text_data_json["username"]
-        notification_type = text_data_json["notification_type"]
+        notification_type = text_data_json.get("notification_type","normal")
         print(f"message:{message}")
         # Send message to room group
         await self.channel_layer.group_send(
