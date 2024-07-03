@@ -49,11 +49,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         )()
         
         
-        print(f"room_message_unread_count:{room_message_unread_count} message:{message}")
+        print(f"room_message_unread_count:{room_message_unread_count} message:{message}, room:{self.room_name}")
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name, {"type": "chat.message", "message": message,"username":username, "notification_type":notification_type, "room_message_unread_count":room_message_unread_count}
         )
+       
 
 
     # Receive message from room group

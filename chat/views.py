@@ -275,6 +275,7 @@ class GetChatRooms(GenericAPIView):
                 room_dict['room_id'] = room.id
                 
                 room_user = room.senderProfile if room.senderProfile.user.id != user_profile.user.id else room.receiverProfile
+                room_dict['user_id'] = room_user.user.id
                 room_dict['username'] = room_user.user.username
                 room_dict['profile_pic'] = '/' + str(room_user.profile_picture) if room_user.profile_picture else None
                 room_dict['active_status'] = room_user.user.login_status
