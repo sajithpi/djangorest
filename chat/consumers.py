@@ -12,6 +12,60 @@ from django.utils import timezone
 
 
 
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_group_name = f'chat_{self.room_name}'
+    
+        print(f"Connecting to room: {self.room_name}, group: {self.room_group_name}")
+
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        
+        
+        print(f"Disconnected Notification Chat Room, Room:{self.room_name}")
+        # Leave room group
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    # Receive message from WebSocket
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        message = text_data_json.get("message",'default')
+        username = text_data_json["username"]
+        notification_type = text_data_json.get("notification_type","normal")
+        room_message_unread_count = await sync_to_async(
+            Chat.objects.filter(room=self.room_name, is_read = False).count
+        )()
+        
+        
+        print(f"room_message_unread_count:{room_message_unread_count} message:{message}")
+        # Send message to room group
+        await self.channel_layer.group_send(
+            self.room_group_name, {"type": "chat.message", "message": message,"username":username, "notification_type":notification_type, "room_message_unread_count":room_message_unread_count}
+        )
+
+
+    # Receive message from room group
+    async def chat_message(self, event):
+        message = event.get("message")
+        username = event.get("username")
+        notification_type = event.get("notification_type")
+        room_message_unread_count = event.get("room_message_unread_count")
+
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({"message": message,"username":username, "notification_typeeee":notification_type, "room_message_unread_count":room_message_unread_count}))
+        
+        
         
 class ChatConsumer(AsyncWebsocketConsumer):
     
@@ -69,7 +123,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         # Leave room group
-        print(f"disconnected notification room:{self.room_name}")
+        print("disconnected")
         # This function is used to delete the user from the connected users from the active room
         # await self.disconnect_user(room_name=self.room_name, channel_name=self.channel_name)
         await self.channel_layer.group_discard(
@@ -136,7 +190,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'timestamp':timestamp,
         }))
         
-
+        # # Inside ChatConsumer.receive after saving the message
+        # await self.channel_layer.send(
+        #     f"notification_{received_user.username}",  # This should match the group/channel name in ChatNotificationConsumer
+        #     {
+        #         "type": "send.notification",
+        #         "sender_user": sender_user.username,
+        #         "received_user": received_user.username,
+        #         "message": censored_message,
+        #         "room_id": room_id,
+        #     }
+        # )
 
     # Receive message from room group
     async def chat_message(self, event):
