@@ -17,9 +17,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'chat_{self.room_name}'
     
-        print(f"Connecting to room: {self.room_name}, group: {self.room_group_name}")
+        print(f"NotificationConsumer=>Connecting to room: {self.room_name}, group: {self.room_group_name}")
 
         # Join room group
+        
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -115,6 +116,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         # connect user function will store the user as an actively connected user
         # await self.connect_user(room_name=self.room_name, channel_name=self.channel_name)
+        print(f"ChatConsumer=>Connecting to room: {self.room_name}, group: {self.room_group_name}")
         await self.accept()
         self.send(text_data=json.dumps({
             'type': 'Connection Established',
@@ -123,7 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         # Leave room group
-        print("disconnected")
+        print(f"ChatConsumer=>Disconnected the room: {self.room_name}, group: {self.room_group_name}")
         # This function is used to delete the user from the connected users from the active room
         # await self.disconnect_user(room_name=self.room_name, channel_name=self.channel_name)
         await self.channel_layer.group_discard(
