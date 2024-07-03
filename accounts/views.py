@@ -59,7 +59,6 @@ class RegisterView(GenericAPIView):
             except json.JSONDecodeError as e:
                 print(f"Error decoding 'interests' JSON: {e}")
                 interests_data = []
-            print(f"request data:{request.data}")
             with transaction.atomic():
                 # Save the user
                 user = serializer.save()

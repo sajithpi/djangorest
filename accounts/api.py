@@ -84,7 +84,7 @@ class GetUserData(GenericAPIView):
         # Serialize profile data with interests
         profile_serializer = UserProfileSerializer(profile, context={'device': device_from_headers})
         data = profile_serializer.data
-        print(f"data:{data}")
+     
 
         # Parse HTML tags to plain text using BeautifulSoup
         plain_text = ''
@@ -282,7 +282,6 @@ class UpdateUserLocation(GenericAPIView):
                 
                 if response.status_code == 200:
                     data = response.json()
-                    print(f"DATA:{data}")
                     country = data['address']['country']
                     city = data['address'].get('location')
                     if city is None:
@@ -756,7 +755,7 @@ class UpdateProfilePreference(GenericAPIView):
                 
             except ProfilePreference.DoesNotExist:
                 return Response({'detail':"ProfilePreference does't exist for this user"},status=status.HTTP_400_BAD_REQUEST)
-            print(f"request.data:{request.data}")
+    
             device = request.headers.get('device','web')
             self.update_choices(Language, request.data, 'languages_choices', 'languages_choices', device)
             self.update_choices(FamilyPlanChoice, request.data, 'family_choices', 'family_choices', device)
