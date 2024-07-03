@@ -103,7 +103,6 @@ class chatRoom(GenericAPIView):
                 user_chat['message'] = room.decrypt_content(chat.content, room.encryption_key) if chat.content else ''  # Use an empty string if content is None
                 user_chat['file'] = str(chat.photo) if chat.photo else ''  # Use an empty string if photo is None
                 last_login_utc = chat.timestamp.replace(tzinfo=timezone.utc)
-                print(f"TIME:{last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))}")
                 last_login_timezone = last_login_utc.astimezone(pytz.timezone(settings.TIME_ZONE))
                 user_chat['timestamp'] = last_login_timezone.strftime("%Y-%m-%d %H:%M:%S")
                 user_chat['sender_user'] = chat.sender.user.username

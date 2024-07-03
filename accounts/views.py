@@ -224,7 +224,6 @@ class LogoutView(GenericAPIView):
         user.login_status = False
         user.login_otp = None
         user.login_otp_validity = None
-        print(f"TIME:{settings.NOW}")
         
         # Get the current time using settings.NOW
         current_time = settings.NOW

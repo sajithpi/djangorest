@@ -97,7 +97,6 @@ def send_otp_via_mail(email, username, type):
             print(f"current timezone:{current_timezone}")
 
             now = settings.NOW
-            print(f"current time:{now}")
             user_obj.login_otp_validity = now + timedelta(minutes=2) # Set the validity for 5 minute
     else:
         user_obj.otp = otp

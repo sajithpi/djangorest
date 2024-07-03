@@ -40,19 +40,26 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data):
+        
         text_data_json = json.loads(text_data)
         message = text_data_json.get("message",'default')
         username = text_data_json["username"]
         notification_type = text_data_json.get("notification_type","normal")
-        room_message_unread_count = await sync_to_async(
-            Chat.objects.filter(room=self.room_name, is_read = False).count
-        )()
+        room_id = text_data_json.get("room_id")
+        room_message_unread_count = 0
+        
+        
+        if notification_type == 'chat':
+            print(f"notification_type is chattt")
+            room_message_unread_count = await sync_to_async(
+                Chat.objects.filter(room=room_id, is_read = False).count
+            )()
         
         
         print(f"room_message_unread_count:{room_message_unread_count} message:{message}, room:{self.room_name}")
         # Send message to room group
         await self.channel_layer.group_send(
-            self.room_group_name, {"type": "chat.message", "message": message,"username":username, "notification_type":notification_type, "room_message_unread_count":room_message_unread_count}
+            self.room_group_name, {"type": "chat.message", "room_id":room_id, "message": message,"username":username, "notification_type":notification_type, "room_message_unread_count":room_message_unread_count}
         )
        
 
@@ -63,9 +70,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         username = event.get("username")
         notification_type = event.get("notification_type")
         room_message_unread_count = event.get("room_message_unread_count")
+        room_id   = event.get("room_id")
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps({"message": message,"username":username, "notification_typeeee":notification_type, "room_message_unread_count":room_message_unread_count}))
+        await self.send(text_data=json.dumps({"message": message,"username":username, "chat_room":room_id,"notification_typeeee":notification_type, "room_message_unread_count":room_message_unread_count}))
         
         
         
