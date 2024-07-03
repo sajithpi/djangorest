@@ -52,7 +52,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         if notification_type == 'chat':
             print(f"notification_type is chattt")
             room_message_unread_count = await sync_to_async(
-                Chat.objects.filter(room=room_id, is_read = False).count
+                Chat.objects.filter(sender__user__username = username, room=room_id, is_read = False).count
             )()
         
         
