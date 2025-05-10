@@ -100,4 +100,5 @@ class Migration(migrations.Migration):
             name='workout',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='accounts.workout'),
         ),
+        
     ]

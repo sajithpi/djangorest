@@ -1,50 +1,121 @@
 from rest_framework import serializers
-from .models import User, UserProfile, CoverPhoto, Interest
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .models import User, UserProfile, CoverPhoto, Interest, ProfilePreference, Notification, Language, SiteLanguage, FamilyPlanChoice, EducationType, DrinkChoice, Workout, SmokeChoice, RelationShipGoal, Religion, UserTestimonial, CompanyData, Configurations
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
 from django.utils.http  import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework.exceptions import AuthenticationFailed
+from . models import User, UserProfile, Package
+from django.utils import timezone
+from . otp import send_otp_via_mail
+import threading
+from django.core.files.storage import default_storage
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        user = self.user
+        user = User.objects.get(username = user)
+            
+        # Add custom data to the response
+        _2fa = user.has_2fa_enabled
+        print(f"2fa user:{_2fa}")
+        if _2fa == True and not user.has_2fa_passed:
+            threading.Thread(target=send_otp_via_mail, args=(user.email, user.username, 'login')).start()
+            # send_otp_via_mail(user.email, user, 'login')
+            return {'email':user.email, 'has_2fa_enabled': True}
+        
+        user.login_status = True 
+        user.last_login = None
+        user.save()
+        print(f"2fa status:{_2fa}")
+        data['has_2fa_enabled'] = _2fa
+        data['is_admin'] = user.is_admin
+        return data
+    
 class UserSerializers(serializers.ModelSerializer):
     
+    package_name = serializers.SerializerMethodField()
+    site_language = serializers.SerializerMethodField()
+    site_language_logo = serializers.SerializerMethodField()
+
+    def get_package_name(self, user):
+        if user.package:
+            return user.package.name
+        return None    
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth","phone_number",]
-
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","sponsor_username","mlm_status","site_language","site_language_logo","date_of_birth","showAge","has_2fa_enabled","package_name","auth_provider","package_validity","is_verified","showDistance","phone_number",]
+  
+    def get_site_language(self, user):
+        return user.site_language.language_code
+        
+    def get_site_language_logo(self, user):
+        return user.site_language.language_logo.url.replace('/media', '')
+    
     def create(self, validated_data):
+        freePackageID = Package.objects.get(type = 'Free')
+        sponsor_name = validated_data.get('sponsor_name')
+     
+        if not sponsor_name:
+            sponsor_user = User.objects.filter(is_admin = True).first()
+        else:
+            sponsor_user = User.objects.get(username = sponsor_name)
+            
         user = User.objects.create(email=validated_data['email'],
                                        username=validated_data['username'],
                                        first_name=validated_data['first_name'],
                                        last_name=validated_data['last_name'],
+                                       sponsor_username = sponsor_user.username,
+                                       package = freePackageID,
                                        gender = validated_data["gender"],
+                                       orientation = validated_data["orientation"],
                                        phone_number = validated_data.get('phone_number'),
                                        date_of_birth = validated_data.get('date_of_birth'),)
         user.set_password(validated_data['password'])
         user.save()
         return user
+    
+
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id","email","username","password","first_name","last_name","gender","date_of_birth","phone_number",]  # Add other user fields as needed
+        fields = ["id","email","username","password","first_name","last_name","gender","orientation","date_of_birth","showAge","showDistance","phone_number",]  # Add other user fields as needed
 
 class UpdateUserProfileSerializer(serializers.ModelSerializer):
     
     cover_photos = serializers.ListField(child = serializers.ImageField(), required = False)
-
+    # languages = serializers.ListField(
+    #             child = serializers.DictField(
+    #                 child = serializers.CharField(max_length=100),
+    #             ),
+    #             required = False
+    #             )
     class Meta:
         model = UserProfile
         fields = [
             'profile_picture',
+            'family_plan',
+            'height',
+            'drink',
+            'religion',
+            'education',
+            'relationship_goals',
+            'workout',
+            'about_me',
+            'smoke',
+            # 'languages',
             'cover_photos',
-            'address_line1',
-            'address_line2',
+            'company',
+            'job_title',
             'country',
-            'state',
+            'is_edited',
             'city',
             'pin_code',
+            
         ]
     def update(self, instance, validated_data):
         cover_photos_data = validated_data.pop('cover_photos',[])
@@ -65,6 +136,10 @@ class ResetPasswordEmailSerializer(serializers.Serializer):
         model = User
         fields = ['email']
 
+class ConfigurationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Configurations
+        fields = '__all__'
         
 class SetNewPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(min_length=6, max_length=68, write_only=True)
@@ -93,21 +168,48 @@ class SetNewPasswordSerializer(serializers.Serializer):
         return super().validate(attrs)
     
 class CoverPhotoSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        try:    
+            if obj.image:  
+                return str(obj.image.url.replace('/media', ''))
+            return None
+        except Exception as e:
+            print(f"Error in CoverPhotoSerializer: {str(e)}")
+            return None
+
     class Meta:
         model = CoverPhoto
         fields = '__all__'
         
-        
+class LanguageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Language
+        fields = '__all__'
     
 class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
         fields = ['id','name']
 
+class TestimonialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserTestimonial
+        fields = ['id', 'description', 'status']
+        
         
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializers()
+    # languages = serializers.CharField(source='languages.name', many = True, read_only=True)
+    languages = LanguageSerializer(many = True)
     cover_photos = CoverPhotoSerializer(many=True)  # Use 'cover_photos' (plural) here
+    height = serializers.SerializerMethodField()
+    profile_picture = serializers.SerializerMethodField()
+    
+    package_expired = serializers.SerializerMethodField()
+    # def get_drink_name(self, obj):
+        # return obj.drink.drinkchoice.name
 
     class Meta:
         model = UserProfile
@@ -115,24 +217,79 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
             'profile_picture',
             'cover_photos',  # Use 'cover_photos' (plural) here
-            'address_line1',
-            'address_line2',
+            'about_me',
+            'family_plan',
+            'drink',
+            'religion',
+            'height',
+            'education',
+            'relationship_goals',
+            'workout',
+            'smoke',
+            'languages',
+            'company',
+            'job_title',
             'interests',
             'country',
-            'state',
+            'is_edited',
             'city',
             'pin_code',
             'created_at',
             'modified_at',
+            'package_expired',
         ]
         
     # Add a SerializerMethodField to include the user's interests
     interests = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
+    
+    def get_package_expired(self, obj):
+        package_validity = obj.user.package_validity
+        if not package_validity:
+            return True
+        current_date = timezone.now()
+        return current_date > package_validity
     
     def get_interests(self, obj):
          # Access the user's interests through the UserProfile's user field
         return [interest.name for interest in obj.user.interests.all()]
+    
+    def get_profile_picture(self, obj):
+        try:
+            if obj.profile_picture:
+                return str(obj.profile_picture.url.replace('/media', ''))
+            return None
+        except Exception as e:
+            print(f"Error in get_profile_picture: {str(e)}")
+            return None
 
+
+    
+    def get_languages(self, obj):
+        device = self.context.get('device')
+        print(f"device:{device}")
+        if device == 'mobile':
+            language_ids = list(obj.languages.values_list('id', flat=True))
+            return language_ids
+        else:
+            language_data = [{'label': language.name, 'value': language.name} for language in obj.languages.all()]
+            return language_data
+    
+    def get_height(self, obj):
+        feet = inches = 0
+        # Calculate the total inches
+        if obj.height:
+            total_inches = float(obj.height) / 2.54
+            # Calculate the number of feet
+            feet = int(total_inches//12)
+            # Calculate the remaining inches
+            inches = int(total_inches % 12) 
+        
+        return {'cm':obj.height , 'feet':feet, 'inches':inches}
+    
+    
+    
+    
 
 class UploadCoverPhotoSerializer(serializers.ModelSerializer):
     
@@ -161,3 +318,214 @@ class CombinedSerializer(serializers.Serializer):
     data_a = UpdateUserSerializer()  # Use your serializer for data A
     data_b = UpdateUserProfileSerializer()  # Use another serializer for data B
 
+class ProfilePreferenceSerializer(serializers.ModelSerializer):
+    family_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=FamilyPlanChoice.objects.all()
+    )
+    drink_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=DrinkChoice.objects.all()
+    )
+    religion_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=Religion.objects.all()
+    )
+    education_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='name',
+        queryset=EducationType.objects.all()
+    )
+    relationship_choices = serializers.SlugRelatedField(
+        many =True,
+        slug_field='name',
+        queryset=RelationShipGoal.objects.all()
+    )
+    workout_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=Workout.objects.all()
+    )
+    smoke_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=SmokeChoice.objects.all()
+    )
+    languages_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='name',
+        queryset=Language.objects.all()
+    )
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
+        
+        
+class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
+    family_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=FamilyPlanChoice.objects.all()
+    )
+    drink_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=DrinkChoice.objects.all()
+    )
+    religion_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=Religion.objects.all()
+    )
+    education_choices = serializers.SlugRelatedField(
+        many=True,
+        slug_field='id',
+        queryset=EducationType.objects.all()
+    )
+    relationship_choices = serializers.SlugRelatedField(
+        many =True,
+        slug_field='id',
+        queryset=RelationShipGoal.objects.all()
+    )
+    workout_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=Workout.objects.all()
+    )
+    smoke_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=SmokeChoice.objects.all()
+    )
+    languages_choices = serializers.SlugRelatedField(
+        many = True,
+        slug_field='id',
+        queryset=Language.objects.all()
+    )
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
+
+class ProfilePreferenceSerializerForMobile(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProfilePreference
+        fields = '__all__'
+
+class NotificationSerializer(serializers.ModelSerializer):
+    from_user_id = serializers.SerializerMethodField()
+    from_user = serializers.CharField(source='from_user.user.username', read_only=True)
+    to_user = serializers.CharField(source='to_user.user.username', read_only=True)
+    profile_picture = serializers.SerializerMethodField()
+    
+    
+    class Meta:
+        model = Notification
+        fields = ['from_user', 'from_user_id', 'to_user', 'type', 'description', 'user_has_seen', 'profile_picture', 'date_added']
+    
+    def get_from_user_id(self, obj):
+        try:
+            user = User.objects.filter(username = obj.from_user).values('id').first()
+            print(f"id:{user}")
+            return user['id']
+        except Exception as e:
+            raise e
+            return None
+            # Handle the case when the user does not exist
+    def get_profile_picture(self, obj):
+        try:
+            # Assuming you have a 'user' ForeignKey on your UserProfile model
+            user = obj.from_user
+            user = User.objects.get(username = user)
+            user_profile = UserProfile.objects.filter(user = user).first()
+            if user_profile.profile_picture:
+                return str(user_profile.profile_picture.url.replace('/media', '/'))
+            else:
+                return None
+            #    print(f"user:{user_profile}")
+        except Exception as e:
+            raise e
+        
+class PackageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Package
+        fields = '__all__'
+
+    # Set required=True only for the 'price' field
+    price = serializers.FloatField(required=True)
+    name = serializers.CharField(required=True)
+    package_img = serializers.ImageField(required = False)
+    validity = serializers.FloatField(required=True)
+    type = serializers.CharField(required=True)
+
+
+    def update(self, instance, validated_data):
+        # Check if the 'package_img' field is present in the validated data
+        if 'package_img' in validated_data:
+            #delete the old package_img
+            old_package_img = instance.package_img
+            if old_package_img:
+                storage = default_storage
+                if storage.exists(old_package_img.name):
+                    storage.delete(old_package_img.name)
+
+                        # Update the 'package_img' field with the new image file
+            instance.package_img = validated_data['package_img']
+
+        # Call the parent class's update method to handle the other fields
+        instance = super().update(instance, validated_data)
+
+        # Return the updated instance
+        return instance
+    
+    def to_representation(self, instance):
+        # Override to remove the "media" prefix from the 'package_img' field
+        ret = super().to_representation(instance)
+        ret['package_img'] = instance.package_img.url.replace('/media','') if instance.package_img else None
+        return ret
+class CompanyDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyData
+        fields = ['company_logo','privacy_policy','terms_and_conditions']
+        
+        extra_kwargs = {
+            'company_logo':{'required': False},
+            'privacy_policy': {'required': False},
+            'terms_and_conditions': {'required': False},
+        }
+    
+    def update(self, instance, validated_data):
+        # Check if the 'package_img' field is present in the validated data
+        if 'company_logo' in validated_data:
+            #delete the old package_img
+            old_company_logo = instance.company_logo
+            if old_company_logo:
+                storage = default_storage
+                if storage.exists(old_company_logo.name):
+                    storage.delete(old_company_logo.name)
+
+                        # Update the 'package_img' field with the new image file
+            instance.company_logo = validated_data['company_logo']
+
+        # Call the parent class's update method to handle the other fields
+        instance = super().update(instance, validated_data)
+
+        # Return the updated instance
+        return instance
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['company_logo'] = instance.company_logo.url.replace("/media/","") if instance.company_logo else None
+        return ret
+    
+class SiteLanguageSerializer(serializers.ModelSerializer):
+    language_logo = serializers.SerializerMethodField()
+    class Meta:
+        model = SiteLanguage
+        fields = ['language_code', 'site_language', 'language_logo']  # or specify the fields you want to include
+        
+    def get_language_logo(self, language):
+        return language.language_logo.url.replace("/media","")

@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-from datetime import timedelta
+from decouple import config
+
+from datetime import datetime, timedelta
+
+import pytz
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=1(l+42ife-$=o#9p-perk6@6#7fe6-$o^4-q(@k3)a*xq+$5t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default = False, cast=bool)
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['*']
@@ -33,6 +37,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,9 +46,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'social_auth',
+    'followers',
+    'chat',
+    'travel',
+
+
     'rest_framework',
     'corsheaders',
     'drf_yasg',
+    'user_agents',
 ]
 
 # CORS_ALLOWED_ORIGINS = ['http://192.168.21.2:3000', 'http://192.168.21.2']
@@ -107,6 +118,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # 'accounts.middleware.BlockIPMiddleware',
 ]
 
 ROOT_URLCONF = 'djangorest.urls'
@@ -127,18 +140,56 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'djangorest.wsgi.application'
 
+
+# WSGI_APPLICATION = 'djangorest.wsgi.application'
+ASGI_APPLICATION = "djangorest.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [("127.0.0.1", 6379)],
+#         },
+#     },
+# }
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+DB_NAME = config('DB_NAME')
+DB_USER = config('DB_USER')
+DB_PASSWORD = config('DB_PASSWORD')
+DB_HOST = config('DB_HOST')
+DB_PORT = config('DB_PORT')
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': DB_NAME,
+        'USER':DB_USER,
+        'PASSWORD':DB_PASSWORD,
+        'HOST':DB_HOST,
+        'PORT':DB_PORT,
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+        
     }
 }
+
 
 
 # Password validation
@@ -165,28 +216,73 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
+
+NOW = datetime.now(pytz.timezone(TIME_ZONE))
 
 USE_I18N = True
 
 USE_TZ = True
 
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
+# STATIC_URL = '/static/'
 
-STATIC_URL = 'static/'
+STATIC_URL = '/staticfiles/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Optional: only include if you're using a development static directory
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR/'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+SOCIAL_AUTH_PASSWORD = config('SOCIAL_AUTH_PASSWORD')
+LIVE_MODE = config('LIVE_MODE', cast = bool)
+if LIVE_MODE == True:
+    USE_X_FORWARDED_HOST = True
+    USE_X_FORWARDED_PORT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+    # FORCE_SCRIPT_NAME = '/djangoapi'
+    # MEDIA_URL = '/djangoapi/media/'
+    # STATIC_URL = '/djangoapi/static/'
+    FORCE_SCRIPT_NAME = '/djangoapi'
+    # MEDIA_URL = '/djangoapi/media/'
+    MEDIA_URL = '/media/'
+    STATIC_URL = '/djangoapi/static/'
+
+# ALLOWED_HOSTS = ['aleksandr.mlmadmin.iossmlm.com']
+ALLOWED_HOSTS = ['*']
+
+USER_URL = config('USER_URL')
+MLM_ADMIN_URL = config('MLM_ADMIN_URL')
+MLM_API_KEY = config('MLM_API_KEY')
 
 #Email Configuration
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'sajithviolin96@gmail.com'
-EMAIL_HOST_PASSWORD = 'kdofppdwydfdnucc'
-EMAIL_USE_TLS = True
+EMAIL_HOST = config('EMAIL_HOST')
+EMAIL_PORT = config('EMAIL_PORT')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
+
+
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
+
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+PAYPAL_CLIENT_SECRET = config('PAYPAL_CLIENT_SECRET')
+PAYPAL_BASE_URL = config('PAYPAL_BASE_URL')
+
