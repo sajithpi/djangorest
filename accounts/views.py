@@ -26,7 +26,7 @@ import json
 from datetime import datetime
 from django.conf import settings
 import threading
-from django.http import HttpResponse
+
 
 import pytz
 from django.core.paginator import Paginator
@@ -209,8 +209,7 @@ class sendOTP(GenericAPIView):
             send_otp_via_mail(email=email, username = user.username, type=type)
             return Response(f"{type} Otp sent into your email")
  
-def welcome(request):
-    return HttpResponse("Welcome to Dating App")
+
        
 class LogoutView(GenericAPIView):
     
