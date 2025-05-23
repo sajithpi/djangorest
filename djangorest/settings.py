@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-=1(l+42ife-$=o#9p-perk6@6#7fe6-$o^4-q(@k3)a*xq+$5t'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default = False, cast=bool)
+DEBUG = True #config('DEBUG', default = False, cast=bool)
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = ['*']
@@ -232,7 +232,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 # STATIC_URL = '/static/'
 
-STATIC_URL = '/staticfiles/'
+STATIC_URL = '/djangoapi/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Optional: only include if you're using a development static directory
@@ -250,17 +250,13 @@ MEDIA_ROOT = BASE_DIR/'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SOCIAL_AUTH_PASSWORD = config('SOCIAL_AUTH_PASSWORD')
 LIVE_MODE = config('LIVE_MODE', cast = bool)
+
 if LIVE_MODE == True:
     USE_X_FORWARDED_HOST = True
     USE_X_FORWARDED_PORT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-
-    # FORCE_SCRIPT_NAME = '/djangoapi'
-    # MEDIA_URL = '/djangoapi/media/'
-    # STATIC_URL = '/djangoapi/static/'
     FORCE_SCRIPT_NAME = '/djangoapi'
-    # MEDIA_URL = '/djangoapi/media/'
     MEDIA_URL = '/media/'
     STATIC_URL = '/djangoapi/static/'
 
