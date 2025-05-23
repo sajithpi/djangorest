@@ -282,14 +282,23 @@ class UpdateUserLocation(GenericAPIView):
                 
                 if response.status_code == 200:
                     data = response.json()
-                    country = data['address']['country']
-                    city = data['address'].get('location')
-                    if city is None:
-                        city = data['address'].get('town')
-                        print(f"CITY:{city}")
-                        if city is None:
-                            city = data['address'].get('city')
-                
+                    address = data.get('address', {})
+                    country = address.get('country')
+                    
+                    city = (
+                        address.get('city') or
+                        address.get('town') or
+                        address.get('village') or
+                        address.get('location') or 
+                        address.get('hamlet') or
+                        address.get('municipality') or
+                        address.get('suburb') or
+                        address.get('locality')
+                    )
+                    if not country or not city:
+                        print(f"Incomplete location data. Response: {data}")
+                        return Response("Could not determine full location details", status=status.HTTP_502_BAD_GATEWAY)
+
                 
                     
                     user_profile.city = city
