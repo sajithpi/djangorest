@@ -49,7 +49,7 @@ class User(AbstractBaseUser):
     date_of_birth = models.DateField(default=None, null=True, blank=True)
     phone_number = models.CharField(max_length=50, default=None, null=True, blank=True)
     showAge = models.BooleanField(default=True)
-    showDistance  = models.BooleanField(default=False)
+    showDistance  = models.BooleanField(default=True)
     auth_provider = models.CharField(max_length=255, blank=False, null=False, default=AUTH_PROVIDERS.get('email'))
     register_otp = models.CharField(max_length=6, null=True, blank=True)
   
