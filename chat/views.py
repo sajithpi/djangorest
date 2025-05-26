@@ -10,7 +10,9 @@ from . serializers import StickerSerializer
 from accounts.models import User, UserProfile
 from django.db.models import Q
 from rest_framework import status, generics
+from followers.models import BlockedUser
 from datetime import datetime
+from accounts import api
 import json
 import pytz
 
@@ -239,6 +241,9 @@ class chatRoom(GenericAPIView):
             # Handle other exceptions
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+
+    
+    
 class GetChatRooms(GenericAPIView):
     
     @swagger_auto_schema(
@@ -262,10 +267,19 @@ class GetChatRooms(GenericAPIView):
         try:
             # Retrieve the authenticated user and their profile
             # user = User.objects.get(username=self.request.user)
-            # user_profile = UserProfile.objects.get(user=user)
+            user_profile = UserProfile.objects.get(user=self.request.user)
+            blocked_user_ids = api.get_blocked_users_data(user_profile=user_profile)
             user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
             # Query for chat rooms involving the authenticated user
-            rooms = RoomChat.objects.filter(Q(senderProfile=user_profile) | Q(receiverProfile=user_profile)).all()
+            # rooms = RoomChat.objects.filter(Q(senderProfile=user_profile) | Q(receiverProfile=user_profile)).all()
+            
+
+            # Filter chat rooms involving the current user
+            rooms = RoomChat.objects.filter(
+                    Q(senderProfile=user_profile) | Q(receiverProfile=user_profile)
+            ).exclude(
+                    Q(senderProfile__id__in=blocked_user_ids) | Q(receiverProfile__id__in=blocked_user_ids)
+            )
 
             # Create a list of room dictionaries for the API response
             rooms_list = []
@@ -322,6 +336,7 @@ class GetChatRooms(GenericAPIView):
         except RoomChat.DoesNotExist:
             return Response("Chat rooms not found", status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            print(f"ERROR=>{e}")
             return Response(f"An error occurred: {str(e)}", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class StickersListCreateView(generics.ListCreateAPIView):
@@ -392,19 +407,30 @@ class SendMessageView(GenericAPIView):
     
     
     def post(self, request, *args, **kwargs):
-    
-        sender_profile = UserProfile.objects.get(user__username = request.user)  # Assuming you have user profiles
-        receiver_profile = UserProfile.objects.get(user__username = request.data.get('receiver'))
-        room = RoomChat.objects.get(id = request.data.get('room_id'))
-    
+        sender_profile = get_object_or_404(UserProfile, user__username=request.user)
+        receiver_username = request.data.get('receiver')
+        receiver_profile = get_object_or_404(UserProfile, user__username=receiver_username)
+        room = get_object_or_404(RoomChat, id=request.data.get('room_id'))
 
-        
-        # Create the chat message
+        # Check if sender or receiver has blocked the other
+        sender_blocked = BlockedUser.objects.filter(blocker=sender_profile, blocked=receiver_profile).exists()
+        receiver_blocked = BlockedUser.objects.filter(blocker=receiver_profile, blocked=sender_profile).exists()
+
+        if sender_blocked or receiver_blocked:
+            return Response({'error': 'You cannot send a message to this user.'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Proceed with creating the message
         content = request.data.get('content')
-        encrypted_message  = room.encrypt_content(content, room.encryption_key)
-        print(f"encrypted_message:{encrypted_message}")
+        encrypted_message = room.encrypt_content(content, room.encryption_key)
+        print(f"encrypted_message: {encrypted_message}")
         decrypted_message = room.decrypt_content(encrypted_message, room.encryption_key)
-        print(f"decrypted_message:{decrypted_message}")
-        chat = Chat.objects.create(content=encrypted_message, sender=sender_profile, receiver=receiver_profile, room=room)
+        print(f"decrypted_message: {decrypted_message}")
+
+        Chat.objects.create(
+            content=encrypted_message,
+            sender=sender_profile,
+            receiver=receiver_profile,
+            room=room
+        )
 
         return Response({'message': 'Message sent successfully'}, status=status.HTTP_201_CREATED)
