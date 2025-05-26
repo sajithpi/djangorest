@@ -416,7 +416,7 @@ class GetProfileDetails(GenericAPIView):
                 'age': calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')) if user.showAge else False,
                 'profile_picture': data['profile_picture'] if data['profile_picture'] else None,
 
-                'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
+                'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude) if user.showDistance else False,
                 'interests':data['interests'],
                 
                 'cover_photos':data['cover_photos'],
