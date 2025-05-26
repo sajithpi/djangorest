@@ -73,8 +73,10 @@ class TravelPlan(GenericAPIView):
             my_trips = MyTrip.objects.filter(user = user_profile)
             tripDetailsList = []
             for trip in my_trips:
+                print(f"trip id:{trip.id}")
                 trip_count = TravelRequest.objects.filter(trip = trip.id, status = 'PENDING').count()
                 print(f"trip_count:{trip_count}")
+                
                 tripDetailsDict = {'trip':trip.id,
                                     "user": trip.user.user.username,
                                     "latitude": trip.latitude,
@@ -473,10 +475,10 @@ class ListTrips(GenericAPIView):
                 matching_Trips = matching_Trips.filter(location = location.lower())
             
             if travel_type == 'dating':
-                # matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
-                # user__user__orientation=user_orientation)
-                matching_Trips = matching_Trips.filter(
+                matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
                 user__user__orientation=user_orientation)
+                # matching_Trips = matching_Trips.filter(
+                # user__user__orientation=user_orientation)
                 
             if trip_date_range != '':
                 matching_Trips = matching_Trips.filter(travel_date__lte = trip_date_range)
