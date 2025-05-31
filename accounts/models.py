@@ -172,6 +172,7 @@ class Package(models.Model):
     price = models.FloatField(default=0)
     type = models.CharField(max_length=10, choices=PACKAGE_CHOICES, blank=True, null=True)
     validity = models.FloatField(default=1)
+    paypal_product_id = models.TextField(blank=True, null=True)
 
     # def set_features(self, features):
     #     self.features = json.dumps(features)
