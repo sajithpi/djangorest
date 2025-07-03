@@ -3,9 +3,9 @@ from accounts.models import Package
 def seed_packages(apps, schema_editor):
 
     # Seed initial values
-    Package.objects.create(name='Free Package', price=0, type='Free', validity=0)
-    Package.objects.create(name='Paid Package', price=10, type='Paid', validity=6)
-    Package.objects.create(name='Paid Package', price=10, type='Paid', validity=1)
+    Package.objects.create(name='Free Package', price=0, type='Free', validity=0, paypal_product_id=None)
+    Package.objects.create(name='Paid Package', price=10, type='Paid', validity=6, paypal_product_id=None)
+    Package.objects.create(name='Paid Package', price=10, type='Paid', validity=1, paypal_product_id = None)
 
 class Migration(migrations.Migration):
 

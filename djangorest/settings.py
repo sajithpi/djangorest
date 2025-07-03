@@ -93,14 +93,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
-    'SLIDING_TOKEN_LIFETIME': timedelta(days=1),
-    'SLIDING_TOKEN_REFRESH_GRACE_PERIOD': timedelta(days=1),
-    'SLIDING_TOKEN_REFRESH_ALMOST_EXPIRED': False,
-    'SLIDING_TOKEN_REFRESH_EACH_TIME': False,
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),                   # Standard access token lifetime
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),              # Max lifetime for sliding token refresh
+    'SLIDING_TOKEN_LIFETIME': timedelta(days=1),                      # Sliding token itself is valid for 1 day
+    'SLIDING_TOKEN_REFRESH_GRACE_PERIOD': timedelta(days=1),          # Token can still be refreshed for 1 day after expiry
+    'SLIDING_TOKEN_REFRESH_ALMOST_EXPIRED': False,                    # Don't refresh token just before expiry
+    'SLIDING_TOKEN_REFRESH_EACH_TIME': False,                         # Token won't be refreshed automatically on use
 }
-
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'basic': {

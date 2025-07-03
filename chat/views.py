@@ -421,6 +421,7 @@ class SendMessageView(GenericAPIView):
 
         # Proceed with creating the message
         content = request.data.get('content')
+        message_type = request.data.get('type','text')
         encrypted_message = room.encrypt_content(content, room.encryption_key)
         print(f"encrypted_message: {encrypted_message}")
         decrypted_message = room.decrypt_content(encrypted_message, room.encryption_key)
@@ -430,7 +431,8 @@ class SendMessageView(GenericAPIView):
             content=encrypted_message,
             sender=sender_profile,
             receiver=receiver_profile,
-            room=room
+            room=room,
+            type = message_type,
         )
 
         return Response({'message': 'Message sent successfully'}, status=status.HTTP_201_CREATED)

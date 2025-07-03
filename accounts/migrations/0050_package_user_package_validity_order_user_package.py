@@ -53,4 +53,9 @@ class Migration(migrations.Migration):
             name='package_img',
             field=models.ImageField(blank=True, null=True, upload_to=accounts.models.package_upload_path),
         ),
+        migrations.AddField(
+            model_name='package',
+            name='paypal_product_id',
+            field=models.TextField(blank=True, null=True),
+        ),
     ]
