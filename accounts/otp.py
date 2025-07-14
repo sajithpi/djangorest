@@ -113,7 +113,7 @@ def send_forgot_password_mail(subject, message, email_from, email, html_content)
 
     send_mail(
         subject,
-        '',
+        message,
         email_host[0],
         [email],
         html_message=html_content,
