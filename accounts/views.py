@@ -281,7 +281,7 @@ class RequestPasswordResetEmail(GenericAPIView):
                 current_site = f'{settings.USER_URL}/reset-password/{uidb64}/{token}'
                 # relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
                 absurl = current_site
-                
+                print(f"absurl:{absurl}")
                 resetPasswordTemplate = EmailTemplate.objects.get(type = 'reset_password')
                 resetPasswordTemplate_Content = resetPasswordTemplate.content.replace('{{company_name}}', 'Dating App').replace('{{username}}', user.username).replace('{{reset_link}}',absurl )
                 email_from = settings.DEFAULT_FROM_EMAIL
