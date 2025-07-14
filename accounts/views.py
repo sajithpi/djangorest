@@ -285,7 +285,7 @@ class RequestPasswordResetEmail(GenericAPIView):
                 resetPasswordTemplate = EmailTemplate.objects.get(type = 'reset_password')
                 resetPasswordTemplate_Content = resetPasswordTemplate.content.replace('{{company_name}}', 'Dating App').replace('{{username}}', user.username).replace('{{reset_link}}',absurl )
                 email_from = settings.DEFAULT_FROM_EMAIL
-                message = f'Password Reset'
+                message = f'Password Reset, Link:{absurl}'
                 # email_body = 'Hello, \n Use link below to reset your password \n' + absurl
                 send_forgot_password_mail(resetPasswordTemplate.subject,message, email_from, user.email, resetPasswordTemplate_Content)
                 # threading.Thread(target=send_forgot_password_mail, args=(resetPasswordTemplate.subject, email_from, user.email,  resetPasswordTemplate_Content)).start()
