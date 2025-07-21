@@ -503,7 +503,7 @@ class GetTestimonialsView(GenericAPIView):
             return Response(f"error:{e}",status=status.HTTP_400_BAD_REQUEST)
         
 class PasswordReset(GenericAPIView):
-    
+    permission_classes = [IsAuthenticated]
     
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -525,17 +525,14 @@ class PasswordReset(GenericAPIView):
     )
     def put(self, request):
         user = User.objects.get(username = request.user)
-        entered_password = request.data.get('password')
         new_password1 = request.data.get('new_password1')
         new_password2 = request.data.get('new_password2')
         if new_password1 != new_password2:
             return Response(f"Your Entered New password is not matching", status=status.HTTP_400_BAD_REQUEST)
         
-        hashed_password = make_password(entered_password)
-        if check_password(entered_password, user.password):
-            user.set_password(new_password1)
-            user.save()
-            return Response("Password updated successfully", status=status.HTTP_200_OK)
+        user.set_password(new_password1)
+        user.save()
+        return Response("Password updated successfully", status=status.HTTP_200_OK)
         
         return Response("Entered Password is not correct, please enter correct password", status=status.HTTP_400_BAD_REQUEST)
     
