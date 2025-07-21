@@ -17,7 +17,7 @@ from geopy.geocoders import Nominatim
 from datetime import datetime
 import requests
 from accounts.api import get_blocked_users_data, add_notification, remove_notification
-
+import json
 def get_country_from_coordinates(latitude, longitude):
     geolocator = Nominatim(user_agent="geoapiExercises")
     location = geolocator.reverse(f"{latitude}, {longitude}")
@@ -70,11 +70,14 @@ class TravelPlan(GenericAPIView):
             user_profile = get_object_or_404(UserProfile.objects.select_related('user'), user__username=self.request.user)
             # user_profile = UserProfile.objects.get(user = user)
 
-            my_trips = MyTrip.objects.filter(user = user_profile)
+            my_trips        = MyTrip.objects.filter(user = user_profile)
             tripDetailsList = []
+            
             for trip in my_trips:
+                print(f"trip id:{trip.id}")
                 trip_count = TravelRequest.objects.filter(trip = trip.id, status = 'PENDING').count()
                 print(f"trip_count:{trip_count}")
+                
                 tripDetailsDict = {'trip':trip.id,
                                     "user": trip.user.user.username,
                                     "latitude": trip.latitude,
@@ -82,8 +85,8 @@ class TravelPlan(GenericAPIView):
                                     "looking_for": trip.looking_for,
                                     "location": trip.location,
                                     "country": trip.country,
-                                    'travel_date': trip.travel_date.strftime('%Y-%m-%d %H:%M:%S') if trip.travel_date else None,
-                                    "days": trip.days,
+                                    'start_date' : trip.start_date.strftime('%Y-%m-%d %H:%M:%S') if trip.start_date else None,
+                                    'end_date' : trip.start_date.strftime('%Y-%m-%d %H:%M:%S') if trip.start_date else None,
                                     "description": trip.description,
                                     'request_count':trip_count,
                                     "status": trip.status}
@@ -147,6 +150,24 @@ class TravelPlan(GenericAPIView):
                 mutable_data['location'] = city
                 mutable_data['country'] = country
                 print(f"COUNTRY:{country}")
+                
+                
+                travel_date_raw = request.data.get('travel_date')
+                try:
+                    travel_date = json.loads(travel_date_raw) if isinstance(travel_date_raw, str) else travel_date_raw
+                except json.JSONDecodeError:
+                    return Response({'error': 'Invalid travel_date format. It should be a JSON object.'}, status=status.HTTP_400_BAD_REQUEST)
+          
+                if travel_date:
+                    start_date = travel_date.get('start')
+                    end_date = travel_date.get('end')
+                    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+                    end_date = datetime.strptime(end_date, "%Y-%m-%d")
+                    mutable_data['start_date'] = start_date
+                    mutable_data['end_date'] = end_date
+                    
+                    days = (end_date - start_date).days
+                    mutable_data['days'] = days
               
                     # mutable_data['country'] = country
                 serializer = MyTripSerializer(data=mutable_data, partial=True)
@@ -464,7 +485,7 @@ class ListTrips(GenericAPIView):
             matching_Trips = MyTrip.objects.filter(
                 ~exclude_blocked_users,
                 looking_for = travel_type,
-                travel_date__gte = NOW,
+                start_date__gte = NOW,
                 
                 status = 'planning',
                     ).exclude(user = user_profile,)
@@ -473,13 +494,13 @@ class ListTrips(GenericAPIView):
                 matching_Trips = matching_Trips.filter(location = location.lower())
             
             if travel_type == 'dating':
-                # matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
-                # user__user__orientation=user_orientation)
-                matching_Trips = matching_Trips.filter(
+                matching_Trips = matching_Trips.filter(user__user__gender=user_partner_gender_preference,
                 user__user__orientation=user_orientation)
+                # matching_Trips = matching_Trips.filter(
+                # user__user__orientation=user_orientation)
                 
             if trip_date_range != '':
-                matching_Trips = matching_Trips.filter(travel_date__lte = trip_date_range)
+                matching_Trips = matching_Trips.filter(start_date__lte = trip_date_range)
             
             
             trip_list = []
@@ -494,7 +515,8 @@ class ListTrips(GenericAPIView):
                     trip['profile_picture'] = '/' + str(matching_Trip.user.profile_picture) if matching_Trip.user.profile_picture else None
                     trip['days'] = matching_Trip.days
                     trip['description'] = str(matching_Trip.description[:110]) 
-                    trip['date'] = matching_Trip.travel_date
+                    trip['start_date'] = matching_Trip.start_date
+                    trip['end_date'] = matching_Trip.end_date
                     trip['status'] = matching_Trip.status
                     
                     trip_list.append(trip)
@@ -567,7 +589,8 @@ class MyTravelRequests(GenericAPIView):
                 user_dict['trip_id'] = trip_request.trip.id
                 user_dict['username'] = trip_details.user.user.username
                 user_dict['profile_pic'] = str(trip_details.user.profile_picture)
-                user_dict['travel_date'] = trip_details.travel_date
+                user_dict['start_date'] = trip_details.start_date
+                user_dict['end_date'] = trip_details.end_date
                 user_dict['days'] = trip_details.days
                 user_dict['location'] = trip_details.location
                 user_dict['description'] = trip_request.description

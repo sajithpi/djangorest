@@ -26,6 +26,8 @@ import json
 from datetime import datetime
 from django.conf import settings
 import threading
+
+
 import pytz
 from django.core.paginator import Paginator
 from django.core.paginator import EmptyPage, PageNotAnInteger
@@ -206,7 +208,9 @@ class sendOTP(GenericAPIView):
         elif method == 'email':
             send_otp_via_mail(email=email, username = user.username, type=type)
             return Response(f"{type} Otp sent into your email")
-        
+ 
+
+       
 class LogoutView(GenericAPIView):
     
     def get_serializer_class(self):
@@ -277,11 +281,11 @@ class RequestPasswordResetEmail(GenericAPIView):
                 current_site = f'{settings.USER_URL}/reset-password/{uidb64}/{token}'
                 # relativeLink = reverse('password_reset_confirm', kwargs={'uidb64':uidb64, 'token':token})
                 absurl = current_site
-                
+                print(f"absurl:{absurl}")
                 resetPasswordTemplate = EmailTemplate.objects.get(type = 'reset_password')
                 resetPasswordTemplate_Content = resetPasswordTemplate.content.replace('{{company_name}}', 'Dating App').replace('{{username}}', user.username).replace('{{reset_link}}',absurl )
                 email_from = settings.DEFAULT_FROM_EMAIL
-                message = f'Password Reset'
+                message = f'Password Reset, Link:{absurl}'
                 # email_body = 'Hello, \n Use link below to reset your password \n' + absurl
                 send_forgot_password_mail(resetPasswordTemplate.subject,message, email_from, user.email, resetPasswordTemplate_Content)
                 # threading.Thread(target=send_forgot_password_mail, args=(resetPasswordTemplate.subject, email_from, user.email,  resetPasswordTemplate_Content)).start()
@@ -499,7 +503,7 @@ class GetTestimonialsView(GenericAPIView):
             return Response(f"error:{e}",status=status.HTTP_400_BAD_REQUEST)
         
 class PasswordReset(GenericAPIView):
-    
+    permission_classes = [IsAuthenticated]
     
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -521,17 +525,14 @@ class PasswordReset(GenericAPIView):
     )
     def put(self, request):
         user = User.objects.get(username = request.user)
-        entered_password = request.data.get('password')
         new_password1 = request.data.get('new_password1')
         new_password2 = request.data.get('new_password2')
         if new_password1 != new_password2:
             return Response(f"Your Entered New password is not matching", status=status.HTTP_400_BAD_REQUEST)
         
-        hashed_password = make_password(entered_password)
-        if check_password(entered_password, user.password):
-            user.set_password(new_password1)
-            user.save()
-            return Response("Password updated successfully", status=status.HTTP_200_OK)
+        user.set_password(new_password1)
+        user.save()
+        return Response("Password updated successfully", status=status.HTTP_200_OK)
         
         return Response("Entered Password is not correct, please enter correct password", status=status.HTTP_400_BAD_REQUEST)
     

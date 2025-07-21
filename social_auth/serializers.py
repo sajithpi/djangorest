@@ -7,7 +7,7 @@ import json
 
 
 GOOGLE_CLIENT_ID = '74750236370-melid0v5g6l1t2kt9la69eigjafq68qi.apps.googleusercontent.com'
-
+GOOGLE_CLIENT_ID = '834084853926-1b06n4caakn33d8dkgffsgup6i2s4kc7.apps.googleusercontent.com'
 class GoogleSocialAuthSerializer(serializers.Serializer):
     auth_token = serializers.CharField()
     

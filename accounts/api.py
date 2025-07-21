@@ -282,14 +282,23 @@ class UpdateUserLocation(GenericAPIView):
                 
                 if response.status_code == 200:
                     data = response.json()
-                    country = data['address']['country']
-                    city = data['address'].get('location')
-                    if city is None:
-                        city = data['address'].get('town')
-                        print(f"CITY:{city}")
-                        if city is None:
-                            city = data['address'].get('city')
-                
+                    address = data.get('address', {})
+                    country = address.get('country')
+                    
+                    city = (
+                        address.get('city') or
+                        address.get('town') or
+                        address.get('village') or
+                        address.get('location') or 
+                        address.get('hamlet') or
+                        address.get('municipality') or
+                        address.get('suburb') or
+                        address.get('locality')
+                    )
+                    if not country or not city:
+                        print(f"Incomplete location data. Response: {data}")
+                        return Response("Could not determine full location details", status=status.HTTP_502_BAD_GATEWAY)
+
                 
                     
                     user_profile.city = city
@@ -407,7 +416,7 @@ class GetProfileDetails(GenericAPIView):
                 'age': calculate_age(datetime.strptime(data['user']['date_of_birth'], '%Y-%m-%d')) if user.showAge else False,
                 'profile_picture': data['profile_picture'] if data['profile_picture'] else None,
 
-                'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude),
+                'distance': haversine_distance(current_user_profile.latitude, current_user_profile.longitude, profile.latitude, profile.longitude) if user.showDistance else False,
                 'interests':data['interests'],
                 
                 'cover_photos':data['cover_photos'],
@@ -904,29 +913,30 @@ class GetProfileMatches(GenericAPIView):
         
         user_partner_gender_preference = user_orientation_filter.get((user_gender, user_orientation))
         print(f"user partner preference:{user_partner_gender_preference}")
+        
         preferences_to_check = {
-            'family_choices': 'family_plan',
-            'drink_choices': 'drink',
-            'religion_choices': 'religion',
-            'education_choices': 'education',
-            'relationship_choices': 'relationship_goals',
-            'workout_choices': 'workout',
-            'smoke_choices': 'smoke',
-            'languages_choices': 'languages',
+            'family_choices'        : 'family_plan',
+            'drink_choices'         : 'drink',
+            'religion_choices'      : 'religion',
+            'education_choices'     : 'education',
+            'relationship_choices'  : 'relationship_goals',
+            'workout_choices'       : 'workout',
+            'smoke_choices'         : 'smoke',
+            'languages_choices'     : 'languages',
         }
 
         choice_count = len(preferences_to_check)
         
         # Create a dictionary to map field names to choices
         field_mapping = {
-            'family_plan': user_preferences.family_choices,
-            'drink': user_preferences.drink_choices,
-            'religion': user_preferences.religion_choices,
-            'education': user_preferences.education_choices,
+            'family_plan'       : user_preferences.family_choices,
+            'drink'             : user_preferences.drink_choices,
+            'religion'          : user_preferences.religion_choices,
+            'education'         : user_preferences.education_choices,
             'relationship_goals': user_preferences.relationship_choices,
-            'workout': user_preferences.workout_choices,
-            'smoke': user_preferences.smoke_choices,
-            'languages': user_preferences.languages_choices,
+            'workout'           : user_preferences.workout_choices,
+            'smoke'             : user_preferences.smoke_choices,
+            'languages'         : user_preferences.languages_choices,
         }
         # Create a list to store preferences for each user
         preferences_list = []
@@ -945,14 +955,14 @@ class GetProfileMatches(GenericAPIView):
         preferences_filters = []
 
         preference_fields = {
-            'family_plan': 'family_choices',
-            'drink': 'drink_choices',
-            'religion': 'religion_choices',
-            'education': 'education_choices',
+            'family_plan'       : 'family_choices',
+            'drink'             : 'drink_choices',
+            'religion'          : 'religion_choices',
+            'education'         : 'education_choices',
             'relationship_goals': 'relationship_choices',
-            'workout': 'workout_choices',
-            'smoke': 'smoke_choices',
-            'languages': 'languages_choices'
+            'workout'           : 'workout_choices',
+            'smoke'             : 'smoke_choices',
+            'languages'         : 'languages_choices'
         }
             
         for preference, queryset_name in preference_fields.items():
@@ -966,7 +976,7 @@ class GetProfileMatches(GenericAPIView):
         for q_obj in preferences_filters:
             combined_filter &= q_obj
         # Create a Q object to represent the exclusion condition
-        exclude_blocked_users = Q(user__id__in=blocked_users)
+        exclude_blocked_users = Q(user__id__in=blocked_users) | Q(user__id=user.id)
 
         # Query to find matching user profiles
 
@@ -1783,38 +1793,45 @@ class MlmRegister(GenericAPIView):
             # sponsor_name = self.kwargs.get('sponsor_name')
             
             # 'Sagalovskiy'
-            user = User.objects.get(username=request.user)
+            user = request.user
             
             if user.mlm_status == 'active':
-                   return Response(f"User {user.username} is already exists in the mlm system", status=status.HTTP_200_OK)
+                    return Response(f"User {user.username} already exists in the MLM system", status=status.HTTP_200_OK)
             
             sponsorName = request.data.get('sponsorName') 
+            sponsor_id = User.objects.filter(username=sponsorName).values_list('id', flat=True).first()
+            
+            if not sponsor_id:
+                return Response('Sponsor not found', status=status.HTTP_404_NOT_FOUND)
+            
             
         
             
-            print(f"sponsor_id:{sponsorName}")
+            print(f"sponsor_name:{sponsorName} sponsor_id:{sponsor_id}")
             # MLM API endpoint URL
             url = f'{settings.MLM_ADMIN_URL}/api/register'
 
             # Prepare data for the POST request
             data = {
-                'username': user.username,
-                'user_ref_id':user.id,
-                'sponsorName': sponsorName,
-                'first_name': user.username,
-                'date_of_birth': user.date_of_birth.isoformat() if user.date_of_birth else None,
-                'gender': user.gender,
-                'email': user.email,
-                'mobile': user.phone_number,
-                'password':12345678,
+                'username'          : user.username,
+                'user_ref_id'       : user.id,
+                'sponsor_ref_id'    : sponsor_id,
+                'first_name'        : user.username,
+                'date_of_birth'     : user.date_of_birth.isoformat() if user.date_of_birth else None,
+                'gender'            : user.gender,
+                'email'             : user.email,
+                'mobile'            : user.phone_number,
+                'password'          : 12345678,
                 # 'password': make_password('12345678'),  # Note: Sending the password in plaintext is not recommended
-                'totalAmount': '100',
-                '_token':settings.MLM_API_KEY,
+                'totalAmount'       : '100',
+                '_token'            : settings.MLM_API_KEY,
             }
             print(f"mlm_api_data:{data}")
             # Make a POST request
             
-            mlm_api_history = MlmApiHistory.objects.create(user = user, data = json.dumps(data), status = 0) #Initiated
+            mlm_api_history = MlmApiHistory.objects.create(user = user,
+                                                           data = json.dumps(data),
+                                                           status = 0) #Initiated
             
             # Get the ID of the newly created entry
             mlm_api_history_id = mlm_api_history.id

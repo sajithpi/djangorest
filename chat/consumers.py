@@ -152,6 +152,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         received_user = text_data_json['received_user']
         sender_profile_pic = text_data_json['sender_profile_pic']
         receiver_profile_pic = text_data_json['receiver_profile_pic']
+        type = text_data_json.get('type','text')
         file = text_data_json['file']
         timestamp = text_data_json['timestamp']
         print(f"MY MESSAGE:{message}")
@@ -171,6 +172,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             receiver=received_user_profile,
             room=room,
             photo = file,
+            type=type,
         )
         await database_sync_to_async(chat.save)()
 

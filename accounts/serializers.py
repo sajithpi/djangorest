@@ -32,6 +32,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         print(f"2fa status:{_2fa}")
         data['has_2fa_enabled'] = _2fa
         data['is_admin'] = user.is_admin
+        data['user_id'] = user.id
+        data['username'] = user.username
         return data
     
 class UserSerializers(serializers.ModelSerializer):

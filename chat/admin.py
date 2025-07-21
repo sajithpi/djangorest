@@ -3,7 +3,7 @@ from chat.models import Chat, RoomChat, Connected, Sticker
 # Register your models here.
 
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ['room_id','sender','receiver','content','photo','timestamp','is_read']
+    list_display = ['room_id','sender','receiver','content','photo','timestamp','is_read','type']
     list_filter = ['room_id']
     search_fields = ['room_id']
 

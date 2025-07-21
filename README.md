@@ -12,7 +12,7 @@ Apply initial migrations to set up your database schema:
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
-
+python manage.py flush - to reset the db
 
 Create the missing static directory to resolve it:
 mkdir static

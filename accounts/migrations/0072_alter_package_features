@@ -15,4 +15,9 @@ class Migration(migrations.Migration):
             name='features',
             field=models.TextField(blank=True, null=True),
         ),
+        migrations.AddField(
+            model_name='package',
+            name='paypal_product_id',
+            field=models.TextField(blank=True, null=True),
+        ),
     ]
