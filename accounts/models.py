@@ -91,7 +91,7 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     login_status = models.BooleanField(default=False)
     has_2fa_passed = models.BooleanField(default=False)
-    has_2fa_enabled = models.BooleanField(default=False)
+    has_2fa_enabled = models.BooleanField(default=True)
     login_otp = models.CharField(max_length=7, blank=True, null=True)
     login_otp_validity = models.DateTimeField(blank=True, null=True)
 
