@@ -18,25 +18,29 @@ PAYPAL_CLIENT_SECRET = settings.PAYPAL_CLIENT_SECRET
 PAYPAL_BASE_URL = settings.PAYPAL_BASE_URL
 
 def generate_access_token():
-    client_id = PAYPAL_CLIENT_ID
-    client_secret = PAYPAL_CLIENT_SECRET
-    token_url = f'https://{PAYPAL_BASE_URL}/v1/oauth2/token'  # Replace with the production URL for live mode
+    try:
+        client_id = PAYPAL_CLIENT_ID
+        client_secret = PAYPAL_CLIENT_SECRET
+        token_url = f'https://{PAYPAL_BASE_URL}/v1/oauth2/token'  # Replace with the production URL for live mode
 
-    headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
 
-    data = {
-        'grant_type': 'client_credentials',
-    }
+        data = {
+            'grant_type': 'client_credentials',
+        }
 
-    response = requests.post(token_url, headers=headers, auth=(client_id, client_secret), data=data)
+        response = requests.post(token_url, headers=headers, auth=(client_id, client_secret), data=data)
 
-    if response.status_code == 200:
-        return response.json().get('access_token')
-    else:
-        # Handle error response
-        print(response.text)
+        if response.status_code == 200:
+            return response.json().get('access_token')
+        else:
+            # Handle error response
+            print(response.text)
+            return None
+    except Exception as e:
+        print(f"Error generating access token: {e}")
         return None
     
 class PayPalPaymentView(APIView):
@@ -117,6 +121,8 @@ class PayPalPaymentView(APIView):
             print(f"Error: {e}")
             return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        
+  
 class CaptureOrderView(APIView):
     
     @swagger_auto_schema(

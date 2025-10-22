@@ -94,7 +94,7 @@ class User(AbstractBaseUser):
     has_2fa_enabled = models.BooleanField(default=True)
     login_otp = models.CharField(max_length=7, blank=True, null=True)
     login_otp_validity = models.DateTimeField(blank=True, null=True)
-
+    paypal_subscription_id = models.CharField(max_length=255, blank=True, null=True)
     is_superadmin = models.BooleanField(default=False)
 
     USERNAME_FIELD ='username'
@@ -173,7 +173,7 @@ class Package(models.Model):
     type = models.CharField(max_length=10, choices=PACKAGE_CHOICES, blank=True, null=True)
     validity = models.FloatField(default=1)
     paypal_product_id = models.TextField(blank=True, null=True)
-
+    paypal_plan_id = models.TextField(blank=True, null=True)
     # def set_features(self, features):
     #     self.features = json.dumps(features)
 
